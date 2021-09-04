@@ -7,19 +7,25 @@
 
 lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
-file=ff_trs_pos
+prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
-pro=4  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = match
+pro=2  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = match
 filt=0 #if pro=4, filt=1, then use filter track to match
 nl1=2
 nl2=1
+nl3=0
 
 # filter area
 lats=25
-latn=50
-lonl=40
-lonr=70
-option=0 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+latn=45
+lonl=60
+lonr=80
+option=2 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+if [ $filt == 1 ]; then 
+    suffix=_${option}_${lats}${latn}-${lonl}${lonr}
+else
+    suffix=""
+fi
 
 if [ $pro == 0 ];then
     nl=2
@@ -34,22 +40,22 @@ fi
 if [ $pro == 1 ];then
     cd $OUTDIR
     pwd
-    echo "combine ${file}"
-    for nl in {1..1};do
+    echo "combine ${prefix}_trs_pos"
+    for nl in {0..0};do
         echo 41 > combine.in_${lev[$nl]}
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            echo ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${file} >> combine.in_${lev[$nl]}
+            echo ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos >> combine.in_${lev[$nl]}
         
-            if [ ! -f "${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${file}" ]; then
-                echo "${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${file} does not exist"
+            if [ ! -f "${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos" ]; then
+                echo "${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos does not exist"
                 #rm -irf ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET
                 #~/TRACK-1.5.2/run_era5_1hr_qiaoling.csh ${ny} ${lev[$nl]}
             else
                 #awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' \
-                #    ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${file}
-                num=$(awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${file} | awk 'END{print NR}')
+                #    ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix_trs_pos}
+                num=$(awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos | awk 'END{print NR}')
                 if [ ${num} -ge 2 ]; then 
                     echo "Need to rerun ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET, whose error line is ${num}"
                     #rm -irf ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET
@@ -59,43 +65,29 @@ if [ $pro == 1 ];then
         done
         
         ~/TRACK-1.5.2/utils/bin/combine < combine.in_${lev[$nl]}
-        mv ./combined_tr_trs ./${file}_${lev[$nl]}_1980-2020 
+        mv ./combined_tr_trs ./${prefix}_${lev[$nl]}_1980-2020 
     done
 fi
 
 if [ $pro == 2 ];then
     echo "=========== statistics ================"
-    cd ~/TRACK-1.5.2/
-    pwd
-    for nl in {2..2};do
-        file=ff_trs_pos_${lev[$nl]}_1980-2020
+    cd ${OUTDIR} #match${suffix}
+    if [ ! -d statistic ];then
+        mkdir statistic
+    fi
+
+    #for file in ${prefix}_* ; do
+    for nl in {0..1};do
+        file=${prefix}_${lev[$nl]}_1980-2020
         filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/${file}"
-        echo $filname
-
-        for season in {0..1};do # 0 = monthly; 1 = seasonal
-        if [ $season == 0 ];then
-            nday=(31 28 31 30 31 30 31 31 30 31 30 31)
-            nmonth=(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)
-            frae=744
-        else
-            nday=(90 92 92 91)
-            nmonth=(DJF MAM JJA SON)
-            frae=0
-        fi
-            
-        sed -i "21s/.*/${filname}/" indat/STATS.latlng_1hr.in
-        for nm in $(seq 1 1 ${#nday[*]});do #{1..${nm}};do
-            fras=$((frae+1))
-            frae=$((fras+24*nday[$((nm-1))]-1))
-            echo "month=${nmonth[$((nm-1))]}, frame_s=${fras}, frame_e=${frae}"
-
-            sed -i "34s/.*/${fras}/" indat/STATS.latlng_1hr.in
-            sed -i "35s/.*/${frae}/" indat/STATS.latlng_1hr.in
-
-            bin/track.linux < indat/STATS.latlng_1hr.in > record4_${file}
-            mv outdat/stat_trs_scl.linux_1.nc ${OUTDIR}${file}_stat_${nmonth[$((nm-1))]}.nc
-        done
-        done
+        output=${OUTDIR}statistic/${file}_stat_
+        
+        #filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/match${suffix}\/${file}"
+        #output=${OUTDIR}match${suffix}/statistic/${file}_stat_
+        
+        echo $file
+        season=0 # 0 = monthly; 1 = seasonal
+        sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
     done
 fi
 
@@ -104,31 +96,108 @@ if [ $pro == 3 ];then
     cd ~/TRACK-1.5.2/
     pwd
     for nl in {0..2};do
+        file=${prefix}_${lev[$nl]}_1980-2020
         echo "lev: ${lev[$nl]}"
-        file=~/TRACK_result/ERA5_VOR${lev[$nl]}_6hr_2000_DET_T42/tr_trs_pos
 
-        utils/bin/box $file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
-        mv ${file}.new ${file}.${option}_${lats}${latn}-${lonl}${lonr}
-        utils/bin/tr2nc ${file}.${option}_${lats}${latn}-${lonl}${lonr} s utils/TR2NC/tr2nc.meta
+        utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
+        mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
+#        utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
     done
 fi
 
 if [ $pro == 4 ];then
     echo "=========== match low level with high level ==================="
+    echo "Firts match 250 and 500, then match 500match250_yes and 850, match 500match250_no and 850"
+    dist=5.0 # distance threshold
+    timt=0.1 # time threshold
+
+    cd ~/TRACK-1.5.2/
+    pwd
+
+    for ny in {1980..2020};do
+    #dir=${OUTDIR}match${suffix}
+    #file1=${OUTDIR}${prefix}_${lev[$nl1]}_1980-2020${suffix}
+    #file2=${OUTDIR}${prefix}_${lev[$nl2]}_1980-2020${suffix}
+    #file3=${OUTDIR}${prefix}_${lev[$nl3]}_1980-2020${suffix}
+    
+    dir=${OUTDIR}match_${ny}
+    file1=${OUTDIR}ERA5_VOR${lev[$nl1]}_1hr_${ny}_DET/${prefix}_trs_pos
+    file2=${OUTDIR}ERA5_VOR${lev[$nl2]}_1hr_${ny}_DET/${prefix}_trs_pos
+    file3=${OUTDIR}ERA5_VOR${lev[$nl3]}_1hr_${ny}_DET/${prefix}_trs_pos
+
+    if [ -d $dir ];then
+        rm $dir/ff_*
+    else
+        mkdir $dir 
+    fi
+
+    utils/bin/censemble2 $file1 $file2 0 100 10 1 0 0 0 0 s -1 1 ${dist} ${timt} > ${dir}/record${lev[$nl1]}_${lev[$nl2]}
+    mv ./match_ens* $dir
+    mv ./str.dat ${dir}/str.dat.${lev[$nl1]}_${lev[$nl2]}
+    mv ./diff.dat ${dir}/diff.dat.${lev[$nl1]}_${lev[$nl2]}
+    mv ./temp-dist.stat ${dir}/diff.dat.${lev[$nl1]}_${lev[$nl2]}
+    rename match_ens1 ${prefix}_${lev[$nl1]}_${lev[$nl2]} $dir/*
+    rename match_ens2 ${prefix}_${lev[$nl2]}_${lev[$nl1]} $dir/*
+    
+    utils/bin/censemble2 $file3 $file2 0 100 10 1 0 0 0 0 s -1 1 ${dist} ${timt} > ${dir}/record${lev[$nl3]}_${lev[$nl2]}
+    mv ./match_ens* $dir
+    mv ./str.dat ${dir}/str.dat.${lev[$nl3]}_${lev[$nl2]}
+    mv ./diff.dat ${dir}/diff.dat.${lev[$nl3]}_${lev[$nl2]}
+    mv ./temp-dist.stat ${dir}/diff.dat.${lev[$nl3]}_${lev[$nl2]}
+    rename match_ens1 ${prefix}_${lev[$nl3]}_${lev[$nl2]} $dir/*
+    rm ${dir}/match_ens2*
+    
+    term=(${lev[$nl2]}_${lev[$nl1]}_yes ${lev[$nl2]}_${lev[$nl1]}_no ${lev[$nl1]}_${lev[$nl2]}_yes)
+    for pre in ${term[*]};do
+        utils/bin/censemble2 ${dir}/${prefix}_${pre}.dat $file3 0 100 10 1 0 0 0 0 s -1 1 ${dist} ${timt} > ${dir}/record${pre}_${lev[$nl3]}
+        mv ./match_ens* $dir
+        mv ./str.dat ${dir}/str.dat.${pre}_${lev[$nl3]}
+        mv ./diff.dat ${dir}/diff.dat.${pre}_${lev[$nl3]}
+        mv ./temp-dist.stat ${dir}/diff.dat.${pre}_${lev[$nl3]}
+        rename match_ens1 ${prefix}_${pre}_${lev[$nl3]} $dir/*
+        rm ${dir}/match_ens2*
+        rm ${dir}/${prefix}_${pre}.dat
+    done
+    
+    pre=${lev[$nl3]}_${lev[$nl2]}_yes
+    utils/bin/censemble2 ${dir}/${prefix}_${pre}.dat $file1 0 100 10 1 0 0 0 0 s -1 1 ${dist} ${timt} > ${dir}/record${pre}_${lev[$nl1]}
+    mv ./match_ens* $dir
+    mv ./str.dat ${dir}/str.dat.${pre}_${lev[$nl1]}
+    mv ./diff.dat ${dir}/diff.dat.${pre}_${lev[$nl1]}
+    mv ./temp-dist.stat ${dir}/diff.dat.${pre}_${lev[$nl1]}
+    rename match_ens1 ${prefix}_${pre}_${lev[$nl1]} $dir/*
+    rm ${dir}/match_ens2*
+    rm ${dir}/${prefix}_${pre}.dat
+
+    rename ".dat" "" ${dir}/${prefix}_*
+
+    for file in ${dir}/${prefix}_*;do
+        awk 'NR==4 {print FILENAME, $2}' ${file} | tee -a ${OUTDIR}number
+    done
+    done
+fi
+
+if [ $pro == 5 ];then
+    echo "=========== match low level with high level ==================="
     cd ~/TRACK-1.5.2/
     pwd
     if [ $filt == 1 ]; then 
-        dir=${OUTDIR}filt${option}_${lats}${latn}-${lonl}${lonr}match${lev[$nl1]}_${lev[$nl2]}
-        file1=${OUTDIR}${file}_${lev[$nl1]}_1980-2020.${option}_${lats}${latn}-${lonl}${lonr}
-        file2=${OUTDIR}${file}_${lev[$nl2]}_1980-2020.${option}_${lats}${latn}-${lonl}${lonr}
+        dir=${OUTDIR}${suffix}match${lev[$nl1]}_${lev[$nl2]}
+        file1=${OUTDIR}${prefix}_${lev[$nl1]}_1980-2020${suffix}
+        file2=${OUTDIR}${prefix}_${lev[$nl2]}_1980-2020${suffix}
     else
         dir=${OUTDIR}match${lev[$nl1]}_${lev[$nl2]}
-        file1=${OUTDIR}${file}_${lev[$nl1]}_1980-2020
-        file2=${OUTDIR}${file}_${lev[$nl2]}_1980-2020
+        file1=${OUTDIR}${prefix}_${lev[$nl1]}_1980-2020
+        file2=${OUTDIR}${prefix}_${lev[$nl2]}_1980-2020
     fi
-    mkdir $dir 
-    utils/bin/censemble2 $file1 $file2 0 100 10 1 0 0 0 0 s -1 1 5.0 0.1 > ${dir}/record
     
+    if [ -d $dir ];then
+        rm $dir/*.dat
+    else
+        mkdir $dir 
+    fi
+
+    utils/bin/censemble2 $file1 $file2 0 100 10 1 0 0 0 0 s -1 1 ${dist} ${timt} > ${dir}/record
     mv ./match_ens* $dir
     mv ./str.dat $dir
     mv ./diff.dat $dir
@@ -140,7 +209,7 @@ if [ $pro == 4 ];then
     #utils/bin/tr2nc ${dir}/match_ens2_no.dat s utils/TR2NC/tr2nc.meta
 
     rename .dat.nc .nc $dir/*
-    rename match_ens1 ${lev[$nl1]}match${lev[$nl2]} $dir/*
-    rename match_ens2 ${lev[$nl2]}match${lev[$nl1]} $dir/*
+    rename match_ens1 ${lev[$nl1]}_${lev[$nl2]} $dir/*
+    rename match_ens2 ${lev[$nl2]}_${lev[$nl1]} $dir/*
 fi
 
