@@ -9,8 +9,9 @@ lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
-pro=2  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = match
-filt=0 #if pro=4, filt=1, then use filter track to match
+pro=2  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = three level match
+# 5 = two level match ; 6 = combine match file
+filt=1 #filt=1, then use filter track to match
 nl1=2
 nl2=1
 nl3=0
@@ -40,7 +41,7 @@ fi
 if [ $pro == 1 ];then
     cd $OUTDIR
     pwd
-    echo "combine ${prefix}_trs_pos"
+    echo "combine ${prefix}_trs_pos${suffix}"
     for nl in {0..0};do
         echo 41 > combine.in_${lev[$nl]}
         echo 1 >> combine.in_${lev[$nl]}
@@ -76,9 +77,10 @@ if [ $pro == 2 ];then
         mkdir statistic
     fi
 
-    #for file in ${prefix}_* ; do
-    for nl in {0..1};do
-        file=${prefix}_${lev[$nl]}_1980-2020
+    #for file in ${prefix}_*_1980-2020${suffix} ; do
+    for file in ${prefix}_*_match ; do
+    #for nl in {0..1};do
+        #file=${prefix}_${lev[$nl]}_1980-2020
         filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/${file}"
         output=${OUTDIR}statistic/${file}_stat_
         
@@ -213,3 +215,30 @@ if [ $pro == 5 ];then
     rename match_ens2 ${lev[$nl2]}_${lev[$nl1]} $dir/*
 fi
 
+if [ $pro == 6 ];then
+    echo "combine ${prefix}_trs_pos for yearly match results"
+    cd ${OUTDIR}match_1980
+    pwd
+    for file in ${prefix}_*;do
+        echo $file
+        echo 41 > ${OUTDIR}combine.in_$file
+        echo 1 >> ${OUTDIR}combine.in_$file
+        
+        for ny in {1980..2020};do
+            echo ${OUTDIR}match_${ny}/${file} >> ${OUTDIR}combine.in_$file
+        
+            if [ ! -f "${OUTDIR}match_${ny}/${file}" ]; then
+                echo "${OUTDIR}match_${ny}/${file} does not exist"
+            else
+                num=$(awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' ${OUTDIR}match_${ny}/${file} | awk 'END{print NR}')
+                if [ ${num} -ge 2 ]; then 
+                    echo "Need to rerun ${OUTDIR}match_${ny}/${file}, whose error line is ${num}"
+                fi
+            fi
+        done
+        
+        ~/TRACK-1.5.2/utils/bin/combine < ${OUTDIR}combine.in_$file > ${OUTDIR}record
+        mv ./combined_tr_trs ${OUTDIR}${file}_match
+        awk 'NR==4 {print FILENAME, $2}' ${OUTDIR}${file}_match | tee -a ${OUTDIR}number
+    done
+fi
