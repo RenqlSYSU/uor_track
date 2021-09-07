@@ -6,10 +6,10 @@ import numpy.ma as ma
 import sys
 matplotlib.use('Agg')
 
-lonl=0
-lonr=150
-lats=15
-latn=70
+lonl=0  #0  #
+lonr=360#150#
+lats=0  #15 #
+latn=90 #70 #
 
 lev=[[0    ,320  ,20  ], # 0Feature Density
      [0    ,3.2  ,0.2 ], # 1Genesis Density
@@ -19,7 +19,7 @@ lev=[[0    ,320  ,20  ], # 0Feature Density
      [-1   ,1    ,1   ], # 5Mean Anisotropy
      [0    ,8    ,0.5 ], # 6Mean Lifetime
      [0    ,80   ,5   ], # 7Mean Speed
-     [0    ,8    ,0.5 ], # 8Mean Intensity
+     [0    ,16   ,1   ], # 8Mean Intensity
      [-1.6 ,1.6  ,0.2 ], # 9Mean Tendency
      [-1   ,1    ,1   ], # 10Spare1
      [-1   ,1    ,1   ], # 11Spare2
@@ -31,24 +31,29 @@ lev=[[0    ,320  ,20  ], # 0Feature Density
      [-1   ,1    ,1   ], # 17Y-component of Mean Orientation Vector
      [-40  ,40   ,5  ]] # 18Y-component of Mean Velocity
 
-draw=[1,2]
-#draw=[0,1,2,14,8,9,6]
-level = sys.argv[4] #'_2_2545-6080'
-if level == 1: # use total level bar 
+draw=[8,9,6]
+#draw=[1,2,14]
+#draw=[1,2,14,8,9,6]
+level = int(sys.argv[3])
+if level == 0: # use total level bar 
     lev[ 0][:]=[0    ,1600 ,100 ]
-    lev[ 1][:]=[0    ,32   ,2   ]
-    lev[ 2][:]=[0    ,32   ,2   ]
-    lev[14][:]=[0    ,160  ,10  ]
+    lev[ 1][:]=[0    ,8    ,0.5 ]
+    lev[ 2][:]=[0    ,8    ,0.5 ]
+    lev[14][:]=[0    ,48   ,3   ]
+
+if level == 2: # 
+    lev[ 1][:]=[0    ,4.8  ,0.3 ]
+    lev[ 2][:]=[0    ,4.8  ,0.3 ]
+    lev[14][:]=[0    ,24   ,1.5 ]
 
 f0=cf.read("/home/users/qd201969/gtopo30_0.9x1.25.nc")
 phis=f0[2]
 print(repr(phis))
 phis=phis/9.8 # transfer from m2/s2 to m
 
-filt = sys.argv[1] #'_2_2545-6080'
-filename = sys.argv[2] #'ff_250_500_no'
-files = sys.argv[3] #'/home/users/qd201969/ERA5-1HR-lev/match'+filt+'/statistic/'+filename+'_stat_'
-figname = sys.argv[5]
+filename = sys.argv[1] #'ff_250_500_no'
+files = sys.argv[2] #'/home/users/qd201969/ERA5-1HR-lev/match'+filt+'/statistic/'+filename+'_stat_'
+figname = sys.argv[4]
 #files='/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat_'
 #files='/home/users/qd201969/ERA5-1HR/stat_clim_'+filt
 titls=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -57,14 +62,14 @@ f1   = cf.read(files+'1.nc')
 for nv in range(0,len(draw),1):#,len(f),1):
     g1=f1[draw[nv]]
     
-    cfp.setvars(file='month_'+filename+filt+g1.long_name+'.png')
+    cfp.setvars(file='month_'+filename+g1.long_name+'.png')
     cfp.gopen(figsize=[20, 20],rows=4,columns=3,wspace=0.1,hspace=0.015,bottom=0.5)
     cfp.mapset(lonmin=lonl, lonmax=lonr, latmin=lats, latmax=latn)
     
     for nm in range(0,len(titls),1):#,len(f),1):
         np = nm+1
         f=cf.read(files+str(np)+'.nc')
-        g=f[draw[nv]]
+        g=f[draw[nv]] # read data
         if draw[nv] == 9:
             g=g*24
         
