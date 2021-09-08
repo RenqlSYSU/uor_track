@@ -7,11 +7,11 @@
 
 lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
-prefix=ff # tr is original cyclone ; ff is the filtered cyclone
+prefix=tr # tr is original cyclone ; ff is the filtered cyclone
 
-pro=2  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = three level match
+pro=1  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = three level match
 # 5 = two level match ; 6 = combine match file
-filt=1 #filt=1, then use filter track to match
+filt=0 #filt=1, then use filter track to match
 nl1=2
 nl2=1
 nl3=0
@@ -41,8 +41,8 @@ fi
 if [ $pro == 1 ];then
     cd $OUTDIR
     pwd
-    echo "combine ${prefix}_trs_pos${suffix}"
-    for nl in {0..0};do
+    echo "combine ${prefix}_trs_pos"
+    for nl in {0..2};do
         echo 41 > combine.in_${lev[$nl]}
         echo 1 >> combine.in_${lev[$nl]}
         
@@ -65,8 +65,9 @@ if [ $pro == 1 ];then
             fi
         done
         
-        ~/TRACK-1.5.2/utils/bin/combine < combine.in_${lev[$nl]}
-        mv ./combined_tr_trs ./${prefix}_${lev[$nl]}_1980-2020 
+        ~/TRACK-1.5.2/utils/bin/combine < combine.in_${lev[$nl]} > record_combine
+        mv ./combined_tr_trs ./${prefix}_${lev[$nl]}_1980-2020
+        awk 'NR==4 {print FILENAME, $2}' ./${prefix}_${lev[$nl]}_1980-2020 | tee -a ${OUTDIR}number
     done
 fi
 

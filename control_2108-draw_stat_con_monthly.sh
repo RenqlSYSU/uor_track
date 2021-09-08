@@ -18,18 +18,19 @@ else
     suffix=
 fi
 
-#figname=('only_250' '250-500' '250-500-850' \
-#         'only_500' '500-850' '500-250' '500-250-850' \
-#         'only_850' '850-500' '850-500-250')
-figname=('250' '500' '850')
+figname=('only_250' '250-500' '250-500-850' \
+         'only_500' '500-850' '500-250' '500-250-850' \
+         'only_850' '850-500' '850-500-250')
+#figname=('250' '500' '850')
 
 cd ${OUTDIR}
 #cd ${OUTDIR}match${suffix}/
-level=0 # 0=total cyclone level, 1=filt cyclone level 
+level=1 # 0=total cyclone level, 1=filt and match cyclone level ,2=filt cyclone
 path=$(pwd)
 
 np=0
-for filename in ${prefix}_*_1980-2020${suffix};do
+#for filename in ${prefix}_*_1980-2020${suffix};do
+for filename in ${prefix}_*_match;do
 #for filename in ${prefix}_*;do
     echo ${filename}
     file=${path}/statistic/${filename}_stat_

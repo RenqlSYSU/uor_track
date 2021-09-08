@@ -7,9 +7,9 @@ import sys
 matplotlib.use('Agg')
 
 lonl=0  #0  #
-lonr=360#150#
-lats=0  #15 #
-latn=90 #70 #
+lonr=150#360#
+lats=15 #0  #
+latn=70 #90 #
 
 lev=[[0    ,320  ,20  ], # 0Feature Density
      [0    ,3.2  ,0.2 ], # 1Genesis Density
@@ -31,8 +31,8 @@ lev=[[0    ,320  ,20  ], # 0Feature Density
      [-1   ,1    ,1   ], # 17Y-component of Mean Orientation Vector
      [-40  ,40   ,5  ]] # 18Y-component of Mean Velocity
 
-draw=[8,9,6]
-#draw=[1,2,14]
+#draw=[8,9,6]
+draw=[1,2,14]
 #draw=[1,2,14,8,9,6]
 level = int(sys.argv[3])
 if level == 0: # use total level bar 
