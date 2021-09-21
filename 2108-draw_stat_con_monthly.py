@@ -4,6 +4,10 @@ import subprocess
 import matplotlib
 import numpy.ma as ma
 import sys
+import xarray as xr
+import numpy as np
+import gc #garbage collector
+import cartopy.crs as ccrs
 matplotlib.use('Agg')
 
 lonl=0  #0  #
@@ -32,7 +36,8 @@ lev=[[0    ,320  ,20  ], # 0Feature Density
      [-40  ,40   ,5  ]] # 18Y-component of Mean Velocity
 
 #draw=[8,9,6]
-draw=[1,2,14]
+#draw=[1,2,14]
+draw=[14]
 #draw=[1,2,14,8,9,6]
 level = int(sys.argv[3])
 if level == 0: # use total level bar 
@@ -46,17 +51,36 @@ if level == 2: #
     lev[ 2][:]=[0    ,4.8  ,0.3 ]
     lev[14][:]=[0    ,24   ,1.5 ]
 
+filename = sys.argv[1] #'ff_250_500_no'
+files = sys.argv[2] #'/home/users/qd201969/ERA5-1HR-lev/match'+filt+'/statistic/'+filename+'_stat_'
+figname = sys.argv[4]
+dbox = int(sys.argv[5])
+if dbox >= 1 :
+    flats = int(sys.argv[6])
+    flatn = int(sys.argv[7])
+    flonl = int(sys.argv[8])
+    flonr = int(sys.argv[9])
+
+#files='/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat_'
+#files='/home/users/qd201969/ERA5-1HR/stat_clim_'+filt
+titls=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
+lat = ds.latitude
+lon = ds.longitude
+ilon = lon[(lon>=lonl) & (lon<=lonr)]
+ilat = lat[(lat>=lats) & (lat<=latn)]
+da = ds['u'].sel(level=200,expver=5,longitude=ilon,latitude=ilat).load()
+# increased performance by loading data into memory first, e.g., with load()
+var = da.groupby(da.time.dt.month).mean('time')
+print(var)
+del ds, da
+gc.collect()
+
 f0=cf.read("/home/users/qd201969/gtopo30_0.9x1.25.nc")
 phis=f0[2]
 print(repr(phis))
 phis=phis/9.8 # transfer from m2/s2 to m
-
-filename = sys.argv[1] #'ff_250_500_no'
-files = sys.argv[2] #'/home/users/qd201969/ERA5-1HR-lev/match'+filt+'/statistic/'+filename+'_stat_'
-figname = sys.argv[4]
-#files='/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat_'
-#files='/home/users/qd201969/ERA5-1HR/stat_clim_'+filt
-titls=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 f1   = cf.read(files+'1.nc')
 for nv in range(0,len(draw),1):#,len(f),1):
@@ -86,10 +110,18 @@ for nv in range(0,len(draw),1):#,len(f),1):
             cfp.cscale('precip2_17lev')
 
         cfp.con(g,fill=True,lines=False,colorbar=None,title=figname+' '+titls[nm])
-        cfp.levs(manual=[1500,3000])
+        
+        cfp.levs(manual=[1500,3000]) # topography 
         cfp.con(phis,fill=False, lines=True, colors='k',linewidths=2)
-        cfp.levs()
-    
+
+        cfp.levs(manual=[30,35]) # jet stream
+        cfp.con(var[nm,:,:],x=ilon, y=ilat, ptype=1, fill=False,
+                lines=True, colors='blueviolet',linewidths=2)
+       
+        if dbox >= 1 :
+            cfp.plotvars.mymap.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
+                    linewidth=4, color='grey', transform=ccrs.PlateCarree()) # filter box
+
     if lev[draw[nv]][0] < 0 :
         cfp.cscale('BlueDarkRed18')
     else:

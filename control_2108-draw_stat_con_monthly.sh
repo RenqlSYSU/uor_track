@@ -4,7 +4,7 @@ lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
-filt=0 #filt=1, then use filter track to match
+filt=1 #filt=1, then use filter track to match
 
 # filter area
 lats=25
@@ -18,24 +18,25 @@ else
     suffix=
 fi
 
-figname=('only_250' '250-500' '250-500-850' \
-         'only_500' '500-850' '500-250' '500-250-850' \
-         'only_850' '850-500' '850-500-250')
-#figname=('250' '500' '850')
+#figname=('only_250' '250-500' '250-500-850' \
+#         'only_500' '500-850' '500-250' '500-250-850' \
+#         'only_850' '850-500' '850-500-250')
+figname=('250' '500' '850')
 
 cd ${OUTDIR}
 #cd ${OUTDIR}match${suffix}/
-level=1 # 0=total cyclone level, 1=filt and match cyclone level ,2=filt cyclone
+level=2 # 0=total cyclone level, 1=filt and match cyclone level ,2=filt cyclone
 path=$(pwd)
 
 np=0
-#for filename in ${prefix}_*_1980-2020${suffix};do
-for filename in ${prefix}_*_match;do
-#for filename in ${prefix}_*;do
+for filename in ${prefix}_*_1980-2020${suffix};do
+#for filename in ${prefix}_*_match;do
+#for filename in ${prefix}_*;do # mainly used in ${OUTDIR}match${suffix}/
     echo ${filename}
     file=${path}/statistic/${filename}_stat_
     python ~/uor_track/2108-draw_stat_con_monthly.py \
-        ${filename} ${file} ${level} ${figname[$np]}${suffix}
+        ${filename} ${file} ${level} ${figname[$np]}${suffix} \
+        1 ${lats} ${latn} ${lonl} ${lonr}
     np=$((np+1))
 done
 

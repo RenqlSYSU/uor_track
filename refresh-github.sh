@@ -3,6 +3,7 @@
 LID=`date +%y%m%d`
 
 #scp lzhenn@hqlx27.ust.hk:/home/lzhenn/cooperate/script/2107-case-slp-uv-spatial-pillow.py /home/users/qd201969/uor_track/script
+scp /home/users/qd201969/ERA5-1HR-lev/* qd201969@login2.jasmin.ac.uk:/home/users/qd201969/ERA5-1HR-lev
 
 echo "Mission1.1: add project file..."
 cd ~/uor_track
