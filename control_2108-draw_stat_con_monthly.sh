@@ -18,10 +18,10 @@ else
     suffix=
 fi
 
-#figname=('only_250' '250-500' '250-500-850' \
+#figtitle=('only_250' '250-500' '250-500-850' \
 #         'only_500' '500-850' '500-250' '500-250-850' \
 #         'only_850' '850-500' '850-500-250')
-figname=('250' '500' '850')
+figtitle=('250' '500' '850')
 
 cd ${OUTDIR}
 #cd ${OUTDIR}match${suffix}/
@@ -33,12 +33,14 @@ for filename in ${prefix}_*_1980-2020${suffix};do
 #for filename in ${prefix}_*_match;do
 #for filename in ${prefix}_*;do # mainly used in ${OUTDIR}match${suffix}/
     echo ${filename}
-    file=${path}/statistic/${filename}_stat_
-    python ~/uor_track/2108-draw_stat_con_monthly.py \
-        ${filename} ${file} ${level} ${figname[$np]}${suffix} \
-        1 ${lats} ${latn} ${lonl} ${lonr}
-    np=$((np+1))
+    file=${path}/statistic/${filename}_stat
+    cdo -r -copy ${file}_[1-9].nc ${file}_1[0-2].nc ${file}.nc 
+
+    #python ~/uor_track/2108-draw_stat_con_monthly.py \
+    #    ${filename} ${file} ${level} ${figtitle[$np]}${suffix} \
+    #    1 ${lats} ${latn} ${lonl} ${lonr}
+    #np=$((np+1))
 done
 
-mogrify -bordercolor white -trim ./month_*.png
+#mogrify -bordercolor white -trim ./month_*.png
 
