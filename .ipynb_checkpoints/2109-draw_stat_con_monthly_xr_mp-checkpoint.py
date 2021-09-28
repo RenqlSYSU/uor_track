@@ -1,13 +1,17 @@
-import cf
-import cfplot as cfp
-import subprocess
-import matplotlib
-import numpy.ma as ma
 import sys
+import subprocess
 import xarray as xr
 import numpy as np
 import gc #garbage collector
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib import colors
 import cartopy.crs as ccrs
+import cartopy.feature as cfeat
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
+from cartopy.io.shapereader import Reader
+import cmaps
 matplotlib.use('Agg')
 
 lonl=0  #0  #
@@ -80,7 +84,7 @@ ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 
 ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
-da = ds['u'].sel(level=200,expver=1,longitude=ilon,latitude=ilat,method="nearest").load()
+da = ds['u'].sel(level=200,expver=5,longitude=ilon,latitude=ilat,method="nearest").load()
 # increased performance by loading data into memory first, e.g., with load()
 uwnd = da.groupby(da.time.dt.month).mean('time')
 print(uwnd)
@@ -94,6 +98,11 @@ phis = phis/9.8 # transfer from m2/s2 to m
 del ds
 gc.collect()
 
+# constants
+BIGFONT=22
+MIDFONT=18
+SMFONT=14
+
 for nv in range(0,len(draw),1):#,len(f),1):
     var = f[draw_var[draw[nv]]].sel(long=ilon,lat=ilat).load()
     if draw[nv] == 9:
@@ -102,39 +111,28 @@ for nv in range(0,len(draw),1):#,len(f),1):
     if draw[nv] > 2 and draw[nv] != 14:
         tden = f['tden'].sel(long=ilon,lat=ilat).load()
         mask = tden < 1.0
-        var.values=ma.array(var.values,mask=mask)
+        var.values=np.ma.array(var.values,mask=mask)
     
-    cfp.setvars(file='month_'+filename+var.long_name+'.png')
-    cfp.gopen(figsize=[20, 20],rows=4,columns=3,wspace=0.1,hspace=0.015,bottom=0.5)
-    cfp.mapset(lonmin=lonl, lonmax=lonr, latmin=lats, latmax=latn)
-    
-    for nm in range(0,len(titls),1):#,len(f),1):
-        np = nm+1
-        cfp.gpos(np)
-        cfp.levs(min=lev[draw[nv]][0], max=lev[draw[nv]][1], step=lev[draw[nv]][2])
-        if lev[draw[nv]][0] < 0 :
-            cfp.cscale('BlueDarkRed18')
-        else:
-            cfp.cscale('precip2_17lev')
-        cfp.con(var[nm,:,:],x=ilon, y=ilat, ptype=1,fill=True,
-                lines=False,colorbar=None,title=figtitle+' '+titls[nm])
-        cfp.levs(manual=[1500,3000]) # topography 
-        cfp.con(phis,x=ilon, y=ilat, ptype=1,fill=False,
-                lines=True, colors='k',linewidths=2)
-        cfp.levs(manual=[30,32]) # jet stream
-        cfp.con(uwnd[nm,:,:],x=ilon, y=ilat, ptype=1, fill=False,
-                lines=True, colors='blueviolet',linewidths=2)
-        if dbox >= 1 :
-            cfp.plotvars.mymap.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                    linewidth=4, color='grey', transform=ccrs.PlateCarree()) # filter box
+    fig = plt.figure(figsize=(12,9),dpi=100)
+    for nm in range(0,len(titls),1):
+        axe = plt.subplot(4,3,nm+1,projection=cart_proj)    #创建子图
+        
+        coast_shp = Reader(os.getenv('SHP_LIB')+'/china_coast/china_coastline.dbf').geometries()
+        coastline = cfeat.ShapelyFeature(coast_shp, ccrs.PlateCarree(), edgecolor='grey', facecolor='none')
+        axe.add_feature(coastline, linewidth=0.8)
 
-    if lev[draw[nv]][0] < 0 :
-        cfp.cscale('BlueDarkRed18')
-    else:
-        cfp.cscale('precip2_17lev')
-    cfp.levs(min=lev[draw[nv]][0], max=lev[draw[nv]][1], step=lev[draw[nv]][2])
-    cfp.cbar(position=[0.2, 0.48, 0.6, 0.01], title=var.long_name)
-    cfp.gclose()
+        #cont = axe.contourf(to_np(lons), to_np(lats), varnp, 17,
+        #             transform=ccrs.PlateCarree(),cmap=cmaps.precip2_17lev,extend='both')
+        cont = axe.contourf(to_np(lons), to_np(lats), varnp, cnlevels, 
+                     transform=ccrs.PlateCarree(),cmap=cmaps.precip2_17lev,extend='both',norm=norm)
+
+    fig.subplots_adjust(bottom=0.5,wspace=0.1,hspace=0.01)
+    position = fig.add_axes([0.2, 0.45, 0.6, 0.015]) #left, bottom, width, height
+    cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
+    
+    plt.suptitle(figtle,x=0.5,y=0.95,fontsize=MIDFONT)
+    plt.savefig(figdir,bbox_inches='tight',pad_inches=0.0)
+    plt.show()
 
 #subprocess.run('mogrify -bordercolor white -trim ./month_*.png',shell=True) 
 #subprocess.run('mogrify -bordercolor white -trim /home/users/qd201969/ERA5-1HR/month_*.png',shell=True) 

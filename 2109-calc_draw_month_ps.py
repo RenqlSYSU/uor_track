@@ -25,7 +25,7 @@ if nv == 1:
     da.values /= 100.0 # convert Pa to hPa
     lev  =[400,1200,50]
 else:
-    da = ds[var_name[nv]].sel(level=200,expver=5,longitude=ilon,latitude=ilat).load()
+    da = ds[var_name[nv]].sel(level=200,expver=1,longitude=ilon,latitude=ilat).load()
     lev  =[20,52,2]
 # increased performance by loading data into memory first, e.g., with load()
 

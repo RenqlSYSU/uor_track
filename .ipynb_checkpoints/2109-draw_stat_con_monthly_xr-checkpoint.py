@@ -80,7 +80,7 @@ ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 
 ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
-da = ds['u'].sel(level=200,expver=1,longitude=ilon,latitude=ilat,method="nearest").load()
+da = ds['u'].sel(level=200,expver=5,longitude=ilon,latitude=ilat,method="nearest").load()
 # increased performance by loading data into memory first, e.g., with load()
 uwnd = da.groupby(da.time.dt.month).mean('time')
 print(uwnd)
@@ -121,7 +121,7 @@ for nv in range(0,len(draw),1):#,len(f),1):
         cfp.levs(manual=[1500,3000]) # topography 
         cfp.con(phis,x=ilon, y=ilat, ptype=1,fill=False,
                 lines=True, colors='k',linewidths=2)
-        cfp.levs(manual=[30,32]) # jet stream
+        cfp.levs(manual=[30,35]) # jet stream
         cfp.con(uwnd[nm,:,:],x=ilon, y=ilat, ptype=1, fill=False,
                 lines=True, colors='blueviolet',linewidths=2)
         if dbox >= 1 :

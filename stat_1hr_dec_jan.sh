@@ -28,7 +28,7 @@ for nm in $(seq 1 1 ${#nday[*]});do #{1..${nm}};do
     sed -i "34s/.*/${fras}/" indat/STATS.latlng_1hr.in
     sed -i "35s/.*/${frae}/" indat/STATS.latlng_1hr.in
 
-    bin/track.linux < indat/STATS.latlng_1hr.in > ${output}record
-    mv outdat/stat_trs_scl.linux_1.nc ${output}${nmonth[$((nm-1))]}.nc
+    bin/track.linux < indat/STATS.latlng_1hr.in > ${output}_record
+    mv outdat/stat_trs_scl.linux_1.nc ${output}_${nmonth[$((nm-1))]}.nc
 done
 

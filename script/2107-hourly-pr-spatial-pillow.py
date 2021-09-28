@@ -1,3 +1,10 @@
+'''
+input start time and case name
+draw one plot and then make animation
+use ls filename to do cycle
+
+20210925
+'''
 import xarray as xr
 import numpy as np
 import subprocess

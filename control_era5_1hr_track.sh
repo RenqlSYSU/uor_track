@@ -7,20 +7,20 @@
 
 lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
-prefix=tr # tr is original cyclone ; ff is the filtered cyclone
+prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
-pro=1  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = trs filt ; 4 = three level match
+pro=2  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt ; 4 = three level match
 # 5 = two level match ; 6 = combine match file
-filt=0 #filt=1, then use filter track to match
+filt=1 #filt=1, then use filter track to match
 nl1=2
 nl2=1
 nl3=0
 
 # filter area
-lats=25
-latn=45
-lonl=60
-lonr=80
+lats=30 #25
+latn=45 #45
+lonl=59 #60
+lonr=60 #80
 option=2 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
 if [ $filt == 1 ]; then 
     suffix=_${option}_${lats}${latn}-${lonl}${lonr}
@@ -74,23 +74,31 @@ fi
 if [ $pro == 2 ];then
     echo "=========== statistics ================"
     cd ${OUTDIR} #match${suffix}
+    path=$(pwd)
     if [ ! -d statistic ];then
         mkdir statistic
     fi
 
-    #for file in ${prefix}_*_1980-2020${suffix} ; do
-    for file in ${prefix}_*_match ; do
-    #for nl in {0..1};do
-        #file=${prefix}_${lev[$nl]}_1980-2020
+    np=0
+    level=1 # 2=total cyclone level,1=middle range filt cyclone, 0=small range filt and match cyclone level
+    for file in ${prefix}_*_1980-2020${suffix} ; do
+    #for file in ${prefix}_*_match ; do
         filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/${file}"
-        output=${OUTDIR}statistic/${file}_stat_
-        
+        output=${OUTDIR}statistic/${file}_stat
         #filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/match${suffix}\/${file}"
-        #output=${OUTDIR}match${suffix}/statistic/${file}_stat_
+        #output=${OUTDIR}match${suffix}/statistic/${file}_stat
         
         echo $file
         season=0 # 0 = monthly; 1 = seasonal
         sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
+        cdo -r -copy ${output}_[1-9].nc ${output}_1[0-2].nc ${output}.nc 
+        rm ${output}_[1-9].nc 
+        rm ${output}_1[0-2].nc
+        
+        python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
+            ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
+            1 ${lats} ${latn} ${lonl} ${lonr}
+        np=$((np+1))
     done
 fi
 
@@ -102,10 +110,14 @@ if [ $pro == 3 ];then
         file=${prefix}_${lev[$nl]}_1980-2020
         echo "lev: ${lev[$nl]}"
 
-        utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
-        mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
-#        utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
+        #utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
+        #mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
+        #awk 'NR==4 {print FILENAME, $2}' ${OUTDIR}${file}${suffix} | tee -a ${OUTDIR}number
+        
+        #utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
     done
+    cd ~/uor_track/fig/
+    python ~/uor_track/2107-draw_panel_traj.py $option ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 4 ];then

@@ -9,16 +9,23 @@ from matplotlib import colors
 import cartopy.crs as ccrs
 import cartopy.feature as cfeat
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
-from cartopy.io.shapereader import Reader
 import cmaps
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 lonl=0  #0  #
 lonr=150#360#
 lats=15 #0  #
 latn=70 #90 #
+lat_sp = 20
+lon_sp = 30
+nrow = 4
+ncol = 3
+bmlo = 0.4
+BIGFONT=22
+MIDFONT=14
+SMFONT=10
 
+# level == 0 #small range
 lev=[[0    ,320  ,20  ], # 0Feature Density
      [0    ,3.2  ,0.2 ], # 1Genesis Density
      [0    ,3.2  ,0.2 ], # 2Lysis Density
@@ -43,18 +50,18 @@ draw_var = ["fden","gden","lden","marea","mgdr","",
             "mlif","msp" ,"mstr","mten" ,""    ,"",
             ""    ,""    ,"tden",""    ] # 7 variables
 #draw=[8,9,6]
-#draw=[1,2,14]
-draw=[14]
+draw=[1,2,14]
+#draw=[14]
 #draw=[1,2,14,8,9,6]
 
-if int(sys.argv[1]) == 0:
+if sys.argv[1] == "0" :
     filename = 'ff_250_1980-2020_2_2545-6080'
     files = '/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat.nc'
     level = 2
-    figtitle = '250'
+    figtitle = '250_2_2545-6080'
     dbox = 0 
 else:
-    filename = sys.argv[1] #'ff_250_500_no'
+    filename = sys.argv[1]  #'ff_250_500_no'
     files = sys.argv[2] #'/home/users/qd201969/ERA5-1HR-lev/match'+filt+'/statistic/'+filename+'_stat_'
     level = int(sys.argv[3])
     figtitle = sys.argv[4]
@@ -66,15 +73,15 @@ if dbox >= 1 :
     flonl = int(sys.argv[8])
     flonr = int(sys.argv[9])
 
-if level == 0: # use total level bar 
+if level == 1: #middle range 
+    lev[ 1][:]=[0    ,4.8  ,0.3 ]
+    lev[ 2][:]=[0    ,4.8  ,0.3 ]
+    lev[14][:]=[0    ,24   ,1.5 ]
+if level == 2: # large range,use total level bar 
     lev[ 0][:]=[0    ,1600 ,100 ]
     lev[ 1][:]=[0    ,8    ,0.5 ]
     lev[ 2][:]=[0    ,8    ,0.5 ]
     lev[14][:]=[0    ,48   ,3   ]
-if level == 2: # 
-    lev[ 1][:]=[0    ,4.8  ,0.3 ]
-    lev[ 2][:]=[0    ,4.8  ,0.3 ]
-    lev[14][:]=[0    ,24   ,1.5 ]
 titls=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 f = xr.open_dataset(files)
@@ -84,27 +91,22 @@ ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 
 ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
-da = ds['u'].sel(level=200,expver=5,longitude=ilon,latitude=ilat,method="nearest").load()
+da = ds['u'].sel(level=200,expver=1,longitude=ilon,latitude=ilat,method="nearest").load()
 # increased performance by loading data into memory first, e.g., with load()
 uwnd = da.groupby(da.time.dt.month).mean('time')
-print(uwnd)
 del ds, da
 gc.collect()
 
 ds = xr.open_dataset("/home/users/qd201969/gtopo30_0.9x1.25.nc")
 phis = ds['PHIS'].sel(lon=ilon,lat=ilat,method="nearest").load()
-print(repr(phis))
 phis = phis/9.8 # transfer from m2/s2 to m
 del ds
 gc.collect()
 
-# constants
-BIGFONT=22
-MIDFONT=18
-SMFONT=14
-
+figdir = "/home/users/qd201969/uor_track/fig/month_"+filename
 for nv in range(0,len(draw),1):#,len(f),1):
     var = f[draw_var[draw[nv]]].sel(long=ilon,lat=ilat).load()
+    print(var)
     if draw[nv] == 9:
         var=var*24
     
@@ -113,49 +115,53 @@ for nv in range(0,len(draw),1):#,len(f),1):
         mask = tden < 1.0
         var.values=np.ma.array(var.values,mask=mask)
     
-    fig = plt.figure(figsize=(12,9),dpi=100)
-    cfp.setvars(file='month_'+filename+var.long_name+'.png')
-    cfp.gopen(figsize=[20, 20],rows=4,columns=3,wspace=0.1,hspace=0.015,bottom=0.5)
-    cfp.mapset(lonmin=lonl, lonmax=lonr, latmin=lats, latmax=latn)
-    
-    for nm in range(0,len(titls),1):#,len(f),1):
-        axe = plt.subplot(4,3,nm+1,projection=cart_proj)    #创建子图
-        
-        coast_shp = Reader(os.getenv('SHP_LIB')+'/china_coast/china_coastline.dbf').geometries()
-        coastline = cfeat.ShapelyFeature(coast_shp, ccrs.PlateCarree(), edgecolor='grey', facecolor='none')
-        axe.add_feature(coastline, linewidth=0.8)
-
-        #cont = axe.contourf(to_np(lons), to_np(lats), varnp, 17,
-        #             transform=ccrs.PlateCarree(),cmap=cmaps.precip2_17lev,extend='both')
-        cont = axe.contourf(to_np(lons), to_np(lats), varnp, cnlevels, 
-                     transform=ccrs.PlateCarree(),cmap=cmaps.precip2_17lev,extend='both',norm=norm)
-    
-        cfp.gpos(np)
-        cfp.levs(min=lev[draw[nv]][0], max=lev[draw[nv]][1], step=lev[draw[nv]][2])
-        if lev[draw[nv]][0] < 0 :
-            cfp.cscale('BlueDarkRed18')
-        else:
-            cfp.cscale('precip2_17lev')
-        cfp.con(var[nm,:,:],x=ilon, y=ilat, ptype=1,fill=True,
-                lines=False,colorbar=None,title=figtitle+' '+titls[nm])
-        cfp.levs(manual=[1500,3000]) # topography 
-        cfp.con(phis,x=ilon, y=ilat, ptype=1,fill=False,
-                lines=True, colors='k',linewidths=2)
-        cfp.levs(manual=[30,35]) # jet stream
-        cfp.con(uwnd[nm,:,:],x=ilon, y=ilat, ptype=1, fill=False,
-                lines=True, colors='blueviolet',linewidths=2)
-        if dbox >= 1 :
-            cfp.plotvars.mymap.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                    linewidth=4, color='grey', transform=ccrs.PlateCarree()) # filter box
-
+    cnlevels = np.arange(lev[draw[nv]][0], lev[draw[nv]][1]+lev[draw[nv]][2], lev[draw[nv]][2])
     if lev[draw[nv]][0] < 0 :
-        cfp.cscale('BlueDarkRed18')
+        fcolors = cmaps.BlueDarkRed18
     else:
-        cfp.cscale('precip2_17lev')
-    cfp.levs(min=lev[draw[nv]][0], max=lev[draw[nv]][1], step=lev[draw[nv]][2])
-    cfp.cbar(position=[0.2, 0.48, 0.6, 0.01], title=var.long_name)
-    cfp.gclose()
+        fcolors = cmaps.precip2_17lev
+    norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
+    
+    fig = plt.figure(figsize=(12,12),dpi=300)
+    ax = fig.subplots(nrow, ncol, subplot_kw=dict(projection=ccrs.PlateCarree())) #sharex=True, sharey=True
+    nm = -1
+    #for nm in range(0,len(titls),1):
+    for nr in range(0,nrow,1):
+        for nc in range(0,ncol,1):
+            nm = nm+1 
+            axe = ax[nr][nc]
+            #axe = plt.subplot(4,3,nm+1,projection=ccrs.PlateCarree())    #创建子图
+            #axe.add_feature(cfeat.COASTLINE.with_scale('110m'),edgecolor='black', linewidth=0.8, zorder=1) 
+            axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=1)
+            axe.set_title(figtitle+" "+titls[nm],fontsize=SMFONT)
 
-#subprocess.run('mogrify -bordercolor white -trim ./month_*.png',shell=True) 
-#subprocess.run('mogrify -bordercolor white -trim /home/users/qd201969/ERA5-1HR/month_*.png',shell=True) 
+            cont = axe.contourf(ilon, ilat, var[nm,:,:], cnlevels, 
+                         transform=ccrs.PlateCarree(),cmap=fcolors,extend='both',norm=norm)
+            topo = axe.contour(ilon, ilat, phis, [1500,3000], 
+                         transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
+            if dbox >= 1 :
+                axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
+                         linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
+            jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,32], 
+                         transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=2.5)
+            if nc == 0:
+                axe.set_yticks(np.arange(lats,latn,lat_sp), crs=ccrs.PlateCarree())
+                axe.yaxis.set_major_formatter(LatitudeFormatter(degree_symbol=''))
+            if nr == (nrow-1):
+                axe.set_xticks(np.arange(lonl,lonr,lon_sp), crs=ccrs.PlateCarree())
+                axe.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
+
+    #fig.subplots_adjust(left=0.2,bottom=bmlo) # wspace control horizontal space
+    position = fig.add_axes([0.2, bmlo+0.005, 0.7, 0.01]) #left, bottom, width, height
+    cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
+    
+    plt.figtext(0.02,bmlo-0.005, var.long_name,fontsize=MIDFONT,
+            horizontalalignment='left',verticalalignment='bottom')
+    #axe.text(0.5,1.2, filename+' '+var.long_name,fontsize=MIDFONT,
+    #        horizontalalignment='center',verticalalignment='bottom',transform=ax[0][1].transAxes)
+    #plt.suptitle(filename+' '+var.long_name,x=0.5,y=0.9,fontsize=MIDFONT/2)
+    plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
+    plt.savefig(figdir+var.long_name.replace(" ","")+".png", bbox_inches='tight',pad_inches=0.01)
+
+#subprocess.run('mogrify -bordercolor white -trim '+figdir+'*.png',shell=True) 
 
