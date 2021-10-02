@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+'''
+read total cyclone number in ff_250_1980-2020_2_3045-5960
+then use box to filter different behaviors cyclones
+plot the filter box in the trajectory figure
+
+20210928
+'''
+
+import sys, os, subprocess, linecache
+
+#def intersection_point(line1, line2):
+#    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+#    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
+#
+#    def det(a, b):
+#        return a[0] * b[1] - a[1] * b[0]
+#
+#    div = det(xdiff, ydiff)
+#    if div == 0:
+#        raise Exception('lines do not intersect')
+#
+#    d = (det(*line1), det(*line2))
+#    x = det(d, xdiff) / div
+#    y = det(d, ydiff) / div
+#    return x, y
+
+def intersection_point(line1, x):
+    xdiff = line1[0][0] - line1[1][0]
+    ydiff = line1[0][1] - line1[1][1]
+    slope = ydiff / xdiff
+    intercept = line1[0][1] - slope*line1[0][0]
+    y = slope*x + intercept
+    return y
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+        raise Exception('lines do not intersect')
+
+    d = (det(*line1), det(*line2))
+    x = det(d, xdiff) / div
+    y = det(d, ydiff) / div
+    return x, y
+
+if sys.argv[1] == "-1" :
+    option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+    flats = 30 #int(sys.argv[2])
+    flatn = 45 #int(sys.argv[3])
+    flonl = 60 #int(sys.argv[4])
+    flonr = 60 #int(sys.argv[5])
+    filname = "/home/users/qd201969/ERA5-1HR-lev/ff_250_1980-2020"
+else:
+    option= int(sys.argv[1]) 
+    flats = int(sys.argv[2])
+    flatn = int(sys.argv[3])
+    flonl = int(sys.argv[4])
+    flonr = int(sys.argv[5])
+    filname = int(sys.argv[6])
+suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+
+#===============================================
+# read ff_trs_pos file and write output file
+#===================================================
+ff = open(filname,"r") 
+outfile = open(filname+"_"+suffix,"w")
+line1 = outfile.write(ff.readline())
+line2 = outfile.write(ff.readline())
+line3 = outfile.write(ff.readline())
+line4 = outfile.write(ff.readline())
+outfile.write(line1)
+outfile.write(line2)
+outfile.write(line3)
+outfile.write(line4)
+
+tid=[]
+line = ff.readline()
+while line:
+    term = line.strip().split(" ")
+    if term[0] == "TRACK_ID":
+        lineid = line
+        linenum = ff.readline()
+        term1 =linenum.strip().split(" ")
+        num = int(term1[-1])
+        
+        data=[]
+        for nl in range(0,num,1):
+            data.append(ff.readline().strip().split(" "))
+
+        data = list(map(float, data))
+        for nl in range(0,num-1,1):
+            if data[nl][1] <= flonl and data[nl+1][1] >= flonl :
+                point = intersection_point(data[nl][1:3], data[nl+1][1:3], flonl)
+                if point[1] <= flatn and point[1] >= flats :
+                    tid.append(term[-1])
+                    outfile.write(lineid)
+                    outfile.write(linenum)
+                    outfile.write(str(data).strip('[').strip(']').replace('], [','\n').replace(',',''))
+                    break 
+
+    line = ff.readline()
+
+ff.close()
+outfile.seek(0,0) # Go back to the beginning of the file
+outfile.write(line1)
+outfile.write(line2)
+outfile.write(line3)
+outfile.write("TRACK_NUM %9d ADD_FLD    0   0 &" %len(tid))
+print("cyclone number %d" %len(tid))
+outfile.close()
+

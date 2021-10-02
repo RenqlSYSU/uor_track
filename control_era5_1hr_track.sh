@@ -5,7 +5,7 @@
 #SBATCH --job-name=ew
 #SBATCH --time=10-00:00:00
 
-lev=(850 500 250)
+lev=(250 500 850)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
@@ -90,10 +90,10 @@ if [ $pro == 2 ];then
         
         echo $file
         season=0 # 0 = monthly; 1 = seasonal
-        sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
-        cdo -r -copy ${output}_[1-9].nc ${output}_1[0-2].nc ${output}.nc 
-        rm ${output}_[1-9].nc 
-        rm ${output}_1[0-2].nc
+        #sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
+        #cdo -r -copy ${output}_[1-9].nc ${output}_1[0-2].nc ${output}.nc 
+        #rm ${output}_[1-9].nc 
+        #rm ${output}_1[0-2].nc
         
         python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
             ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
