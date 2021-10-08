@@ -95,7 +95,6 @@ da = ds['u'].sel(level=200,expver=1,longitude=ilon,latitude=ilat,method="nearest
 # increased performance by loading data into memory first, e.g., with load()
 uwnd = da.groupby(da.time.dt.month).mean('time')
 del ds, da
-gc.collect()
 
 ds = xr.open_dataset("/home/users/qd201969/gtopo30_0.9x1.25.nc")
 phis = ds['PHIS'].sel(lon=ilon,lat=ilat,method="nearest").load()

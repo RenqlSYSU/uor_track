@@ -13,11 +13,11 @@ import numpy as np
 import sys, os, subprocess, linecache
 import cartopy.crs as ccrs
 
-if sys.argv[1] == "-1" :
+if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
     flats = 30 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
-    flonl = 59 #int(sys.argv[4])
+    flonl = 60 #int(sys.argv[4])
     flonr = 60 #int(sys.argv[5])
     prefix = "ff"
 else:
@@ -29,19 +29,20 @@ else:
     prefix = int(sys.argv[6])
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 
-behv = ["all"  ,"ntn"  ,"stn"  ,"pas"  ,"lys"  ,"dif"]
-lats = [flats  ,flatn  ,flats-1,flats  ,flats  ]
-latn = [flatn  ,flatn+1,flats  ,flatn  ,flatn  ]
-lonl = [flonl  ,flonl  ,flonl  ,90     ,flonr  ]
-lonr = [flonr  ,105    ,105    ,105    ,90     ]
+flonr2 = 90
+behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
+lats = [flats ,flatn ,flats ,flats ,flats ]
+latn = [flatn ,flatn ,flats ,flatn ,flatn ]
+lonl = [flonl ,flonl ,flonl ,flonr2,flonr ]
+lonr = [flonr ,flonr2,flonr2,flonr2,flonr2]
 opti = [option ,2      ,2      ,2      ,1      ]
 lev = [850,500,250]
 var  = np.empty( [len(lev),len(behv)],dtype=int )  
 perc = np.empty( [len(lev),len(behv)],dtype=float )  
 
 path = '/home/users/qd201969/ERA5-1HR-lev/'
-drawbox = 0
-calcbehv = 1
+drawbox = 1
+calcbehv = 0
 
 os.chdir("/home/users/qd201969/TRACK-1.5.2")
 #===============================================
@@ -116,42 +117,53 @@ if calcbehv == 1:
 # draw figure 
 #===================================================
 if drawbox == 1:
-    #os.chdir("/home/users/qd201969/uor_track/fig")
+    os.chdir("/home/users/qd201969/uor_track/fig")
     f0=cf.read("/home/users/qd201969/gtopo30_0.9x1.25.nc")
     phis=f0[2]
     print(repr(phis))
     phis=phis/9.8 # transfer from m2/s2 to m
-
-    cfp.setvars(file=prefix+"_"+suffix+".png")
-    cfp.gopen(rows=3, columns=1 ,hspace=0.25)#,bottom=0.2
-    cfp.mapset(lonmin=0, lonmax=150, latmin=10, latmax=70)
-    for nl in range(0,3,1):#,len(f),1):
-        np=nl+1
-        filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
-        if not os.path.isfile(filname+'.nc') :
-            ret=subprocess.Popen("utils/bin/tr2nc "+filname+" s utils/TR2NC/tr2nc.meta",shell=True)
-            ret.wait()
+    
+    for nr in range(0,len(lats)-1,1):
+        if nr == 0:
+            suffix2 = ""
+        else:
+            suffix2 = "_"+str(opti[nr])+"_"+str(lats[nr])+str(latn[nr])+"-"+str(lonl[nr])+str(lonr[nr])
         
-        f=cf.read(filname+'.nc')
-        print(f)
-        g = f[2]
-        g = g*1e5
-        print(g)
+        cfp.setvars(file="traj-"+prefix+"_"+suffix+suffix2+".png")
+        cfp.gopen(rows=3, columns=1 ,hspace=0.25)#,bottom=0.2
+        cfp.mapset(lonmin=0, lonmax=150, latmin=10, latmax=70)
+        for nl in range(0,3,1):#,len(f),1):
+            np=nl+1
+            
+            cfp.gpos(np)
+            cfp.levs(manual=[1500,3000,4500])
+            cfp.con(phis,fill=False, lines=True, colors='k',linewidths=2,\
+                    title=prefix+' '+suffix+" "+str(lev[nl])+" "+behv[nr])
+            cfp.levs()
+            
+            for nrr in range(0,len(lats),1):
+                cfp.plotvars.mymap.plot([lonl[nrr],lonl[nrr],lonr[nrr],lonr[nrr],lonl[nrr]],[latn[nrr],lats[nrr],lats[nrr],latn[nrr],latn[nrr]], 
+                        linewidth=4, color='k', transform=ccrs.PlateCarree()) # filter box
 
-        cfp.gpos(np)
-        cfp.levs(manual=[1500,3000,4500])
-        cfp.con(phis,fill=False, lines=True, colors='k',linewidths=2)
-        cfp.levs()
+            if behv[nr] == "PAS" and lev[nl] == 850:
+                continue
+            
+            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix+suffix2
+            if not os.path.isfile(filname+'.nc') :
+                ret=subprocess.Popen("/home/users/qd201969/TRACK-1.5.2/utils/bin/tr2nc \
+                        "+filname+" s /home/users/qd201969/TRACK-1.5.2/utils/TR2NC/tr2nc.meta",shell=True)
+                ret.wait()
+            f=cf.read(filname+'.nc')
+            print(f)
+            g = f[2]
+            g = g*1e5
+            print(g)
 
-        cfp.cscale('precip2_17lev')
-        cfp.levs(min=0.0, max=8.0, step=0.5)
-        cfp.traj(g, zorder=0, legend_lines=True, colorbar=False, linewidth=1.5, title=prefix+' '+suffix+" "+str(lev[nl]))
-        
-        for nr in range(0,len(lats),1):
-            cfp.plotvars.mymap.plot([lonl[nr],lonl[nr],lonr[nr],lonr[nr],lonl[nr]],[latn[nr],lats[nr],lats[nr],latn[nr],latn[nr]], 
-                    linewidth=4, color='k', transform=ccrs.PlateCarree()) # filter box
-        
-    cfp.cbar(position=[0.75, 0.2, 0.01, 0.6], title='Relative Vorticity (Hz)*1e5',orientation='vertical')
-    cfp.gclose()
-    subprocess.run('mogrify -bordercolor white -trim ./'+prefix+"_"+suffix+".png",shell=True) 
+            cfp.cscale('precip2_17lev')
+            cfp.levs(min=0.0, max=8.0, step=0.5)
+            cfp.traj(g, zorder=0, legend_lines=True, colorbar=False, linewidth=1.5)
+            
+        cfp.cbar(position=[0.75, 0.2, 0.01, 0.6], title='Relative Vorticity (Hz)*1e5',orientation='vertical')
+        cfp.gclose()
+    subprocess.run("mogrify -bordercolor white -trim ./traj-"+prefix+"_"+suffix+"*.png",shell=True) 
 

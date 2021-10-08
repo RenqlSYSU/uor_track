@@ -70,7 +70,7 @@ lat = ds.latitude
 lon = ds.longitude
 ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
-da = ds['u'].sel(level=200,expver=5,longitude=ilon,latitude=ilat).load()
+da = ds['u'].sel(level=200,expver=1,longitude=ilon,latitude=ilat).load()
 # increased performance by loading data into memory first, e.g., with load()
 var = da.groupby(da.time.dt.month).mean('time')
 print(var)

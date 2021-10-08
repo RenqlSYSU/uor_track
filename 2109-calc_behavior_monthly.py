@@ -189,3 +189,4 @@ print("")
 print("lev "+str(behv).strip('[').strip(']').replace(',','').replace('\'',''))
 for nl in range(0,len(lev),1):
     print(str(lev[nl])+" "+str(perc[0,nl,:]).strip('[').strip(']'))
+
