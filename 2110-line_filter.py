@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 '''
 read total cyclone number in ff_250_1980-2020_2_3045-5960
-then use box to filter different behaviors cyclones
-plot the filter box in the trajectory figure
+then use line to filter different behaviors cyclones
 
 20210928
 '''
@@ -47,11 +46,11 @@ def intersection_point_fixx(line1, x):
 #if sys.argv[1] == "-1" :
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 30 #int(sys.argv[2])
-    flatn = 45 #int(sys.argv[3])
+    flats = 0 #int(sys.argv[2])
+    flatn = 90 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
     flonr = 60 #int(sys.argv[5])
-    time = 48 # threshold, hour
+    time = 24 # threshold, hour
     filname = "/home/users/qd201969/ERA5-1HR-lev/ff_850_1980-2020"
 else:
     filname = sys.argv[1]

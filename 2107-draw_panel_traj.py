@@ -92,5 +92,5 @@ for nl in range(0,3,1):#,len(f),1):
     
 cfp.cbar(position=[0.9, 0.2, 0.01, 0.6], title='Relative Vorticity (Hz)*1e5',orientation='vertical')
 cfp.gclose()
-subprocess.run('mogrify -bordercolor white -trim /home/users/qd201969/uor_track/'+prefix[nc]+"_"+suffix+".png",shell=True) 
+subprocess.run('mogrify -bordercolor white -trim ./'+prefix[nc]+"_"+suffix+".png",shell=True) 
 

@@ -3,10 +3,10 @@ import cdsapi
 c = cdsapi.Client()
 
 c.retrieve(
-    'reanalysis-era5-single-levels-monthly-means',
+    'reanalysis-era5-single-levels-daily-means',
     {
         'format': 'netcdf',
-        'product_type': 'monthly_averaged_reanalysis',
+        'product_type': 'daily_averaged_reanalysis',
         'variable': 'surface_pressure',
         'year': [
             '1979', '1980', '1981',

@@ -17,11 +17,12 @@ import cartopy.crs as ccrs
 
 def calc_month( frae, month, nday, filname):
     var  = np.empty( [len(month)], dtype=int ) # 4 or 12 
+    datafile = "/home/users/qd201969/uor_track/fig/match_ens1_yes.dat"
     for nm in range(0,len(month),1):
         fras = frae+1
         frae = fras+24*nday[nm]-1
         print("month=%s, frame_s=%d, frame_e=%d" %(month[nm],fras,frae))
-        rf = open("/home/users/qd201969/TRACK-1.5.2/region.dat","w")
+        rf = open("/home/users/qd201969/uor_track/fig/region.dat","w")
         rf.write("0 360\n-90 90\n"+str(fras)+" "+str(frae))
         rf.close()
 
@@ -29,7 +30,7 @@ def calc_month( frae, month, nday, filname):
                 filname+" "+filname+" 0 100 10 1 0 0 0 0 s 0 1 > rec",shell=True)
         ret.wait()
 
-        a=linecache.getline("/home/users/qd201969/TRACK-1.5.2/match_ens1_yes.dat", 4).strip().split(" ",1)
+        a=linecache.getline(datafile, 4).strip().split(" ",1)
         term = a[1].strip().split(" ",1)
         var[nm] = int(term[0])
         linecache.clearcache()
@@ -113,11 +114,11 @@ def draw_month_traj(frae, month, nday, filname, behv):
 
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 30 #int(sys.argv[2])
+    flats = 25 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
     flonr = 60 #int(sys.argv[5])
-    time = 48 # threshold, hour
+    time = 24 # threshold, hour
     prefix = "ff"
     season = 0 # 0 monthly, 1 seasonal
 else:
@@ -179,8 +180,8 @@ if calcbehv == 1:
         term = a[1].strip().split(" ",1)
         var[0,nl,0] = int(term[0])
         linecache.clearcache()
-        #var[1:len(month),nl,0] = calc_month( frae, month[1:len(month)], nday[1:len(month)], filname)
-        var[1:len(month),nl,0] = draw_month_traj( frae, month[1:len(month)], nday[1:len(month)], filname, behv[0])
+        var[1:len(month),nl,0] = calc_month( frae, month[1:len(month)], nday[1:len(month)], filname)
+        #var[1:len(month),nl,0] = draw_month_traj( frae, month[1:len(month)], nday[1:len(month)], filname, behv[0])
 
         for nr in range(1,len(lats)-1,1):
             suffix2 = str(opti[nr])+"_"+str(lats[nr])+str(latn[nr])+"-"+str(lonl[nr])+str(lonr[nr])
@@ -200,8 +201,8 @@ if calcbehv == 1:
             term = a[1].strip().split(" ",1)
             var[0,nl,nr] = int(term[0])
             linecache.clearcache()
-            #var[1:len(month),nl,nr] = calc_month( frae, month[1:len(month)], nday[1:len(month)], filname+"_"+suffix2)
-            var[1:len(month),nl,nr] = draw_month_traj( frae, month[1:len(month)], nday[1:len(month)], filname+"_"+suffix2, behv[nr])
+            var[1:len(month),nl,nr] = calc_month( frae, month[1:len(month)], nday[1:len(month)], filname+"_"+suffix2)
+            #var[1:len(month),nl,nr] = draw_month_traj( frae, month[1:len(month)], nday[1:len(month)], filname+"_"+suffix2, behv[nr])
 
     var[:,:,-1] = var[:,:,0]-np.sum(var[:,:,1:4],axis=2)
 

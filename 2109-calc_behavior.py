@@ -15,8 +15,8 @@ import cartopy.crs as ccrs
 
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 30 #int(sys.argv[2])
-    flatn = 45 #int(sys.argv[3])
+    flats = 0 #int(sys.argv[2])
+    flatn = 90 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
     flonr = 60 #int(sys.argv[5])
     prefix = "ff"

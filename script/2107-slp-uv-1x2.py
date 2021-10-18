@@ -29,14 +29,10 @@ MIDFONT=18
 SMFONT=14
 
 # define date of start time and forcast time
-stime  = ['2021','06','26'] # year, month, date, hour
-ftime  =[['2021','06','27','16'],
-         ['2021','09','16','03'],
-         ['2021','09','16','06'],
+stime  = ['2021','10','07'] # year, month, date, hour
+ftime  =[['2021','10','07','16'],
          ['2021','09','16','09']]
-ftime0 =[['2021','06','28','16'], # use to calc accumulated pr,smaller than ftime
-         ['2021','09','16','00'],
-         ['2021','09','16','03'],
+ftime0 =[['2021','10','08','16'], 
          ['2021','09','16','06']]
 
 #varname = ['slp','U10','V10']

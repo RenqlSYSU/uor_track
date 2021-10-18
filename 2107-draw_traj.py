@@ -1,25 +1,25 @@
+#!/usr/bin/env python
 import cf
 import cfplot as cfp
 import numpy as np
 import sys
 import subprocess
 import matplotlib
-matplotlib.use('Agg')
 
 f0=cf.read("/home/users/qd201969/gtopo30_0.9x1.25.nc")
 phis=f0[2]
 print(repr(phis))
 phis=phis/9.8 # transfer from m2/s2 to m
 
-path = '/home/users/qd201969/TRACK_result/'
+path = '/home/users/qd201969/ERA5-1HR-lev/'
 #filename = ['ff_trs_pos','tr_trs_pos']
-lev = ['850','500','300']
-nl1 = 1
-nl2 = 0
-filename = ['match_'+lev[nl1]+'_no','match_'+lev[nl1]+'_yes' \
-           ,'match_'+lev[nl2]+'_no','match_'+lev[nl2]+'_yes']
+lev = ['850','500','250']
+nl1 = 2
+nl2 = 1
+filename = [lev[nl1]+'_'+lev[nl2]+'_no',lev[nl1]+'_'+lev[nl2]+'_yes' \
+           ,lev[nl2]+'_'+lev[nl1]+'_no',lev[nl2]+'_'+lev[nl1]+'_yes']
 #case='match'+lev[nl1]+'_'+lev[nl2]
-case='filt_match'+lev[nl1]+'_'+lev[nl2]
+case='pas_match'+lev[nl1]+'_'+lev[nl2]
 filt = False #True #
 
 #f=cf.read('/home/users/qd201969/TRACK_result/ERA5_VOR850_6hr_2000_DET_T42/ff_trs_pos.nc')
@@ -84,9 +84,9 @@ for nc in range(0,len(filename),1):#,len(f),1):
     cfp.levs(min=0.0, max=8.0, step=0.5)
     #cfp.traj(g, linewidth=2, legend_lines=False, markeredgecolor='none', markeredgewidth=0.0, markevery=1, legend=True, markersize=2)
     #cfp.traj(g)
-    cfp.traj(g, zorder=0, legend_lines=True,  linewidth=2, title=case+' '+filename[nc],colorbar_title=' Relative Vorticity (Hz) * 1e5')
+    cfp.traj(g, zorder=0, legend_lines=True,  linewidth=2, title=filename[nc],colorbar_title=' Relative Vorticity (Hz) * 1e5')
     
     cfp.gclose()
 
-subprocess.run('mogrify -bordercolor white -trim /home/users/qd201969/ERA5-1HR/'+case+'*.png',shell=True) 
+subprocess.run('mogrify -bordercolor white -trim ./'+case+'*.png',shell=True) 
 

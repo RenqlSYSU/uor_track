@@ -34,11 +34,21 @@ BIGFONT=22
 MIDFONT=14
 SMFONT=10
 
-filename = 'ff_250_1980-2020_2_2545-6080'
-files = '/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat.nc'
-figtitle = '250_2_2545-6080'
-
 titls=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+varname = ['z']
+drawvar = ['z']
+unit    = ['m']
+vcref =[10,20,30] # different levels 
+cnlvl =[[1300 ,20 ],
+        [5050 ,60 ],
+        [9300 ,100]]
+q_mis=15
+dbox = 1
+flats = 30 #int(sys.argv[2])
+flatn = 45 #int(sys.argv[3])
+flonl = 60 #int(sys.argv[4])
+flonr = 90 #int(sys.argv[5])
+figdir = "/home/users/qd201969/uor_track/fig/"
 
 f = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_z_1979-2020.nc')
 lat = f.latitude
@@ -53,6 +63,8 @@ phis = phis/9.8 # transfer from m2/s2 to m
 for nl in range(0,len(lev),1):
     da = f['z'].sel(level=lev[nl],longitude=ilon,latitude=ilat,method="nearest").load()
     var = da.groupby(da.time.dt.month).mean('time')
+    var.data = var.data/9.8
+    print(var)
 
     ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
     da = ds['u'].sel(level=lev[nl],longitude=ilon,latitude=ilat,method="nearest").load()
@@ -64,11 +76,18 @@ for nl in range(0,len(lev),1):
     del ds, da
     gc.collect()
 
-    if cnlev[nl][0] < 0 :
+    #speed = np.power((np.power(uwnd.data,2)+np.power(vwnd.data,2)),0.5)
+    #vcref = int(np.percentile(speed,50))
+    #maxlvl = int(np.percentile(var.data,80))
+    #minlvl = int(np.percentile(var.data,20))
+    #if minlvl < 0 :
+    if cnlvl[nl][0] < 0 :
         fcolors = cmaps.BlueDarkRed18
     else:
         fcolors = cmaps.precip2_17lev
-    cnlevels = np.arange(cnlev[nl][0], cnlev[nl][1]+cnlev[nl][2], cnlev[nl][2])
+    #spacig = round((maxlvl-minlvl)/fcolors.N)
+    #cnlevels = np.arange(minlvl,maxlvl,spacig)
+    cnlevels = np.arange(cnlvl[nl][0], cnlvl[nl][0]+cnlvl[nl][1]*(fcolors.N-1), cnlvl[nl][1])
     norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
 
     fig = plt.figure(figsize=(12,12),dpi=300)
@@ -78,27 +97,27 @@ for nl in range(0,len(lev),1):
         for nc in range(0,ncol,1):
             nm = nm+1 
             axe = ax[nr][nc]
-            #axe = plt.subplot(4,3,nm+1,projection=ccrs.PlateCarree())    #创建子图
-            #axe.add_feature(cfeat.COASTLINE.with_scale('110m'),edgecolor='black', linewidth=0.8, zorder=1) 
-            #axe.add_feature(cfeat.LAKES.with_scale('110m'),edgecolor='black', linewidth=0.8, zorder=1) 
-            axe.add_feature(cfeat.LAND.with_scale('110m'),edgecolor='black', linewidth=0.8, zorder=1) 
-            #axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=1)
-            axe.set_title(figtitle+str(lev[nl])+" "+titls[nm],fontsize=SMFONT)
+            #axe.add_feature(cfeat.LAND.with_scale('110m'), edgecolor='black', linewidth=0.8, zorder=1) 
+            axe.add_feature(cfeat.COASTLINE.with_scale('110m'),edgecolor='black', linewidth=0.8, zorder=1) 
+            #axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=2)
+            axe.set_title(str(lev[nl])+" "+titls[nm],fontsize=SMFONT)
 
-            shad = axe.contourf(ilon, ilat, var[nm,:,:], cnlevels, 
+            shad = axe.contourf(ilon, ilat, var[nm,:,:], cnlevels,
                          transform=ccrs.PlateCarree(),cmap=fcolors,extend='both',norm=norm)
+            
             wind = axe.quiver(ilon[::q_mis], ilat[::q_mis], uwnd[nm,::q_mis,::q_mis],vwnd[nm,::q_mis,::q_mis],
-                    zorder=2, pivot='mid',units='inches',scale=30,scale_units='inches',color="dimgray",
+                    pivot='mid',units='inches',scale=vcref[nl]*3,scale_units='inches',color="dimgray",
                     width=0.02,headwidth=3,headlength=4.5,transform=ccrs.PlateCarree())
-            topo = axe.contour(ilon, ilat, phis, [1500,3000], 
-                         transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            cont = axe.contour(ilon, ilat, var[nm,:,:], [30,32], 
-                         transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=2.5)
+
+            cont = axe.contour(ilon, ilat, var[nm,:,:], np.arange(1000,15000,cnlvl[nl][1]), 
+                         transform=ccrs.PlateCarree(), colors='darkviolet', linewidths=2)
+
+            topo = axe.contour(ilon, ilat, phis, [1500,3000],
+                         transform=ccrs.PlateCarree(),colors='black',linewidths=1.2)
+
             if dbox >= 1 :
                 axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                         linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
-            #jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,32], 
-            #             transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=2.5)
+                         linewidth=2, color='black', transform=ccrs.PlateCarree()) # filter box
 
             if nc == 0:
                 axe.set_yticks(np.arange(lats,latn,lat_sp), crs=ccrs.PlateCarree())
@@ -107,12 +126,12 @@ for nl in range(0,len(lev),1):
                 axe.set_xticks(np.arange(lonl,lonr,lon_sp), crs=ccrs.PlateCarree())
                 axe.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
 
-    position = fig.add_axes([0.2, bmlo+0.005, 0.7, 0.01]) #left, bottom, width, height
+    position = fig.add_axes([0.18, bmlo, 0.7, 0.01]) #left, bottom, width, height
     cb = plt.colorbar(shad, cax=position ,orientation='horizontal')#, shrink=.9)
-    axe.quiverkey(wind, 1.05, 0.97, 10, r'$10 m/s$', labelpos='N',coordinates='axes')
+    axe.quiverkey(wind, 0.92, bmlo-0.01, vcref[nl], r'$%d m/s$'%vcref[nl], labelpos='N',coordinates='figure')
 
-    plt.figtext(0.02,bmlo-0.005, var.long_name, fontsize=MIDFONT,
+    plt.figtext(0.02,bmlo-0.005, "%dhPa %s (%s)"%(lev[nl],drawvar[0],unit[0]), fontsize=MIDFONT,
             horizontalalignment='left',verticalalignment='bottom')
     plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
-    plt.savefig(figdir+var.long_name.replace(" ","")+".png", bbox_inches='tight',pad_inches=0.01)
+    plt.savefig(figdir+"%s_%d.png"%(drawvar[0],lev[nl]), bbox_inches='tight',pad_inches=0.01)
 

@@ -9,18 +9,18 @@ lev=(250 500 850)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
-pro=2  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt ; 4 = three level match
+pro=5  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt ; 4 = three level match
 # 5 = two level match ; 6 = combine match file
 filt=1 #filt=1, then use filter track to match
-nl1=2
+nl1=0
 nl2=1
 nl3=0
 
 # filter area
-lats=30 #25
+lats=25 #25
 latn=45 #45
-lonl=59 #60
-lonr=60 #80
+lonl=60 #60
+lonr=100 #80
 option=2 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
 if [ $filt == 1 ]; then 
     suffix=_${option}_${lats}${latn}-${lonl}${lonr}
@@ -104,17 +104,24 @@ fi
 
 if [ $pro == 3 ];then
     echo "=========== trs filt (${lats}-${latn}N, ${lonl}-${lonr}E) ================"
+    #box [filname] [Lat1.] [Lat2.] [Lng1.] [Lng2.] 
+    # [Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)] 
+    # [Negate (1)] [Track Thresh] [Start Time, YYYYMMDDHH]
+
     cd ~/TRACK-1.5.2/
     pwd
     for nl in {0..2};do
         file=${prefix}_${lev[$nl]}_1980-2020
-        echo "lev: ${lev[$nl]}"
+        echo "lev: ${lev[$nl]} box filter"
 
-        #utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
-        #mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
-        #awk 'NR==4 {print FILENAME, $2}' ${OUTDIR}${file}${suffix} | tee -a ${OUTDIR}number
+        #python ~/uor_track/2110-line_filter.py ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 24 
+        utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
+        mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
+        utils/bin/box ${OUTDIR}${file}${suffix} ${lats} ${latn} ${lonl} ${lonr} 0 1 0.0 
+        mv ${OUTDIR}${file}${suffix}.new ${OUTDIR}${file}${suffix}
+        awk 'NR==4 {print FILENAME, $2}' ${OUTDIR}${file}${suffix} | tee -a ${OUTDIR}number
         
-        #utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
+        utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
     done
     cd ~/uor_track/fig/
     python ~/uor_track/2107-draw_panel_traj.py $option ${lats} ${latn} ${lonl} ${lonr}
@@ -194,12 +201,17 @@ fi
 
 if [ $pro == 5 ];then
     echo "=========== match low level with high level ==================="
+    dist=5.0 # distance threshold
+    timt=0.1 # time threshold
     cd ~/TRACK-1.5.2/
     pwd
     if [ $filt == 1 ]; then 
-        dir=${OUTDIR}${suffix}match${lev[$nl1]}_${lev[$nl2]}
-        file1=${OUTDIR}${prefix}_${lev[$nl1]}_1980-2020${suffix}
-        file2=${OUTDIR}${prefix}_${lev[$nl2]}_1980-2020${suffix}
+        #dir=${OUTDIR}${suffix}match${lev[$nl1]}_${lev[$nl2]}
+        #file1=${OUTDIR}${prefix}_${lev[$nl1]}_1980-2020${suffix}
+        #file2=${OUTDIR}${prefix}_${lev[$nl2]}_1980-2020${suffix}
+        dir=${OUTDIR}pas_match${lev[$nl1]}_${lev[$nl2]}
+        file1=/home/users/qd201969/ERA5-1HR-lev/ff_${lev[$nl1]}_1980-2020_2_2745-6060_PAS
+        file2=/home/users/qd201969/ERA5-1HR-lev/ff_${lev[$nl2]}_1980-2020_2_2745-6060_PAS
     else
         dir=${OUTDIR}match${lev[$nl1]}_${lev[$nl2]}
         file1=${OUTDIR}${prefix}_${lev[$nl1]}_1980-2020
@@ -207,21 +219,22 @@ if [ $pro == 5 ];then
     fi
     
     if [ -d $dir ];then
-        rm $dir/*.dat
+        rm $dir/*
     else
         mkdir $dir 
     fi
 
+    #utils/bin/censemble2 $file1 $file2 0 100 10 1 0 0 0 0 s 0 1 ${dist} ${timt} > ${dir}/record
     utils/bin/censemble2 $file1 $file2 0 100 10 1 0 0 0 0 s -1 1 ${dist} ${timt} > ${dir}/record
     mv ./match_ens* $dir
     mv ./str.dat $dir
     mv ./diff.dat $dir
     mv ./temp-dist.stat $dir
 
-    #utils/bin/tr2nc ${dir}/match_ens1_yes.dat s utils/TR2NC/tr2nc.meta
-    #utils/bin/tr2nc ${dir}/match_ens1_no.dat s utils/TR2NC/tr2nc.meta
-    #utils/bin/tr2nc ${dir}/match_ens2_yes.dat s utils/TR2NC/tr2nc.meta
-    #utils/bin/tr2nc ${dir}/match_ens2_no.dat s utils/TR2NC/tr2nc.meta
+    utils/bin/tr2nc ${dir}/match_ens1_yes.dat s utils/TR2NC/tr2nc.meta
+    utils/bin/tr2nc ${dir}/match_ens1_no.dat s utils/TR2NC/tr2nc.meta
+    utils/bin/tr2nc ${dir}/match_ens2_yes.dat s utils/TR2NC/tr2nc.meta
+    utils/bin/tr2nc ${dir}/match_ens2_no.dat s utils/TR2NC/tr2nc.meta
 
     rename .dat.nc .nc $dir/*
     rename match_ens1 ${lev[$nl1]}_${lev[$nl2]} $dir/*
