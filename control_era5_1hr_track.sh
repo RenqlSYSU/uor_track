@@ -7,10 +7,11 @@
 
 lev=(250 500 850)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
-prefix=ff # tr is original cyclone ; ff is the filtered cyclone
+prefix=fft # tr is original cyclone ; ff is the filtered cyclone
+# fft is the file that has been converted to real time
 
-pro=5  # 0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt ; 4 = three level match
-# 5 = two level match ; 6 = combine match file
+pro=1  # -1=convert to real time ;0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt 
+# 4 = three level match ;5 = two level match ; 6 = combine match file
 filt=1 #filt=1, then use filter track to match
 nl1=0
 nl2=1
@@ -26,6 +27,25 @@ if [ $filt == 1 ]; then
     suffix=_${option}_${lats}${latn}-${lonl}${lonr}
 else
     suffix=""
+fi
+
+if [ $pro == -1 ];then
+    cd /home/users/qd201969/TRACK-1.5.2
+    pwd
+    echo "convert to real time"
+    timestep=1 #hour
+
+    for ny in {1980..2020};do
+        starttime=$((ny-1))120100
+        for nl in {0..2};do
+            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos
+            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos
+            if [ ! -f "$filname2" ]; then
+                utils/bin/count $filname1 0 0 5 4 0 $starttime $timestep
+                mv ${filname1}.new ${filname2}
+            fi
+        done
+    done
 fi
 
 if [ $pro == 0 ];then
@@ -47,16 +67,17 @@ if [ $pro == 1 ];then
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            echo ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos >> combine.in_${lev[$nl]}
+            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos
+            echo $filname >> combine.in_${lev[$nl]}
         
-            if [ ! -f "${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos" ]; then
-                echo "${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos does not exist"
+            if [ ! -f "$filname" ]; then
+                echo "$filname does not exist"
                 #rm -irf ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET
                 #~/TRACK-1.5.2/run_era5_1hr_qiaoling.csh ${ny} ${lev[$nl]}
             else
                 #awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' \
                 #    ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix_trs_pos}
-                num=$(awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos | awk 'END{print NR}')
+                num=$(awk '{if(NF==4 && ($2 > 400 || $3 > 100 || $4 > 1000)) print FILENAME, $0}' $filname | awk 'END{print NR}')
                 if [ ${num} -ge 2 ]; then 
                     echo "Need to rerun ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET, whose error line is ${num}"
                     #rm -irf ${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET

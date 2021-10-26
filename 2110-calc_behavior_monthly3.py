@@ -22,10 +22,10 @@ if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
     flats = 27 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
-    flonl = 63 #int(sys.argv[4])
-    flonr = 63 #int(sys.argv[5])
+    flonl = 60 #int(sys.argv[4])
+    flonr = 60 #int(sys.argv[5])
     time = 24 # threshold, hour
-    prefix = "ff"
+    prefix = "fft"
     season = 0 # 0 monthly, 1 seasonal
 else:
     option= int(sys.argv[1]) 
@@ -41,8 +41,8 @@ suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/behv3_month_%dh_%s"%(time,suffix)
 fileout="/home/users/qd201969/uor_track/mdata/behv3_month_%dh_%s.nc"%(time,suffix)
 calcbehv = 1
-drawannual = 1
-drawbox = 1
+drawannual = 0
+drawbox = 0
 
 flonr2 = 90
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]

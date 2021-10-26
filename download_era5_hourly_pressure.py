@@ -7,11 +7,11 @@ path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_subdaily/'
 
 c = cdsapi.Client()
 
-for nv in range(0,len(varname),1):
+for nv in range(2,len(varname),1):
     if not os.path.exists(path+filname[nv]):
         os.makedirs(path+filname[nv])
 
-    for year in range(1979,2020,1):
+    for year in range(2020,2021,1):
         c.retrieve(
             'reanalysis-era5-pressure-levels',
             {

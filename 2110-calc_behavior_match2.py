@@ -41,7 +41,7 @@ else:
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/behv3_match2_%dh_%s"%(time,suffix)
 fileout="/home/users/qd201969/uor_track/mdata/behv3_match2_%dh_%s.nc"%(time,suffix)
-calcbehv =1 
+calcbehv =0
 drawannual = 0
 drawbox = 1
 
@@ -56,7 +56,7 @@ lev1 = [850,500,250]
 lev2 = ['only_250',          '250-500','250-500-850',
         'only_500','500-850','500-250','500-250-850', 
         'only_850','850-500',          '850-500-250']
-npp = [1, 7, 10, 2, 5, 8, 11, 3, 6, 12]
+npp = [10, 7, 1,  11, 5, 8, 2,  12, 6, 3]
 
 if season == 0:
     nday=[365,31,28,31,30,31,30,31,31,30,31,30,31]
@@ -192,7 +192,7 @@ if drawbox == 1:
     ff = open("%smatch_%s/number"%(path,suffix),'r')
     lines = ff.readlines()
     
-    for nr in range(1,len(lats-1),1):
+    for nr in range(4,len(lats),1):
         if nr == 0:
             suffix2 = ""
         else:
@@ -200,11 +200,12 @@ if drawbox == 1:
         
         cfp.setvars(file="traj-match2-"+prefix+"_"+suffix+suffix2+".png")
         cfp.gopen(figsize=[20, 20],rows=4,columns=3,wspace=0.1,hspace=0.015,bottom=0.5)
-        cfp.mapset(lonmin=0, lonmax=150, latmin=10, latmax=70)
-        for nl in range(0,len(lev2),1):#,len(f),1):
+        cfp.mapset(lonmin=0, lonmax=150, latmin=15, latmax=70)
+        for nl in range(len(lev2)-1,-1,-1):#,len(f),1):
             np=npp[nl]
             term = lines[nl].strip().split(" ")
             filname = term[0].strip()+suffix2
+            print(filname)
             
             cfp.gpos(np)
             cfp.levs(manual=[1500,3000,4500])
@@ -221,11 +222,11 @@ if drawbox == 1:
             if var[0,nl,nr] == 0:
                 continue
             
-            if not os.path.isfile(filname[nl]+'.nc') :
+            if not os.path.isfile(filname+'.nc') :
                 ret=subprocess.Popen("/home/users/qd201969/TRACK-1.5.2/utils/bin/tr2nc \
-                        "+filname[nl]+" s /home/users/qd201969/TRACK-1.5.2/utils/TR2NC/tr2nc.meta",shell=True)
+                        "+filname+" s /home/users/qd201969/TRACK-1.5.2/utils/TR2NC/tr2nc.meta",shell=True)
                 ret.wait()
-            f=cf.read(filname[nl]+'.nc')
+            f=cf.read(filname+'.nc')
             print(f)
             g = f[2]
             g = g*1e5
@@ -237,6 +238,6 @@ if drawbox == 1:
             
         cfp.cbar(position=[0.2, 0.48, 0.6, 0.01], title='Relative Vorticity (Hz)*1e5')
         cfp.gclose()
-        subprocess.run("mogrify -bordercolor white -trim ./traj-"+prefix+"_"+suffix+suffix2+".png",shell=True) 
+        subprocess.run("mogrify -bordercolor white -trim ./traj-match2-"+prefix+"_"+suffix+suffix2+".png",shell=True) 
         #subprocess.run("rm /home/users/qd201969/ERA5-1HR-lev/*.nc",shell=True) 
 

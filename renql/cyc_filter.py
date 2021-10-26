@@ -92,7 +92,7 @@ def behavior(filname,flats,flatn,flonl,flonr):
                 else:
                     signal = -1 # LYS
             
-            locals().get('tid_%s'%behv[signal]).append(term[-1])
+            locals().get('tid_%s'%behv[signal]).append(term[2])
             outfile[signal].write(lineid)
             outfile[signal].write(linenum)
             for nll in value:
@@ -173,7 +173,7 @@ def line_filt(filname,flats,flatn,flonl,flonr,option=2,time=24):
                                 break 
             
             if signal == 1:
-                tid.append(term[-1])
+                tid.append(term[2])
                 outfile.write(lineid)
                 outfile.write(linenum)
                 for nll in value:
