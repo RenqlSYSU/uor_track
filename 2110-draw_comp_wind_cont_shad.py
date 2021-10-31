@@ -82,7 +82,7 @@ latn=70 #90 #
 lat_sp = 20
 lon_sp = 30
 
-diff=1 # if diff=1, then draw diff
+diff=0 # if diff=1, then draw diff
 nrow = 4
 ncol = 3
 bmlo = 0.4

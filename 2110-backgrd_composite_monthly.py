@@ -136,7 +136,8 @@ for varname in ['u','v','t','z']:
             else:
                 ct = locals().get('ct_%d_%s'%(lev[nl],behv[nr]))
                 if len(ct) == 0:
-                    numb[nl,nr,:]=0
+                    numb[nl,nr,:]= 0
+                    var[nl,nr,:,:,:,:] = 0 
                     continue
                 ctda = xr.DataArray(ct, coords=[ct], dims=["time"])
                 for nm in range(0,len(months),1):
