@@ -19,11 +19,11 @@ import cartopy.crs as ccrs
 from renql import cyc_filter, monthly_calc
 
 if len(sys.argv) < 2 :
-    option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 25 #int(sys.argv[2])
+    option=0 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+    flats = 27 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
-    flonr = 60 #int(sys.argv[5])
+    flonr = 90 #int(sys.argv[5])
     time = 24 # threshold, hour
     prefix = "ff"
     season = 0 # 0 monthly, 1 seasonal
@@ -40,15 +40,15 @@ else:
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/behv3_month_%dh_%s"%(time,suffix)
 fileout="/home/users/qd201969/uor_track/mdata/behv3_month_%dh_%s.nc"%(time,suffix)
-calcbehv = 1
+calcbehv = 0
 drawannual = 1
-drawbox = 0
+drawbox = 1
 
 flonr2 = 90
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
 lats = [flats ,flatn ,flats ,flats ,flats ]
 latn = [flatn ,flatn ,flats ,flatn ,flatn ]
-lonl = [flonl ,flonl ,flonl ,flonr2,flonr ]
+lonl = [flonl ,flonl ,flonl ,flonr2,flonl ]
 lonr = [flonr ,flonr2,flonr2,flonr2,flonr2]
 opti = [option,2     ,2     ,2     ,1     ]
 lev = [850,500,250]
@@ -77,7 +77,14 @@ if calcbehv == 1:
 
         if not os.path.isfile(filname) :
             filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"
-            var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,option,time)
+            if option == 2:
+                var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,option,time)
+            else:
+                com = "/home/users/qd201969/TRACK-1.5.2/utils/bin/box %s %d %d %d %d %d 0 0.0"\
+                    %(filname0,flats,flatn,flonl,flonr,option)
+                ret=subprocess.Popen(com,shell=True)
+                ret.wait()
+                subprocess.run("mv %s.new %s"%(filname0,filname),shell=True)
 
         var[0,nl,:] = cyc_filter.behavior(filname,
                 lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
@@ -155,6 +162,16 @@ if drawannual == 1:
     fig.tight_layout(w_pad=0.5,h_pad=1) #,rect=(0,bmlo,1,1)
     fig.savefig(figdir+".png")
     #fig.savefig(figdir+".png", bbox_inches='tight',pad_inches=0.01)
+    
+    fig = plt.figure(figsize=(9,9),dpi=200)
+    ax  = fig.subplots(1, 1) #sharex=True, sharey=True
+    ax.set_title("total number "+suffix,fontsize=midfont)
+    for nl in range(0,len(lev),1):
+        ax.plot(imonth,var[1:len(month),nl,0],linewidth=3,label=str(lev[nl]))
+    
+    ax.legend(loc='upper right')
+    fig.tight_layout(w_pad=0.5,h_pad=1) #,rect=(0,bmlo,1,1)
+    fig.savefig(figdir+"total.png")
 
 #===============================================
 # draw trajectory and filter box 
@@ -171,7 +188,7 @@ if drawbox == 1:
     phis=phis/9.8 # transfer from m2/s2 to m
     
     cfp.setvars(file="traj-"+prefix+"_"+suffix+".png")
-    cfp.gopen(figsize=[20, 20],rows=3,columns=3,wspace=0.1,hspace=0.02,bottom=0.4)
+    cfp.gopen(figsize=[20, 20],rows=3,columns=3,wspace=0.1,hspace=0.02,bottom=0.55)
     cfp.mapset(lonmin=0, lonmax=150, latmin=10, latmax=70)
     for nr in range(1,len(lats)-1,1):
         if nr == 0:
@@ -212,7 +229,7 @@ if drawbox == 1:
             cfp.levs(min=0.0, max=8.0, step=0.5)
             cfp.traj(g, zorder=0, legend_lines=True, colorbar=False, linewidth=1.5)
             
-    cfp.cbar(position=[0.2, 0.38, 0.6, 0.01], title='Relative Vorticity (Hz)*1e5')
+    cfp.cbar(position=[0.2, 0.53, 0.6, 0.01], title='Relative Vorticity (Hz)*1e5')
     cfp.gclose()
     subprocess.run("mogrify -bordercolor white -trim ./traj-"+prefix+"_"+suffix+".png",shell=True) 
     #subprocess.run("rm /home/users/qd201969/ERA5-1HR-lev/*.nc",shell=True) 

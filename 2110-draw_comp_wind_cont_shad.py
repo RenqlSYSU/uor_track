@@ -82,7 +82,7 @@ latn=70 #90 #
 lat_sp = 20
 lon_sp = 30
 
-diff=0 # if diff=1, then draw diff
+diff=1 # if diff=1, then draw diff
 nrow = 4
 ncol = 3
 bmlo = 0.4
@@ -113,7 +113,7 @@ flatn = 45 #int(sys.argv[3])
 flonl = 60 #int(sys.argv[4])
 flonr = 90 #int(sys.argv[5])
 figdir = "/home/users/qd201969/uor_track/fig/"
-filname = '/home/users/qd201969/uor_track/mdata/comp_6h_season_' # t.nc'
+filname = '/home/users/qd201969/uor_track/mdata/comp_6h_season_top5_' # t.nc'
 months = ["DJF","MAM","JJA","SON"]
 
 f = xr.open_dataset(filname+'z.nc')

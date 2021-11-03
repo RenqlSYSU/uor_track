@@ -6,6 +6,39 @@ import numpy as np
 import sys, os, subprocess, linecache, gc
 import cartopy.crs as ccrs
 
+def calc_month_fft( month, filname):
+    var = np.zeros( [len(month)], dtype=int ) # 4 or 12 
+    
+    ff = open(filname,"r") 
+    line1 = ff.readline()
+    line2 = ff.readline()
+    line3 = ff.readline()
+    line4 = ff.readline()
+    a = line4.strip().split(" ",1)
+    term = a[1].strip().split(" ",1)
+    print("total cyclone number in %s : %s" %(ff.name,term[0]))
+    
+    line = ff.readline()
+    while line:
+        term = line.strip().split(" ")
+        if term[0] == "TRACK_ID":
+            linenum = ff.readline()
+            term1 =linenum.strip().split(" ")
+            num = int(term1[-1])
+            ct1=[]
+            for nl in range(0,num,1):
+                line = ff.readline()
+                data = list(map(float,line.strip().split(" ")))
+                ct1.append(datetime.strptime(data[0],'%Y%m%d%H'))
+        if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
+            var[ct1[0].month-1] += 1
+        else:
+            var[ct1[0].month] += 1
+        line = ff.readline()
+    
+    ff.close()
+    return var
+
 def calc_month( frae, month, nday, filname):
     var  = np.empty( [len(month)], dtype=int ) # 4 or 12 
     datafile = "/home/users/qd201969/uor_track/fig/match_ens1_yes.dat"

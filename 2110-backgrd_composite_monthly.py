@@ -28,6 +28,7 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
     print("total cyclone number in %s : %s" %(ff.name,term[0]))
     
     ct1=[]
+    inty=[]
     line = ff.readline()
     while line:
         term = line.strip().split(" ")
@@ -51,15 +52,19 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
                         b='18'
                     a = a[:-2]+b
                     ct1.append(datetime.strptime(a,'%Y%m%d%H'))
+                    inty.append(data[3])
         line = ff.readline()
     ff.close()
-    ct2=list(set(ct1))
-    # print total, unrepeated, repeated, repeated/total, unrepeated/alltime
+    
     print("total, unrepeated, repeated, repeated/total, unrepeated/alltime")
     if len(ct1) == 0:
+        ct2 = ct1
         print("all time when cyclone in %d-%dE,%d-%dN : %d"\
                 %(flonl,flonr,flats,flatn,len(ct1)))
     else:
+        #ct1=list(np.array(ct1)[inty>np.percentile(np.array(inty),95)]) # top 5%
+        ct1=list(np.array(ct1)[inty<np.percentile(np.array(inty),5)]) # low 5%
+        ct2=list(set(ct1))
         print("all time when cyclone in %d-%dE,%d-%dN : %d, %d, %d, %.2f%%, %.2f%%"\
                 %(flonl,flonr,flats,flatn,len(ct1),len(ct2),(len(ct1)-len(ct2)),\
                 (len(ct1)-len(ct2))*100/len(ct1),len(ct2)*100/alltime))
@@ -86,8 +91,7 @@ else:
     time = int(sys.argv[8])
 
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonl)
-figdir = "/home/users/qd201969/uor_track/fig/behv3_month_%dh_%s"%(time,suffix)
-fileout="/home/users/qd201969/uor_track/mdata/comp_6h_season_"
+fileout="/home/users/qd201969/uor_track/mdata/comp_6h_season_low5_"
 
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
 levc = [850,500,250,200]
@@ -116,8 +120,8 @@ lon = ds.longitude
 ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 for varname in ['u','v','t','z']:
-    var  = np.empty( [len(lev),len(behv),len(months),len(levc),len(ilat),len(ilon)],dtype=float )  
-    numb = np.empty( [len(lev),len(behv),len(months)],dtype=int ) 
+    var  = np.zeros( [len(lev),len(behv),len(months),len(levc),len(ilat),len(ilon)],dtype=float )  
+    numb = np.zeros( [len(lev),len(behv),len(months)],dtype=int ) 
     for nl in range(0,len(lev),1):
         for nr in range(0,len(behv),1):
             print("handle %d %s"%(lev[nl],behv[nr]))
@@ -145,6 +149,7 @@ for varname in ['u','v','t','z']:
                     ctda0 = ctda.sel(time=ctda.time.dt.month.isin(months[nm]))
                     if len(ctda0) == 0:
                         numb[nl,nr,nm]=0
+                        var[nl,nr,nm,:,:,:] = 0 
                         continue
                     for year in range(1979,2021,1):
                         ctda1 = ctda0.sel(time=ctda0.time.dt.year.isin(year))

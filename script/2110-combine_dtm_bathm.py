@@ -39,7 +39,7 @@ def ravzip(*itr):
 def draw_3d(title,lon,lat,var,norm,ncmap):
     fig = plt.figure(figsize=(12,9),dpi=300)
     axe = plt.axes(projection="3d")
-    axe.set_title(title,fontsize=MIDFONT) 
+    #axe.set_title(title,fontsize=MIDFONT) 
     
     #ls = LightSource(270, 45)
     #rgb = ls.shade(var, cmap=ncmap, norm=norm, vert_exag=0.1, blend_mode='soft')
@@ -55,8 +55,8 @@ def draw_3d(title,lon,lat,var,norm,ncmap):
     axe.set_zlim(-80,620)
     #axe.set_zscale('log')
     axe.view_init(elev=53, azim=-75)
-    #axe.grid(False)
-    #plt.axis('off')
+    axe.grid(False)
+    plt.axis('off')
     
     dx = np.diff(lon[1,1:3])
     dy = np.diff(lat[1:3,1])
@@ -66,21 +66,21 @@ def draw_3d(title,lon,lat,var,norm,ncmap):
     bars = np.empty(lon.shape, dtype=object)
     for i,(x,y,dz,o) in enumerate(ravzip(lon, lat, var, zo)):
         for nll in range(0,len(cnlevels),1):
-            if nll==0 and dz < cnlevels[nll]:
+            if nll==0 and dz<cnlevels[nll]:
                 color0 = ncmap([nll])
                 break
-            elif nll<(len(cnlevels)-1) and dz >= cnlevels[nll] and dz < cnlevels[nll+1]:
-                color0 = ncmap([nll+1])
+            elif nll>0 and nll<(len(cnlevels)-1) and dz>=cnlevels[nll-1] and dz<cnlevels[nll]:
+                color0 = ncmap([nll])
                 break
-            else:
-                color0 = ncmap([-1])
+            elif nll==(len(cnlevels)-1) and dz>=cnlevels[nll]:
+                color0 = ncmap([nll+1])
 
         j, k = divmod(i, res)
-        bars[j, k] = pl = axe.bar3d(x, y, 0, dx, dy, dz, color0)
+        bars[j, k] = pl = axe.bar3d(x, y, 0, dx, dy, dz/10.0, color0)
         pl._sort_zpos = o
    
-    colourMap = plt.cm.ScalarMappable(cmap=ncmap,norm=norm)
-    fig.colorbar(colourMap,extend='both',shrink=0.6)#,label='m'
+    #colourMap = plt.cm.ScalarMappable(cmap=ncmap,norm=norm)
+    #fig.colorbar(colourMap,extend='both',shrink=0.6)#,label='m'
     plt.savefig("%s%s_3d.jpg"%(figdir,title),bbox_inches="tight",pad_inches=0.1)
     del fig, axe
 
@@ -142,6 +142,7 @@ ncmap = ListedColormap(cmaps.GMT_globe(range(0,209,2))) #cmaps.precip2_17lev
 #ncmap = ListedColormap(["red","blue","green"])
 cnlevels = np.concatenate((np.arange(-63,0,1),np.arange(0,615,15)))
 norm  = colors.BoundaryNorm(boundaries=cnlevels, ncolors=ncmap.N,extend="both")
+print("cnlevel: %d, ncmap: %d"%(len(cnlevels),ncmap.N))
 #norm = colors.TwoSlopeNorm(vmin=-60, vcenter=0, vmax=450)
 #draw_one("100m_terrain-bathy",lon,lat,var,norm,ncmap)
 #draw_3d("100m_terrain-bathy",lon,lat,var,norm,ncmap)
