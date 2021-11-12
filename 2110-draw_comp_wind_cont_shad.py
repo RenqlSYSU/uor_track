@@ -18,18 +18,31 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeat
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cmaps
+from scipy import stats
 
-def draw_vect_shad(month,var,uwnd,vwnd,numb):
+def draw_vect_shad(month,var,uwnd,vwnd,numb,vari,uvari,vvari):
     xbar=[0.04,0.36,0.68]
+    siglvl = 0.1
     for nl1 in range(0,3,1):
         fig = plt.figure(figsize=(12,12),dpi=300)
         ax = fig.subplots(nrow, ncol, subplot_kw=dict(projection=ccrs.PlateCarree())) #sharex=True, sharey=True
         for nr in range(0,nrow,1):
             nb = nr+1
-            if diff == 1 :
-                var[nl1,nb,:,:,:]=var[nl1,nb,:,:,:] - var[nl1,0,:,:,:]
+            if diff == 1:
+                t,pvar = stats.ttest_ind_from_stats(var[nl1,nb,:,:,:],vari[nl1,nb,:,:,:],numb[nl1,nb],
+                        var[nl1,0,:,:,:],vari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
+                t,pu = stats.ttest_ind_from_stats(uwnd[nl1,nb,:,:,:],uvari[nl1,nb,:,:,:],numb[nl1,nb],
+                        uwnd[nl1,0,:,:,:],uvari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
+                t,pv = stats.ttest_ind_from_stats(vwnd[nl1,nb,:,:,:],vvari[nl1,nb,:,:,:],numb[nl1,nb],
+                        vwnd[nl1,0,:,:,:],vvari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
+                print(pvar)
+                var[nl1,nb,:,:,:] = (var[nl1,nb,:,:,:] - var[nl1,0,:,:,:])/9.8
                 uwnd[nl1,nb,:,:,:]=uwnd[nl1,nb,:,:,:] - uwnd[nl1,0,:,:,:]
                 vwnd[nl1,nb,:,:,:]=vwnd[nl1,nb,:,:,:] - vwnd[nl1,0,:,:,:]
+                var[nl1,nb,:,:,:].values=np.ma.array(var[nl1,nb,:,:,:].values,mask=(pvar>siglvl))
+                mask = np.array([pu>siglvl,pv>siglvl]).all(axis=0)
+                uwnd[nl1,nb,:,:,:].values=np.ma.array(uwnd[nl1,nb,:,:,:].values,mask=mask)
+                vwnd[nl1,nb,:,:,:].values=np.ma.array(vwnd[nl1,nb,:,:,:].values,mask=mask)
             for nc in range(0,ncol,1):
                 nl = nc
                 if cnlvl[nl][0] < 0 :
@@ -93,7 +106,7 @@ SMFONT=10
 lev = [850,500,250]
 levc = [850,500,250]
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
-varname = ['z']
+varname = ['var']
 drawvar = ['z']
 unit    = ['m']
 if diff == 1:
@@ -113,7 +126,7 @@ flatn = 45 #int(sys.argv[3])
 flonl = 60 #int(sys.argv[4])
 flonr = 90 #int(sys.argv[5])
 figdir = "/home/users/qd201969/uor_track/fig/"
-filname = '/home/users/qd201969/uor_track/mdata/comp_6h_season_top5_' # t.nc'
+filname = '/home/users/qd201969/uor_track/mdata/comp_6h_season_1_' # t.nc'
 months = ["DJF","MAM","JJA","SON"]
 
 f = xr.open_dataset(filname+'z.nc')
@@ -122,16 +135,27 @@ lon = f.lon
 ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 numb = f['numb']
-numb[0,3]=0
-var = f['var'].sel(level=levc,lon=ilon,lat=ilat).load()
-var.data = var.data/9.8
-print(var)
+var = f[varname[0]].sel(level=levc,lon=ilon,lat=ilat).load()
+vari = f['vari'].sel(level=levc,lon=ilon,lat=ilat).load()
+var.data = var.data
+print("var[0,0,1,2,:,:]")
+print(var[0,0,1,2,:,:])
+print("var[0,1,1,2,:,:]")
+print(var[0,1,1,2,:,:])
 
 ds = xr.open_dataset(filname+'u.nc')
-uwnd = ds['var'].sel(level=levc,lon=ilon,lat=ilat).load()
+uwnd = ds[varname[0]].sel(level=levc,lon=ilon,lat=ilat).load()
+uvari = ds['vari'].sel(level=levc,lon=ilon,lat=ilat).load()
 
 ds = xr.open_dataset(filname+'v.nc')
-vwnd = ds['var'].sel(level=levc,lon=ilon,lat=ilat).load()
+vwnd = ds[varname[0]].sel(level=levc,lon=ilon,lat=ilat).load()
+vvari = ds['vari'].sel(level=levc,lon=ilon,lat=ilat).load()
+print("uwnd")
+print(uwnd[0,0,1,2,:,:])
+print(uwnd[0,1,1,2,:,:])
+print("vwnd")
+print(vwnd[0,0,1,2,:,:])
+print(vwnd[0,1,1,2,:,:])
 
 ds = xr.open_dataset("/home/users/qd201969/gtopo30_0.9x1.25.nc")
 phis = ds['PHIS'].sel(lon=ilon,lat=ilat,method="nearest").load()
@@ -140,4 +164,6 @@ del ds
 gc.collect()
 
 for nm in range(0,len(months),1):
-    draw_vect_shad(months[nm],var[:,:,nm,:,:,:],uwnd[:,:,nm,:,:,:],vwnd[:,:,nm,:,:,:],numb[:,:,nm])
+    draw_vect_shad(months[nm],var[:,:,nm,:,:,:],uwnd[:,:,nm,:,:,:],vwnd[:,:,nm,:,:,:],numb[:,:,nm],\
+            vari[:,:,nm,:,:,:],uvari[:,:,nm,:,:,:],vvari[:,:,nm,:,:,:])
+

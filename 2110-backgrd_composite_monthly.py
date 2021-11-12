@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 '''
-read total cyclone number in ff_250_1980-2020_2_3045-6060
-then judge whether the cyclone is NTN, STN or LYS in this region
-if not, it is considered to be able to pass over the TP
-plot the filter box in the trajectory figure
+1. when cyclone located in the defined region, read datetime
+2. then convert hourly date to 6 hourly date,
+3. composite corresponding u,v,t,z and their variances 
+4. store the data
 
 20211014
 renql
@@ -16,6 +16,14 @@ import numpy as np
 import pandas as pd
 import sys, os, subprocess, linecache, gc
 from datetime import datetime
+from renql import cyc_filter
+
+def mean_vari_dynamic(mean0,vari0,numb0,samp):
+    print("numb0 %d, mean0[1,12,12] %.2f, vari0[1,12,12] %.2f"%(numb0,mean0[1,12,12],vari0[1,12,12]))
+    numb1 = numb0 + len(samp)
+    mean1 = mean0 + (np.sum(samp,axis=0)-len(samp)*mean0)/numb1
+    vari1 = (numb0*(vari0+np.power(mean1-mean0,2))+np.sum(np.power(np.subtract(samp,mean1),2),axis=0))/numb1
+    return mean1,vari1,numb1
 
 def composite_time(filname,flats,flatn,flonl,flonr,alltime):
     ff = open(filname,"r") 
@@ -36,23 +44,34 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
             linenum = ff.readline()
             term1 =linenum.strip().split(" ")
             num = int(term1[-1])
+            data = []
             for nl in range(0,num,1):
                 line = ff.readline()
+                data.append(list(map(float,line.strip().split(" "))))
+                '''
                 data = list(map(float,line.strip().split(" ")))
                 if data[1]<=flonr and data[1] >= flonl and\
                 data[2]<=flatn and data[2]>=flats :
                     a = str(int(data[0]))
-                    if int(a[-2:]) in range(0,6,1):
-                        b='00'
-                    elif int(a[-2:]) in range(6,12,1):
-                        b='06'
-                    elif int(a[-2:]) in range(12,18,1):
-                        b='12'
-                    elif int(a[-2:]) in range(18,24,1):
-                        b='18'
-                    a = a[:-2]+b
-                    ct1.append(datetime.strptime(a,'%Y%m%d%H'))
-                    inty.append(data[3])
+                '''
+            for nl in range(0,num-1,1):
+                if data[nl][1] <= flonl and data[nl+1][1] > flonl and data[nl+1][1] <= 180 :
+                    point = cyc_filter.intersection_point_fixx([data[nl][1:3], data[nl+1][1:3]], flonl)
+                    if point <= flatn and point >= flats :
+                        a = str(int(data[nl+1][0]))
+                        '''
+                        if int(a[-2:]) in range(0,6,1):
+                            b='00'
+                        elif int(a[-2:]) in range(6,12,1):
+                            b='06'
+                        elif int(a[-2:]) in range(12,18,1):
+                            b='12'
+                        elif int(a[-2:]) in range(18,24,1):
+                            b='18'
+                        '''
+                        a = a[:-2]+'00'
+                        ct1.append(datetime.strptime(a,'%Y%m%d%H'))
+                        inty.append(data[3])
         line = ff.readline()
     ff.close()
     
@@ -63,13 +82,13 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
                 %(flonl,flonr,flats,flatn,len(ct1)))
     else:
         #ct1=list(np.array(ct1)[inty>np.percentile(np.array(inty),95)]) # top 5%
-        ct1=list(np.array(ct1)[inty<np.percentile(np.array(inty),5)]) # low 5%
+        #ct1=list(np.array(ct1)[inty<np.percentile(np.array(inty),5)]) # low 5%
         ct2=list(set(ct1))
         print("all time when cyclone in %d-%dE,%d-%dN : %d, %d, %d, %.2f%%, %.2f%%"\
                 %(flonl,flonr,flats,flatn,len(ct1),len(ct2),(len(ct1)-len(ct2)),\
                 (len(ct1)-len(ct2))*100/len(ct1),len(ct2)*100/alltime))
     print("")
-    return ct2
+    return ct1
 
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
@@ -91,7 +110,7 @@ else:
     time = int(sys.argv[8])
 
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonl)
-fileout="/home/users/qd201969/uor_track/mdata/comp_6h_season_low5_"
+fileout="/home/users/qd201969/uor_track/mdata/comp_6h_season_daily00_"
 
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
 levc = [850,500,250,200]
@@ -99,7 +118,7 @@ lev  = [850,500,250]
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 datapath = "/gws/nopw/j04/ncas_generic/users/renql/ERA5_subdaily/"#t/ERA5_NH_t_1989.nc
 
-ftime  = pd.date_range(start='1979-12-01 00',end='2021-01-31 23', freq='6H',closed=None)
+ftime  = pd.date_range(start='1979-12-01 00',end='2021-01-31 23', freq='1D',closed=None)
 alltime= len(ftime)
 
 for nl in range(0,len(lev),1):
@@ -119,37 +138,45 @@ lat = ds.latitude
 lon = ds.longitude
 ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
-for varname in ['u','v','t','z']:
+for varname in ['u','v','z']: #'t',
     var  = np.zeros( [len(lev),len(behv),len(months),len(levc),len(ilat),len(ilon)],dtype=float )  
+    vari = np.zeros( [len(lev),len(behv),len(months),len(levc),len(ilat),len(ilon)],dtype=float )  
     numb = np.zeros( [len(lev),len(behv),len(months)],dtype=int ) 
     for nl in range(0,len(lev),1):
         for nr in range(0,len(behv),1):
             print("handle %d %s"%(lev[nl],behv[nr]))
             if nr == 0:
                 for nm in range(0,len(months),1):
-                    term = np.zeros( [len(levc),len(ilat),len(ilon)],dtype=float ) 
+                    term_mean = np.zeros( [len(levc),len(ilat),len(ilon)],dtype=float ) 
+                    term_vari = np.zeros( [len(levc),len(ilat),len(ilon)],dtype=float ) 
                     allt = 0
                     for year in range(1979,2021,1):
                         ds   = xr.open_dataset("%s%s/ERA5_NH_%s_%d.nc"%(datapath,varname,varname,year))
-                        term = term + ds[varname].sel(time=ds.time.dt.month.isin(months[nm]),
-                                level=levc,longitude=ilon,latitude=ilat).sum('time')
-                        allt = allt + len(ds['time'].sel(time=ds.time.dt.month.isin(months[nm])))
-                    var[nl,nr,nm,:,:,:] = term/allt
+                        term = ds[varname].sel(time=np.array([ds.time.dt.month.isin(months[nm]),ds.time.dt.hour.isin(0)]).all(axis=0),
+                                level=levc,longitude=ilon,latitude=ilat)
+                        term_mean, term_vari, allt = mean_vari_dynamic(term_mean,term_vari,allt,term)
+                        #allt = allt + len(ds['time'].sel(time=ds.time.dt.month.isin(months[nm])))
+                    var[nl,nr,nm,:,:,:] = term_mean
+                    vari[nl,nr,nm,:,:,:]= term_vari
                     numb[nl,nr,nm]=allt
-                    del term, allt
+                    del term, allt, term_mean, term_vari
             else:
                 ct = locals().get('ct_%d_%s'%(lev[nl],behv[nr]))
                 if len(ct) == 0:
                     numb[nl,nr,:]= 0
                     var[nl,nr,:,:,:,:] = 0 
+                    vari[nl,nr,:,:,:,:] = 0 
                     continue
                 ctda = xr.DataArray(ct, coords=[ct], dims=["time"])
                 for nm in range(0,len(months),1):
-                    term = np.zeros( [len(levc),len(ilat),len(ilon)],dtype=float ) 
+                    term_mean = np.zeros( [len(levc),len(ilat),len(ilon)],dtype=float ) 
+                    term_vari = np.zeros( [len(levc),len(ilat),len(ilon)],dtype=float ) 
+                    allt = 0
                     ctda0 = ctda.sel(time=ctda.time.dt.month.isin(months[nm]))
                     if len(ctda0) == 0:
                         numb[nl,nr,nm]=0
                         var[nl,nr,nm,:,:,:] = 0 
+                        vari[nl,nr,nm,:,:,:] = 0 
                         continue
                     for year in range(1979,2021,1):
                         ctda1 = ctda0.sel(time=ctda0.time.dt.year.isin(year))
@@ -157,15 +184,18 @@ for varname in ['u','v','t','z']:
                         if len(ctda1) == 0:
                             continue
                         ds  = xr.open_dataset("%s%s/ERA5_NH_%s_%d.nc"%(datapath,varname,varname,year))
-                        term= term + ds[varname].sel(time=ctda1,level=levc,longitude=ilon,latitude=ilat).sum('time')
-                    var[nl,nr,nm,:,:,:] = term/len(ctda0.sel(time=ctda0.time.dt.year.isin(range(1979,2021,1))))
-                    numb[nl,nr,nm]=len(ctda0.sel(time=ctda0.time.dt.year.isin(range(1979,2021,1))))
-                del ct, ctda, term, ctda0, ctda1
+                        term = ds[varname].sel(time=ctda1,level=levc,longitude=ilon,latitude=ilat)
+                        term_mean, term_vari, allt = mean_vari_dynamic(term_mean,term_vari,allt,term)
+                    var[nl,nr,nm,:,:,:] = term_mean
+                    vari[nl,nr,nm,:,:,:]= term_vari
+                    numb[nl,nr,nm]=allt
+                del ct, ctda, term, ctda0, ctda1, allt, term_mean, term_vari
             
     ds = xr.Dataset(
             {
                 "numb": (["lev3", "behv","month"], numb),
                 "var" : (["lev3", "behv","month", "level", "lat","lon"], var),
+                "vari": (["lev3", "behv","month", "level", "lat","lon"], vari),
                 },
             coords={
                 "lev3" : (["lev3"],lev),
@@ -178,5 +208,5 @@ for varname in ['u','v','t','z']:
             )
     ds.attrs["description"] = "composite background for diff behavior of 3levs cyclones"
     ds.to_netcdf(fileout+varname+".nc","w")
-    del ds,var,numb
+    del ds,var,numb,vari
         

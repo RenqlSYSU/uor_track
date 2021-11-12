@@ -16,14 +16,14 @@ import numpy as np
 import sys, os, subprocess, linecache, gc
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from renql import cyc_filter, monthly_calc
+from renql import cyc_filter, monthly_calc, life_intensity
 
 if len(sys.argv) < 2 :
-    option=0 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+    option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
     flats = 27 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
-    flonr = 90 #int(sys.argv[5])
+    flonr = 60 #int(sys.argv[5])
     time = 24 # threshold, hour
     prefix = "ff"
     season = 0 # 0 monthly, 1 seasonal
@@ -40,9 +40,10 @@ else:
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/behv3_month_%dh_%s"%(time,suffix)
 fileout="/home/users/qd201969/uor_track/mdata/behv3_month_%dh_%s.nc"%(time,suffix)
-calcbehv = 0
-drawannual = 1
-drawbox = 1
+calcbehv = 1
+storedata  = 0
+drawannual = 0
+drawbox    = 0
 
 flonr2 = 90
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
@@ -86,19 +87,23 @@ if calcbehv == 1:
                 ret.wait()
                 subprocess.run("mv %s.new %s"%(filname0,filname),shell=True)
 
-        var[0,nl,:] = cyc_filter.behavior(filname,
-                lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
+        #var[0,nl,:] = cyc_filter.behavior(filname,
+        #        lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
 
         for nr in range(0,len(behv),1):
             if nr == 0:
                 filname1 = filname
             else:
                 filname1 = filname+"_"+behv[nr]
-            var[1:len(month),nl,nr] = monthly_calc.calc_month(
-                    frae, month[1:len(month)], nday[1:len(month)], filname1)
+
+            life_intensity.hist_life_intensity(filname1)
+
+            #var[1:len(month),nl,nr] = monthly_calc.calc_month(
+            #        frae, month[1:len(month)], nday[1:len(month)], filname1)
             #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
             #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
 
+if storedata == 1:
     f = open(figdir,'w')
     f.write(path+prefix+"_1980-2020_"+suffix+"\n")
     f.write("*"*50+"\n")
