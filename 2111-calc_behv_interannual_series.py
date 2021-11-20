@@ -19,6 +19,7 @@ from datetime import datetime
 from scipy import stats
 from renql import cyc_filter
 import matplotlib.pyplot as plt
+from matplotlib import colors
 
 def standardize(data):
     naxis = 0
@@ -172,7 +173,7 @@ def storedata(var,fileout):
         %d-%dE, %d-%dN, threshold timelife %d'''%(flonl,flonr,flats,flatn,time)
     ds.to_netcdf(fileout,"w")
     
-def draw_ts(var):
+def draw_ts(var,figdir):
 # draw the interannual time series
     nrow = 4
     ncol = 1
@@ -200,20 +201,67 @@ def draw_ts(var):
         #fig.savefig(figdir)
         fig.savefig(figdir+season[nm]+".png", bbox_inches='tight',pad_inches=0.01)
 
-def draw_relation(var):
+def draw_relation(var,figdir):
     nrow = 2
     ncol = 2
     bmlo = 0.1
     bigfont=22
-    midfont=14
-    smfont=10
+    midfont=10
+    smfont=6
+    cnlevels = [-0.99,-0.95,-0.90,0.90,0.95,0.99]
+    listcolor = ["dodgerblue","deepskyblue","powderblue","white","gold","darkorange","red"]
+    fcolors = colors.ListedColormap(listcolor)
+    norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
+    
+    dims = var.shape
+    var1 = var.reshape((dims[0]*dims[1],dims[2],dims[3]),order='C')
+    
+    label=[]
+    for i0 in range(dims[0]):
+        for i1 in range(dims[1]):
+            label.append("%d %s"%(lev[i0],behv[i1+1]))
+
     fig = plt.figure(figsize=(9,9),dpi=200)
     ax = fig.subplots(nrow, ncol) #sharex=True, sharey=True
     for ix in range(0,nrow,1):
         for iy in range(0,ncol,1):
             nm = 2*iy+ix
+            cor  = np.empty((dims[0]*dims[1],dims[0]*dims[1]),dtype=float) 
+            prob = np.ones((dims[0]*dims[1],dims[0]*dims[1]),dtype=float)
+            for i in range(len(label)):
+                for j in range(i):
+                    cor[i,j], prob[i,j] = stats.pearsonr(var1[i,nm,:],var1[j,nm,:])
+                    print("%s %s %s : r = %.2f prob = %.2f"%(season[nm], label[i], label[j], cor[i,j], prob[i,j]))
+            prob = 1-prob
+            prob = np.where(cor<0,-prob,prob)
 
-        
+            axe = ax[ix][iy]
+            axe.set_title(season[nm]+" "+suffix,fontsize=midfont)
+            im = axe.imshow(prob, cmap=fcolors, norm=norm)
+            axe.set_xticks(np.arange(len(label)))
+            axe.set_yticks(np.arange(len(label)))
+            axe.set_xticklabels(label,fontsize=smfont)
+            axe.set_yticklabels(label,fontsize=smfont)
+            axe.plot([3.5,3.5],[0,(len(label)-1)],color="k")
+            axe.plot([7.5,7.5],[0,(len(label)-1)],color="k")
+            axe.plot([0,(len(label)-1)],[7.5,7.5],color="k")
+            axe.plot([0,(len(label)-1)],[3.5,3.5],color="k")
+            # Rotate the tick labels and set their alignment.
+            plt.setp(axe.get_xticklabels(), rotation=45, ha="right",
+                             rotation_mode="anchor")
+
+            #axe.spines[:].set_visible(False)
+            # Loop over data dimensions and create text annotations.
+            for i in range(len(label)):
+                for j in range(i):
+                    text = axe.text(j,i,"%.2f"%cor[i,j], ha="center", va="center", color="k",fontsize=6)
+
+    position = fig.add_axes([0.92, 0.2, 0.01, 0.6]) #left, bottom, width, height
+    cb = plt.colorbar(im, cax=position ,orientation='vertical')#, shrink=.9)
+    #fig.tight_layout(rect=(0,bmlo,1,1)) #w_pad=0.5,h_pad=0.001) #,
+    #fig.savefig(figdir)
+    fig.savefig(figdir+".png", bbox_inches='tight',pad_inches=0.08)
+            
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
     flats = 27 #int(sys.argv[2])
@@ -248,12 +296,12 @@ season = ["DJF","MAM","JJA","SON"]
 #storedata(var,outdir+"behv_interannual_series.nc")
 
 fvar = xr.open_dataset(outdir+"behv_interannual_series.nc")
-var = fvar['var']
+var = fvar['var'].data
 
-#draw_ts(var)
-#draw_relation(var)
+#draw_ts(var,figdir)
+draw_relation(var[:,1:,:,:],figdir+"relation")
 
-for varname in ["u","v","z"]:
-    calc_regression(var,varname,outdir+"regr_interannual_")
+#for varname in ["u","v","z"]:
+#    calc_regression(var,varname,outdir+"regr_interannual_")
 #draw_regression()
 

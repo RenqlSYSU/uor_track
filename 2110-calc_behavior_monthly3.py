@@ -38,9 +38,10 @@ else:
     time = int(sys.argv[8])
 
 suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
-figdir = "/home/users/qd201969/uor_track/fig/behv3_month_%dh_%s"%(time,suffix)
+figdir = "/home/users/qd201969/uor_track/fig/"
 fileout="/home/users/qd201969/uor_track/mdata/behv3_month_%dh_%s.nc"%(time,suffix)
-calcbehv = 1
+calcbehv = 0
+draw_hist = 1
 storedata  = 0
 drawannual = 0
 drawbox    = 0
@@ -65,14 +66,14 @@ else:
     frae=0
 
 imonth=range(1,len(month),1)
-var  = np.empty( [len(month),len(lev),len(behv)],dtype=int )  
-perc = np.empty( [len(month),len(lev),len(behv)],dtype=float )  
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 os.chdir("/home/users/qd201969/uor_track/fig")
 #===============================================
 # box filer cyclone, read cyclone number
 #===================================================
 if calcbehv == 1:
+    var  = np.empty( [len(month),len(lev),len(behv)],dtype=int )  
+    perc = np.empty( [len(month),len(lev),len(behv)],dtype=float )  
     for nl in range(0,len(lev),1):
         filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix#+"_"+str(time)
 
@@ -96,15 +97,46 @@ if calcbehv == 1:
             else:
                 filname1 = filname+"_"+behv[nr]
 
-            life_intensity.hist_life_intensity(filname1)
+            #life_intensity.hist_life_intensity(filname1)
 
             #var[1:len(month),nl,nr] = monthly_calc.calc_month(
             #        frae, month[1:len(month)], nday[1:len(month)], filname1)
             #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
             #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
 
+if draw_hist == 1:
+    nrow = len(lev)
+    ncol = len(behv)-1
+    bmlo = 0.1
+    BIGFONT=22
+    MIDFONT=14
+    SMFONT=10
+    
+    fig = plt.figure(figsize=(9,9),dpi=200)
+    ax = fig.subplots(nrow, ncol, sharex=True, sharey=True)
+    for nl in range(0,len(lev),1):
+        filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix#+"_"+str(time)
+        for nr in range(1,len(behv),1):
+            if nr == 0:
+                filname1 = filname
+            else:
+                filname1 = filname+"_"+behv[nr]
+            
+            patches = life_intensity.hist_life_intensity(filname1, \
+                    ax=ax[nl,nr-1], title="%d %s"%(lev[nl],behv[nr]))
+            if nl == 2:
+                ax[nl,nr-1].set_xlabel("lifetime (days)",fontsize=SMFONT)
+
+            if nr == 1:
+                ax[nl,nr-1].set_ylabel("Max intensity ($10^{-5} s^{-1}$)",fontsize=SMFONT)
+
+    position = fig.add_axes([0.96, bmlo+0.05, 0.02, 0.8]) #left, bottom, width, height
+    cb = plt.colorbar(patches, cax=position ,orientation='vertical')#, shrink=.9)
+    fig.tight_layout(rect=(0,bmlo,0.94,1)) #w_pad=0.5,h_pad=0.001) #,
+    fig.savefig("%slife_inte_%s.png"%(figdir,suffix), bbox_inches='tight',pad_inches=0.08)
+
 if storedata == 1:
-    f = open(figdir,'w')
+    f = open("%sbehv3_month_%dh_%s"%(figdir,time,suffix),'w')
     f.write(path+prefix+"_1980-2020_"+suffix+"\n")
     f.write("*"*50+"\n")
     f.write("lats"+str(lats)+"\n")
@@ -165,8 +197,8 @@ if drawannual == 1:
     
     ax[2][1].legend(behv[1:len(behv)], loc='upper right')
     fig.tight_layout(w_pad=0.5,h_pad=1) #,rect=(0,bmlo,1,1)
-    fig.savefig(figdir+".png")
-    #fig.savefig(figdir+".png", bbox_inches='tight',pad_inches=0.01)
+    fig.savefig("%sbehv3_month_%dh_%s"%(figdir,time,suffix))
+    #fig.savefig("%sbehv3_month_%dh_%s"%(figdir,time,suffix), bbox_inches='tight',pad_inches=0.01)
     
     fig = plt.figure(figsize=(9,9),dpi=200)
     ax  = fig.subplots(1, 1) #sharex=True, sharey=True
@@ -176,7 +208,7 @@ if drawannual == 1:
     
     ax.legend(loc='upper right')
     fig.tight_layout(w_pad=0.5,h_pad=1) #,rect=(0,bmlo,1,1)
-    fig.savefig(figdir+"total.png")
+    fig.savefig("%sbehv3_month_%dh_%s_total.png"%(figdir,time,suffix))
 
 #===============================================
 # draw trajectory and filter box 
