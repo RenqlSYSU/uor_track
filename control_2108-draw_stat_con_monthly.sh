@@ -4,7 +4,7 @@ lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=ff # tr is original cyclone ; ff is the filtered cyclone
 
-filt=1 #filt=1, then use filter track to match
+filt=0 #filt=1, then use filter track to match
 
 # filter area
 lats=25
@@ -25,7 +25,7 @@ figtitle=('250' '500' '850')
 
 cd ${OUTDIR}
 #cd ${OUTDIR}match${suffix}/
-level=1 # 2=total cyclone level,1=middle range filt cyclone, 0=small range filt and match cyclone level
+level=2 # 2=total cyclone level,1=middle range filt cyclone, 0=small range filt and match cyclone level
 path=$(pwd)
 
 np=0
@@ -38,7 +38,7 @@ for filename in ${prefix}_*_1980-2020${suffix};do
     #python ~/uor_track/2108-draw_stat_con_monthly.py \
     python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
         ${filename} ${file}.nc ${level} ${figtitle[$np]}${suffix} \
-        1 ${lats} ${latn} ${lonl} ${lonr}
+        0 ${lats} ${latn} ${lonl} ${lonr}
     np=$((np+1))
 done
 

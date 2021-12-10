@@ -23,9 +23,10 @@ if len(sys.argv) < 2 :
     flats = 27 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
-    flonr = 60 #int(sys.argv[5])
+    flonr = 85 #int(sys.argv[5])
     time = 24 # threshold, hour
     prefix = "ff"
+    suffix0 = "_5_2545-60110"
     season = 0 # 0 monthly, 1 seasonal
 else:
     option= int(sys.argv[1]) 
@@ -37,18 +38,18 @@ else:
     season = int(sys.argv[7])
     time = int(sys.argv[8])
 
-suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+suffix=str(option)+"_"+str(flatn)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/"
 fileout="/home/users/qd201969/uor_track/mdata/behv3_month_%dh_%s.nc"%(time,suffix)
-calcbehv = 0
-draw_hist = 1
+calcbehv = 1
+draw_hist = 0
 storedata  = 0
 drawannual = 0
 drawbox    = 0
 
 flonr2 = 90
 behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
-lats = [flats ,flatn ,flats ,flats ,flats ]
+lats = [flatn ,flatn ,flats ,flats ,flats ]
 latn = [flatn ,flatn ,flats ,flatn ,flatn ]
 lonl = [flonl ,flonl ,flonl ,flonr2,flonl ]
 lonr = [flonr ,flonr2,flonr2,flonr2,flonr2]
@@ -75,21 +76,22 @@ if calcbehv == 1:
     var  = np.empty( [len(month),len(lev),len(behv)],dtype=int )  
     perc = np.empty( [len(month),len(lev),len(behv)],dtype=float )  
     for nl in range(0,len(lev),1):
-        filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix#+"_"+str(time)
+        filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0+"_"+suffix#+"_"+str(time)
 
         if not os.path.isfile(filname) :
-            filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"
+            filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0
             if option == 2:
-                var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,option,time)
+                var[0,nl,0] = cyc_filter.line_filt(filname0,flatn,flatn,flonl,flonr,option,time)
             else:
-                com = "/home/users/qd201969/TRACK-1.5.2/utils/bin/box %s %d %d %d %d %d 0 0.0"\
+                com = "/home/users/qd201969/track-1.5.2/utils/bin/box %s %d %d %d %d %d 0 0.0"\
                     %(filname0,flats,flatn,flonl,flonr,option)
-                ret=subprocess.Popen(com,shell=True)
+                ret=subprocess.popen(com,shell=True)
                 ret.wait()
                 subprocess.run("mv %s.new %s"%(filname0,filname),shell=True)
 
-        #var[0,nl,:] = cyc_filter.behavior(filname,
-        #        lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
+        if not os.path.isfile(filname+"_ntn") :
+            var[0,nl,:] = cyc_filter.behavior(filname,
+                    lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
 
         for nr in range(0,len(behv),1):
             if nr == 0:
@@ -99,10 +101,11 @@ if calcbehv == 1:
 
             #life_intensity.hist_life_intensity(filname1)
 
+            #var[1:len(month),nl,nr] = monthly_calc.calc_month_fft(filname1,time)
             #var[1:len(month),nl,nr] = monthly_calc.calc_month(
             #        frae, month[1:len(month)], nday[1:len(month)], filname1)
-            #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
-            #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
+            var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
+               frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
 
 if draw_hist == 1:
     nrow = len(lev)
@@ -115,7 +118,7 @@ if draw_hist == 1:
     fig = plt.figure(figsize=(9,9),dpi=200)
     ax = fig.subplots(nrow, ncol, sharex=True, sharey=True)
     for nl in range(0,len(lev),1):
-        filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix#+"_"+str(time)
+        filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0+"_"+suffix#+"_"+str(time)
         for nr in range(1,len(behv),1):
             if nr == 0:
                 filname1 = filname
@@ -225,9 +228,9 @@ if drawbox == 1:
     phis=phis/9.8 # transfer from m2/s2 to m
     
     cfp.setvars(file="traj-"+prefix+"_"+suffix+".png")
-    cfp.gopen(figsize=[20, 20],rows=3,columns=3,wspace=0.1,hspace=0.02,bottom=0.55)
-    cfp.mapset(lonmin=0, lonmax=150, latmin=10, latmax=70)
-    for nr in range(1,len(lats)-1,1):
+    cfp.gopen(figsize=[20, 20],rows=4,columns=3,wspace=0.1,hspace=0.02,bottom=0.5) #0.55
+    cfp.mapset(lonmin=0, lonmax=150, latmin=15, latmax=70)
+    for nr in range(1,len(lats),1):
         if nr == 0:
             suffix2 = ""
         else:
@@ -251,7 +254,7 @@ if drawbox == 1:
             if var[0,nl,nr] == 0:
                 continue
             
-            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix+suffix2
+            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0+"_"+suffix+suffix2
             if not os.path.isfile(filname+'.nc') :
                 ret=subprocess.Popen("/home/users/qd201969/TRACK-1.5.2/utils/bin/tr2nc \
                         "+filname+" s /home/users/qd201969/TRACK-1.5.2/utils/TR2NC/tr2nc.meta",shell=True)
@@ -266,7 +269,7 @@ if drawbox == 1:
             cfp.levs(min=0.0, max=8.0, step=0.5)
             cfp.traj(g, zorder=0, legend_lines=True, colorbar=False, linewidth=1.5)
             
-    cfp.cbar(position=[0.2, 0.53, 0.6, 0.01], title='Relative Vorticity (Hz)*1e5')
+    cfp.cbar(position=[0.2, 0.48, 0.6, 0.01], title='Relative Vorticity (Hz)*1e5') #0.53
     cfp.gclose()
     subprocess.run("mogrify -bordercolor white -trim ./traj-"+prefix+"_"+suffix+".png",shell=True) 
     #subprocess.run("rm /home/users/qd201969/ERA5-1HR-lev/*.nc",shell=True) 

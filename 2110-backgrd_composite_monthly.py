@@ -44,6 +44,7 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
             linenum = ff.readline()
             term1 =linenum.strip().split(" ")
             num = int(term1[-1])
+            
             data = []
             for nl in range(0,num,1):
                 line = ff.readline()
@@ -71,7 +72,7 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
                         '''
                         a = a[:-2]+'00'
                         ct1.append(datetime.strptime(a,'%Y%m%d%H'))
-                        inty.append(data[3])
+                        inty.append(data[nl+1][3])
         line = ff.readline()
     ff.close()
     
@@ -81,7 +82,7 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
         print("all time when cyclone in %d-%dE,%d-%dN : %d"\
                 %(flonl,flonr,flats,flatn,len(ct1)))
     else:
-        #ct1=list(np.array(ct1)[inty>np.percentile(np.array(inty),95)]) # top 5%
+        ct1=list(np.array(ct1)[inty>np.percentile(np.array(inty),95)]) # top 5%
         #ct1=list(np.array(ct1)[inty<np.percentile(np.array(inty),5)]) # low 5%
         ct2=list(set(ct1))
         print("all time when cyclone in %d-%dE,%d-%dN : %d, %d, %d, %.2f%%, %.2f%%"\

@@ -12,11 +12,21 @@ if [ $season == 0 ];then
     #nmonth=(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)
     nmonth=($(seq 1 1 12))
     frae=744
-else
+fi
+
+if [ $season == 1 ];then
     nday=(90 92 92 91)
     nmonth=(DJF MAM JJA SON)
     frae=0
 fi
+
+if [ $season == -1 ];then
+    nday=(365)
+    nmonth=(all)
+    frae=744
+fi
+
+
 echo ${nmonth[*]}
     
 sed -i "21s/.*/${filname}/" indat/STATS.latlng_1hr.in

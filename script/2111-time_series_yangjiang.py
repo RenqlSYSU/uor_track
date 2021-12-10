@@ -60,30 +60,33 @@ lat = 20.961667
 lon = 111.608889
 hgt = [110,110,50,50,30,30,20,20] # unit m
 drawvar = ['WS','WD','WS','WD','WS','WD','Temp','RH']
-unit = ['m/s','Ã‚Â°','m/s','Ã‚Â°','m/s','Ã‚Â°','Ã‚Â°C','%']
+unit = ['m/s','°','m/s','°','m/s','°','°C','%']
+#unit = ['m/s','Ã‚Â°','m/s','Ã‚Â°','m/s','Ã‚Â°','Ã‚Â°C','%']
 
 # define date of start time and forcast time
-stime  = ['2020','06','30'] # year, month, date, hour
-ftime  = pd.date_range(start='2020-07-01 00',end='2020-07-10 23',freq='1H',closed=None)
+stime  = ['2019','11','30'] # year, month, date, hour
+ftime  = pd.date_range(start='2019-12-01 00',end='2019-12-31 00',freq='1H',closed=None)
 ftime0 = pd.date_range(start='2021-09-16 00',end='2021-09-25 23',freq='1H',closed=None) # use for rainfall
 
-case = ['Coupled','Uncoupled',"Obs"]
-path = ['/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/'+''.join(stime)+'00_org/',
-        '/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/'+''.join(stime)+'00_wrf/',
-        "/home/lzhenn/array74/data/yangjiang-windfarm/report_expand.xlsx"]
+case = ["Obs","Coupled"]#,'Uncoupled'
+path = ["/home/lzhenn/array74/data/yangjiang-windfarm/1hour.txt",
+        '/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/'+''.join(stime)+'00/']
+        #'/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/'+''.join(stime)+'00_wrf/',
 domin = ['d02','d02'] #njord, pathn2
 
-for nv in range(6,8):
+for nv in range(0,8):
     varname = "%s_%dm_Avg [%s]"%(drawvar[nv],hgt[nv],unit[nv])
     figdir= "/home/lzhenn/cooperate/fig/ts_yangjiang1_%s.jpg"%(varname.rsplit("_",1)[0])
     title = "%s, %fN, %fE"%(varname,lat,lon)
 
-    var = np.empty((3,len(ftime)), dtype = float)
-    df = pd.read_excel(path[2], index_col=0, usecols=['日期',varname])
-    var[2,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
+    var = np.zeros((len(case),len(ftime)), dtype = float)
+    df = pd.read_csv(path[0],index_col=0, usecols=['Date/Time',varname])
+    var[0,:] = df[df.index.isin(ftime.strftime('%Y-%m-%d %H:00'))].to_numpy()[:,0]
+    #df = pd.read_excel(path[0], index_col=0, usecols=['日期',varname])
+    #var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
     del df
 
-    for nc in range(len(case)-1):
+    for nc in range(1,len(case),1):
         for nt in range(0,len(ftime)-1,24):
             #filedir = path[nc]+'wrfout_'+domin[nc]+'_'+ftime[nt].strftime("%Y-%m-%d_%H:00:00")
             filedir = path[nc]+'wrfout_'+domin[nc]+'_'+ftime[nt].strftime("%Y-%m-%d")+"*"
@@ -107,12 +110,12 @@ for nv in range(6,8):
     fig = plt.figure(figsize=(12,9),dpi=300)
     axe = fig.add_axes([0.05, 0.05, 0.9, 0.45])
     axe.set_title(title,fontsize=MIDFONT) 
-    for nc in range(len(var)):
-        if nc == 2:
+    for nc in range(len(case)):
+        if nc == 0:
             axe.plot(ftime, var[nc,:], label=case[nc])
         else:
-            rmse = np.sqrt(np.power(np.nan_to_num((var[nc,:] - var[2,:]),copy=False,nan=0),2).mean())
-            mae = np.nan_to_num((var[nc,:] - var[2,:]),copy=False,nan=0).mean()
+            rmse = np.sqrt(np.power(np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0),2).mean())
+            mae = np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0).mean()
             axe.plot(ftime, var[nc,:], label="%s (RMSE: %.2f, MAE: %.2f)"%(case[nc],rmse,mae))
     #axe.set_ylabel("wind speed (m/s)",fontsize=MIDFONT)  # Add an x-label to the axes.
     axe.set_xlabel("time",fontsize=MIDFONT)  # Add a y-label to the axes.

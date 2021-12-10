@@ -44,7 +44,6 @@ def calc_life_intensity(filname,flats=25,flatn=48,flonl=57,flonr=100):
                     data.append(term)
 
             data = np.array(data)
-            print(data.shape)
             if len(data.shape) == 2:
                 inte.append(data[:,3].mean())
                 #inte.append(data[:,3].max())
@@ -65,31 +64,31 @@ def calc_life_intensity(filname,flats=25,flatn=48,flonl=57,flonr=100):
 
     return life, inte, int(term[0])
 
-def hist_life_intensity(filname,ax=None,title=None,figsave=False):
-    BIGFONT=22
-    MIDFONT=14
-    SMFONT=10
+def hist_life_intensity(filname,ax=None,title=None,figsave=False,flats=25,flatn=45,flonl=60,flonr=90):
+    title_font=18
+    label_font=14
 
-    life, inte, numb = calc_life_intensity(filname)
+    life, inte, numb = calc_life_intensity(filname,\
+        flats=flats-3,flatn=flatn+3,flonl=flonl-3,flonr=flonr+3)
 
     #cnlevels = np.arange(0,85,5)
-    cnlevels = np.arange(0.5,9,0.5)/100.0
+    cnlevels = np.arange(0.5,17.5,1)/100.0
     norm  = colors.BoundaryNorm(boundaries=cnlevels, ncolors=cmaps.precip2_17lev.N,extend='both')
-    xbin = range(1,16,1)
-    ybin = range(1,21,1)
+    xbin = np.arange(1,8,0.5)
+    ybin = np.arange(1,13,0.5)
    
     if not title:
         title = filname.split("/")[-1]
     
     if not ax:
         fig = plt.figure(figsize=(9,9),dpi=200)
-        ax = fig.axes()
-        ax.set_xlabel("lifetime (days)",fontsize=MIDFONT)
-        ax.set_ylabel("Max intensity ($10^{-5} s^{-1}$)",fontsize=MIDFONT)
+        ax = plt.axes()
+        ax.set_xlabel("lifetime (days)",fontsize=label_font)
+        ax.set_ylabel("Max intensity ($10^{-5} s^{-1}$)",fontsize=label_font)
 
     h,xedge,yedge,patches = ax.hist2d(life,inte,bins=[xbin,ybin],\
             cmap=cmaps.precip2_17lev,norm=norm, density=True )
-    ax.set_title("%s (%d)"%(title,numb),fontsize=SMFONT)
+    ax.set_title("%s (%d)"%(title,numb),fontsize=title_font)
 
     if figsave == True:
         plt.colorbar(patches, ax=ax, shrink=.7)

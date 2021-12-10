@@ -14,16 +14,15 @@ import cmaps
 
 lonl=0  #0  #
 lonr=150#360#
-lats=15 #0  #
+lats=15 #20 #
 latn=70 #90 #
 lat_sp = 20
-lon_sp = 30
-nrow = 4
-ncol = 3
-bmlo = 0.4
-BIGFONT=22
-MIDFONT=14
-SMFONT=10
+lon_sp = 30 #60 #
+nrow = 4 #6 #
+ncol = 3 #2 #
+bmlo = 0.4 #0.25 #
+title_font=14
+label_font=10
 
 # level == 0 #small range
 lev=[[0    ,320  ,20  ], # 0Feature Density
@@ -55,10 +54,10 @@ draw=[1,2,14]
 #draw=[1,2,14,8,9,6]
 
 if sys.argv[1] == "0" :
-    filename = 'ff_250_1980-2020_2_2545-6080'
+    filename = 'ff_250_1980-2020' #_2_2545-6080
     files = '/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat.nc'
     level = 2
-    figtitle = '250_2_2545-6080'
+    figtitle = '250'#_2_2545-6080
     dbox = 0 
 else:
     filename = sys.argv[1]  #'ff_250_500_no'
@@ -91,7 +90,7 @@ ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 
 ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
-da = ds['u'].sel(level=200,expver=1,longitude=ilon,latitude=ilat,method="nearest").load()
+da = ds['u'].sel(level=200,longitude=ilon,latitude=ilat,method="nearest").load()
 # increased performance by loading data into memory first, e.g., with load()
 uwnd = da.groupby(da.time.dt.month).mean('time')
 del ds, da
@@ -122,7 +121,7 @@ for nv in range(0,len(draw),1):#,len(f),1):
     norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
     
     fig = plt.figure(figsize=(12,12),dpi=300)
-    ax = fig.subplots(nrow, ncol, subplot_kw=dict(projection=ccrs.PlateCarree())) #sharex=True, sharey=True
+    ax = fig.subplots(nrow, ncol, subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=180.0))) #sharex=True, sharey=True
     nm = -1
     #for nm in range(0,len(titls),1):
     for nr in range(0,nrow,1):
@@ -132,7 +131,7 @@ for nv in range(0,len(draw),1):#,len(f),1):
             #axe = plt.subplot(4,3,nm+1,projection=ccrs.PlateCarree())    #创建子图
             #axe.add_feature(cfeat.COASTLINE.with_scale('110m'),edgecolor='black', linewidth=0.8, zorder=1) 
             axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=1)
-            axe.set_title(figtitle+" "+titls[nm],fontsize=SMFONT)
+            axe.set_title(figtitle+" "+titls[nm],fontsize=title_font)
 
             cont = axe.contourf(ilon, ilat, var[nm,:,:], cnlevels, 
                          transform=ccrs.PlateCarree(),cmap=fcolors,extend='both',norm=norm)
@@ -141,8 +140,8 @@ for nv in range(0,len(draw),1):#,len(f),1):
             if dbox >= 1 :
                 axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
                          linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
-            jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,32], 
-                         transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=2.5)
+            jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,40,50], 
+                         transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=2)
             if nc == 0:
                 axe.set_yticks(np.arange(lats,latn,lat_sp), crs=ccrs.PlateCarree())
                 axe.yaxis.set_major_formatter(LatitudeFormatter(degree_symbol=''))
@@ -151,14 +150,18 @@ for nv in range(0,len(draw),1):#,len(f),1):
                 axe.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
 
     #fig.subplots_adjust(left=0.2,bottom=bmlo) # wspace control horizontal space
-    position = fig.add_axes([0.2, bmlo+0.005, 0.7, 0.01]) #left, bottom, width, height
-    cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
-    
-    plt.figtext(0.02,bmlo-0.005, var.long_name,fontsize=MIDFONT,
-            horizontalalignment='left',verticalalignment='bottom')
-    #axe.text(0.5,1.2, filename+' '+var.long_name,fontsize=MIDFONT,
+    if (nrow/ncol) >= 2.0: 
+        position = fig.add_axes([0.99, bmlo+0.05, 0.01, 0.6]) #left, bottom, width, height
+        cb = plt.colorbar(cont, cax=position ,orientation='vertical')#, shrink=.9)
+        cb.set_label(label=var.long_name, size=title_font) #, weight='bold'
+    else:
+        position = fig.add_axes([0.2, bmlo+0.005, 0.7, 0.01]) #left, bottom, width, height
+        cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
+        plt.figtext(0.02,bmlo-0.005, var.long_name,fontsize=title_font,
+                horizontalalignment='left',verticalalignment='bottom')
+    #axe.text(0.5,1.2, filename+' '+var.long_name,fontsize=title_font,
     #        horizontalalignment='center',verticalalignment='bottom',transform=ax[0][1].transAxes)
-    #plt.suptitle(filename+' '+var.long_name,x=0.5,y=0.9,fontsize=MIDFONT/2)
+    #plt.suptitle(filename+' '+var.long_name,x=0.5,y=0.9,fontsize=title_font/2)
     plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
     plt.savefig(figdir+var.long_name.replace(" ","")+".png", bbox_inches='tight',pad_inches=0.01)
 

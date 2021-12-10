@@ -7,22 +7,22 @@
 
 lev=(250 500 850)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
-prefix=fft # tr is original cyclone ; ff is the filtered cyclone
+prefix=$1 #ff # tr is original cyclone ; ff is the filtered cyclone
 # fft is the file that has been converted to real time
 
-pro=1  # -1=convert to real time ;0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt 
+pro=$2 #2  # -1=convert to real time ;0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt 
 # 4 = three level match ;5 = two level match ; 6 = combine match file
-filt=1 #filt=1, then use filter track to match
+filt=$3 #1 #filt=1, then use filter track to match
 nl1=0
 nl2=1
 nl3=0
 
 # filter area
-lats=25 #25
-latn=45 #45
-lonl=60 #60
-lonr=100 #80
-option=2 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+option=$4 #5 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)/pass no genesis(5)
+lats=$5 #25 #25
+latn=$6 #45 #45
+lonl=$7 #60 #60
+lonr=$8 #110 #80
 if [ $filt == 1 ]; then 
     suffix=_${option}_${lats}${latn}-${lonl}${lonr}
 else
@@ -110,7 +110,7 @@ if [ $pro == 2 ];then
         #output=${OUTDIR}match${suffix}/statistic/${file}_stat
         
         echo $file
-        season=0 # 0 = monthly; 1 = seasonal
+        season=0 # 0 = monthly; 1 = seasonal; -1 all year
         #sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
         #cdo -r -copy ${output}_[1-9].nc ${output}_1[0-2].nc ${output}.nc 
         #rm ${output}_[1-9].nc 
@@ -121,6 +121,8 @@ if [ $pro == 2 ];then
             1 ${lats} ${latn} ${lonl} ${lonr}
         np=$((np+1))
     done
+    #python ~/uor_track/2109-draw_stat_con_xr_mp.py \
+    #    ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 3 ];then
@@ -136,16 +138,21 @@ if [ $pro == 3 ];then
         echo "lev: ${lev[$nl]} box filter"
 
         #python ~/uor_track/2110-line_filter.py ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 24 
-        utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
-        mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
-        utils/bin/box ${OUTDIR}${file}${suffix} ${lats} ${latn} ${lonl} ${lonr} 0 1 0.0 
-        mv ${OUTDIR}${file}${suffix}.new ${OUTDIR}${file}${suffix}
+        if [ $option -le 4 ];then 
+            utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
+            mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
+        else
+            utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} 2 0 0.0 
+            mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
+            utils/bin/box ${OUTDIR}${file}${suffix} ${lats} ${latn} ${lonl} ${lonr} 0 1 0.0 
+            mv ${OUTDIR}${file}${suffix}.new ${OUTDIR}${file}${suffix}
+        fi
         awk 'NR==4 {print FILENAME, $2}' ${OUTDIR}${file}${suffix} | tee -a ${OUTDIR}number
         
-        utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
+#        utils/bin/tr2nc ${OUTDIR}${file}${suffix} s utils/TR2NC/tr2nc.meta
     done
-    cd ~/uor_track/fig/
-    python ~/uor_track/2107-draw_panel_traj.py $option ${lats} ${latn} ${lonl} ${lonr}
+#    cd ~/uor_track/fig/
+#    python ~/uor_track/2107-draw_panel_traj.py $option ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 4 ];then

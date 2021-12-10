@@ -70,23 +70,30 @@ lon = 111.608889
 filname = ["hsig","tps","njord_his","njord_his"]
 drawvar = ["hs"  ,"tps","speed","dir"]
 unit    = ["m"   ,"s"  ,"cm/s" ,"deg"]
-obsvar  = ["H3","Tp" ,'表  层','Unnamed: 14']
+obsvar  = ["H3","Tp" ,'表  层','Unnamed: 4']
+#obsvar  = ["H3","Tp" ,'表  层','Unnamed: 14']
 
 # define date of start time and forcast time
-ftime = pd.date_range(start="2020-07-01 00",end="2020-07-11 00",freq="1H",closed=None)
-path  = ["/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/2020063000_org/",
-         "/home/lzhenn/array74/data/yangjiang-windfarm/report_expand.xlsx"]
-case  = ["Coupled","Obs"]
+stime  = ['2019','11','30'] # year, month, date, hour
+ftime  = pd.date_range(start='2019-12-01 00',end='2019-12-31 00',freq='1H',closed=None)
+case = ["Obs","Coupled"]#,'Uncoupled'
+path = ["/home/lzhenn/array74/data/yangjiang-windfarm/",
+        '/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/'+''.join(stime)+'00/']
 
 for nv in range(0,4,1):
     figdir= "/home/lzhenn/cooperate/fig/%s.jpg"%(drawvar[nv])
     title = "ocean %s (%s) (%.2fN,%.2fE) "%(drawvar[nv],unit[nv],lat,lon)
 
     var = np.empty((len(case),len(ftime)), dtype = float)
-    df = pd.read_excel(path[1], index_col=0, usecols=['日期',obsvar[nv]])
-    var[1,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
 
-    nc = 0
+    if nv <= 1 :
+        df = pd.read_excel(path[0]+"201912wave.xlsx", index_col=0, usecols=['日期',obsvar[nv]],skiprows=[1])
+        var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
+    else:
+        df = pd.read_excel(path[0]+"201912current.xlsx", index_col=0, usecols=['日   期',obsvar[nv]],skiprows=[1])
+        var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
+
+    nc = 1
     for nt in range(0,len(ftime)-1,24):
         print(nt,ftime[nt])
         filedir = path[nc]+filname[nv]+"_d01."+ftime[nt].strftime("%Y%m%d")+".nc"
@@ -99,11 +106,11 @@ for nv in range(0,4,1):
     axe = fig.add_axes([0.05, 0.05, 0.9, 0.45])
     axe.set_title(title,fontsize=MIDFONT) 
     for nc in range(len(var)):
-        if nc == 1:
+        if nc == 0:
             axe.plot(ftime, var[nc,:], label=case[nc])
         else:
-            rmse = np.sqrt(np.power(np.nan_to_num((var[nc,:] - var[1,:]),copy=False,nan=0),2).mean())
-            mae = np.nan_to_num((var[nc,:] - var[1,:]),copy=False,nan=0).mean()
+            rmse = np.sqrt(np.power(np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0),2).mean())
+            mae = np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0).mean()
             axe.plot(ftime, var[nc,:], label="%s (RMSE: %.2f, MAE: %.2f)"%(case[nc],rmse,mae))
     #axe.set_ylabel("wind speed (m/s)",fontsize=MIDFONT)  # Add an x-label to the axes.
     axe.set_xlabel("time",fontsize=MIDFONT)  # Add a y-label to the axes.

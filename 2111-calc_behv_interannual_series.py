@@ -114,6 +114,11 @@ def regCoef_n(ts1,ts2,dim1,dim2):
                         #print(regression.slope,regression.pvalue)
     return slope, pvalu
 
+def new_linregress(x, y):
+    # Wrapper around scipy linregress to use in apply_ufunc
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+    return np.array([slope, p_value])
+
 def calc_regression(var,varname,fileout):
     levc = [850,500,250,200]
     lonl=0  #0  #
@@ -136,8 +141,17 @@ def calc_regression(var,varname,fileout):
             ds   = xr.open_dataset("%s%s/ERA5_NH_%s_%d.nc"%(datapath,varname,varname,year[ny]))
             term[ny,:,:,:] = ds[varname].sel(time=ds.time.dt.month.isin(months[nm]),
                     level=levc,longitude=ilon,latitude=ilat).mean("time")
-       
-        regr[:,:,nm,:,:,:], prob[:,:,nm,:,:,:] = regCoef_n(var[:,:,nm,:],term,2,0)
+
+        foo = xr.DataArray(term, coords=[("year",year), ("lev",levc), ("lat",ilat), ("lon",ilon)]) 
+        a1 = xr.apply_ufunc(new_linregress, var[:,:,nm,:],foo
+                            input_core_dims=[['year'], ['year']],
+                            output_core_dims=[["parameter"]],
+                            vectorize=True,
+                            dask="parallelized",
+                            output_dtypes=['float64'],
+                           )
+        regr[:,:,nm,:,:,:] = a1[0,:,:,:,:,:] 
+        prob[:,:,nm,:,:,:] = a1[1,:,:,:,:,:]
 
     ds = xr.Dataset(
             {
@@ -296,7 +310,7 @@ season = ["DJF","MAM","JJA","SON"]
 #storedata(var,outdir+"behv_interannual_series.nc")
 
 fvar = xr.open_dataset(outdir+"behv_interannual_series.nc")
-var = fvar['var'].data
+var = fvar['var']
 
 #draw_ts(var,figdir)
 draw_relation(var[:,1:,:,:],figdir+"relation")

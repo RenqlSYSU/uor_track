@@ -73,9 +73,10 @@ bmlo = 0.1
 title_font=18
 label_font=14
 
-dtime = pd.date_range(start='1995-01-01 00',periods=10, freq='10D',closed=None)
+dtime = pd.date_range(start='1995-01-01 00',periods=60, freq='6H',closed=None)
 #dtime = pd.date_range(start='1995-01-01 00',end='1995-01-15 00', freq='6H',closed=None)
-create_gif = False #True
+create_gif = True #False#
+nfilt="T63"
 lev = [850,500,250]
 cnlvl =[[-8 ,1 ]]
 cnlvl2 = [30,50,100]
@@ -117,10 +118,10 @@ for nt in range(len(dtime)):
         path2 = "%sERA5_VOR%d_1hr_%d_DET/"%(path,lev[nl],dtime[nt].year)
         plat, plon = read_point_fixtime(path2+"fft_trs_pos",dtime[nt].strftime('%Y%m%d%H'),lonl,lonr,lats,latn)
         
-        #fvor = xr.open_dataset("%sERA5_VOR%d_1hr_%d_DET_T63filt.nc"%(path2,lev[nl],dtime[nt].year))
-        #var1 = fvor['var'].sel(time=calc_frames(dtime[nt]),level = 1,lon=ilon,lat=ilat,method="nearest").load()
-        fvor = xr.open_dataset("%sERA5_VOR_1h_dec_jan/ERA5_VOR%d_1hr_dec-jan%d_DET.nc"%(datapath,lev[nl],dtime[nt].year))
-        var1 = fvor['var138'].sel(time=dtime[nt],lev=float(lev[nl]*100),lat=ilat,lon=ilon,method="nearest").load()
+        fvor = xr.open_dataset("%sERA5_VOR%d_1hr_%d_DET_%sfilt.nc"%(path2,lev[nl],dtime[nt].year,nfilt))
+        var1 = fvor['var'].sel(time=calc_frames(dtime[nt]),level = 1,lon=ilon,lat=ilat,method="nearest").load()
+        #fvor = xr.open_dataset("%sERA5_VOR_1h_dec_jan/ERA5_VOR%d_1hr_dec-jan%d_DET.nc"%(datapath,lev[nl],dtime[nt].year))
+        #var1 = fvor['var138'].sel(time=dtime[nt],lev=float(lev[nl]*100),lat=ilat,lon=ilon,method="nearest").load()
         var1.values = var1.values*1e5
 
         axe = ax[nl]

@@ -166,7 +166,8 @@ def line_filt(filname,flats,flatn,flonl,flonr,option=2,time=24):
                                 signal = 1
                                 break 
                     if flats == flatn :
-                        if (data[nl][2]-flats)*(data[nl+1][2]-flats) <= 0 :
+                        #if (data[nl][2]-flats)*(data[nl+1][2]-flats) <= 0 :
+                        if data[nl][2] >= flatn and data[nl+1][2] < flatn:
                             point = intersection_point_fixy([data[nl][1:3], data[nl+1][1:3]], flats)
                             if point <= flonr and point >= flonl :
                                 signal = 1
@@ -188,6 +189,54 @@ def line_filt(filname,flats,flatn,flonl,flonr,option=2,time=24):
     outfile.write(line3)
     outfile.write("TRACK_NUM %9d ADD_FLD    0   0 &" %len(tid))
     print("filter cyclone number in %s : %d" %(outfile.name,len(tid)))
+    outfile.close()
+
+    return len(tid)
+
+def time_filt(filname,time):
+    ff = open(filname,"r") 
+    line1 = ff.readline()
+    line2 = ff.readline()
+    line3 = ff.readline()
+    line4 = ff.readline()
+    a = line4.strip().split(" ",1)
+    term = a[1].strip().split(" ",1)
+    print("total cyclone number in %s : %s" %(ff.name,term[0]))
+   
+    fname = filname.split("_",1)
+    outfile = open("%s%d_%s"%(fname[0],time,fname[1]),"w")
+    outfile.write(line1)
+    outfile.write(line2)
+    outfile.write(line3)
+    outfile.write(line4)
+
+    tid=[]
+    line = ff.readline()
+    while line:
+        term = line.strip().split(" ")
+        if term[0] == "TRACK_ID":
+            lineid = line
+            linenum = ff.readline()
+            term1 =linenum.strip().split(" ")
+            num = int(term1[-1])
+            
+            if num >= time :
+                tid.append(term[2])
+                outfile.write(lineid)
+                outfile.write(linenum)
+                for nl in range(0,num,1):
+                    line = ff.readline()
+                    outfile.write(line)
+
+        line = ff.readline()
+
+    ff.close()
+    outfile.seek(0,0) # Go back to the beginning of the file
+    outfile.write(line1)
+    outfile.write(line2)
+    outfile.write(line3)
+    outfile.write("TRACK_NUM %9d ADD_FLD    0   0 &" %len(tid))
+    print("%s liftime longer than %d hours: %d" %(outfile.name,time,len(tid)))
     outfile.close()
 
     return len(tid)
