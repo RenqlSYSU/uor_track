@@ -67,6 +67,7 @@ unit = ['m/s','°','m/s','°','m/s','°','°C','%']
 stime  = ['2019','11','30'] # year, month, date, hour
 ftime  = pd.date_range(start='2019-12-01 00',end='2019-12-31 00',freq='1H',closed=None)
 ftime0 = pd.date_range(start='2021-09-16 00',end='2021-09-25 23',freq='1H',closed=None) # use for rainfall
+print(ftime)
 
 case = ["Obs","Coupled"]#,'Uncoupled'
 path = ["/home/lzhenn/array74/data/yangjiang-windfarm/1hour.txt",
