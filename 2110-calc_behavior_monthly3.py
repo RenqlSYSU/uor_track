@@ -89,7 +89,7 @@ if calcbehv == 1:
                 ret.wait()
                 subprocess.run("mv %s.new %s"%(filname0,filname),shell=True)
 
-        if not os.path.isfile(filname+"_ntn") :
+        if not os.path.isfile(filname+"_NTN") :
             var[0,nl,:] = cyc_filter.behavior(filname,
                     lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
 

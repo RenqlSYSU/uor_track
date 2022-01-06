@@ -19,19 +19,26 @@ from renql import monthly_calc, life_intensity, cyc_filter
 import matplotlib.pyplot as plt
 from matplotlib import colors
 
+title_font=18
+label_font=14
+plt.rcParams["font.weight"] = "bold"
+font = {'family': 'serif',
+        'style': 'normal',
+        'weight': 'bold',
+        'color':  'black',
+        }
+
 def draw_ts(var,figdir):
-    title_font=18
-    label_font=14
     plinsty = ["solid",(0,(4,2)),(0,(1,2))] # change with lev
     pcolor  = ["k","r","b"] # change with option 
 
     fig = plt.figure(figsize=(9,9),dpi=200)
     axe = plt.axes()
-    axe.set_title("%d-%dE, %d-%dN"%(flonl,flonr,flats,flatn),fontsize=title_font)
+    axe.set_title("%d-%dE, %d-%dN"%(flonl,flonr,flats,flatn),fontsize=title_font,fontdict=font)
     axe.set_xlim(1, 12)
     axe.set_ylim(0, np.max(var))
-    axe.set_xlabel("month",fontsize=label_font)
-    axe.set_ylabel("number",fontsize=label_font)
+    axe.set_xlabel("month",fontsize=label_font,fontdict=font)
+    axe.set_ylabel("number of tracks",fontsize=label_font,fontdict=font)
     axe.tick_params(axis='both', which='major', labelsize=label_font)
     for nl in range(len(lev)):
         for nop in range(len(option)):
@@ -45,7 +52,7 @@ if len(sys.argv) < 2 :
     flatn = 45 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
     flonr = 110 #int(sys.argv[5])
-    time = 48 # threshold, hour
+    time = 24 # threshold, hour
     prefix = "ff48"
 else:
     flats = int(sys.argv[1])
@@ -61,8 +68,8 @@ path = '/home/users/qd201969/ERA5-1HR-lev/'
 lev  = [850,500,250]
 months = range(1,13,1)
 timefilt = 0
-draw_hist = 0
-draw_annual_ts = 1
+draw_hist = 1
+draw_annual_ts = 0
 
 if timefilt == 1:
     for nop in range(len(option)):
@@ -79,12 +86,12 @@ if timefilt == 1:
         ret.wait()
 
 if draw_annual_ts == 1:
-    var = np.zeros( [len(lev),3,12], dtype=int )
+    var = np.zeros( [len(lev),3,12], dtype=float )
     for nl in range(len(lev)):
         for nop in range(len(option)):
             suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
             filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
-            var[nl,nop,:] = monthly_calc.calc_month_fft(filname,time)
+            var[nl,nop,:] = monthly_calc.calc_month(filname,time)/41.0
     draw_ts(var,figdir)
 
 if draw_hist == 1:
@@ -104,11 +111,9 @@ if draw_hist == 1:
                     ax=ax[nl,nop-1], title="%d %s"%(lev[nl],optionn[nop]),\
                     flats=flats,flatn=flatn,flonl=flonl,flonr=flonr)
             if nl == 2:
-                ax[nl,nop-1].set_xlabel("lifetime (days)",fontsize=label_font)
+                ax[nl,nop-1].set_xlabel("lifetime (days)",fontsize=label_font,fontdict=font)
 
-            if nop == 1:
-                ax[nl,nop-1].set_ylabel("Max intensity ($10^{-5} s^{-1}$)",fontsize=label_font)
-
+    ax[1,0].set_ylabel("Mean intensity ($10^{-5} s^{-1}$)",fontsize=label_font,fontdict=font)
     position = fig.add_axes([0.96, bmlo+0.05, 0.02, 0.8]) #left, bottom, width, height
     cb = plt.colorbar(patches, cax=position ,orientation='vertical')#, shrink=.9)
     fig.tight_layout(rect=(0,bmlo,0.94,1)) #w_pad=0.5,h_pad=0.001) #,

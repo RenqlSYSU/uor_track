@@ -7,7 +7,7 @@ import sys, os, subprocess, linecache, gc
 import cartopy.crs as ccrs
 from datetime import datetime, timedelta
 
-def calc_month_fft(filname, time):
+def calc_month(filname, time):
     var = np.zeros( [12], dtype=int ) # 4 or 12 
     
     ff = open(filname,"r") 
@@ -34,41 +34,16 @@ def calc_month_fft(filname, time):
                 for nl in range(0,num,1):
                     line = ff.readline()
                     data = list(map(float,line.strip().split(" ")))
-                    if term2 == "fft":
-                        ct1.append(datetime.strptime(data[0],'%Y%m%d%H'))
-                    else:
-                        ct1.append(start+timedelta(hours=int(data[0])))
+                    ct1.append(start+timedelta(hours=int(data[0])))
 
-                if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
-                    var[ct1[0].month-1] += 1
-                else:
-                    var[ct1[-1].month-1] += 1
+                if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+                    if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
+                        var[ct1[0].month-1] += 1
+                    else:
+                        var[ct1[-1].month-1] += 1
         line = ff.readline()
     
     ff.close()
-    var[0]=int(var[0]/2)
-    var[11]=int(var[11]/2)
-    return var
-
-def calc_month( frae, month, nday, filname):
-    var  = np.empty( [len(month)], dtype=int ) # 4 or 12 
-    datafile = "/home/users/qd201969/uor_track/fig/match_ens1_yes.dat"
-    for nm in range(0,len(month),1):
-        fras = frae+1
-        frae = fras+24*nday[nm]-1
-        print("month=%s, frame_s=%d, frame_e=%d" %(month[nm],fras,frae))
-        rf = open("/home/users/qd201969/uor_track/fig/region.dat","w")
-        rf.write("0 360\n-90 90\n"+str(fras)+" "+str(frae))
-        rf.close()
-
-        ret=subprocess.Popen("/home/users/qd201969/TRACK-1.5.2/utils/bin/censemble2 "+\
-                filname+" "+filname+" 0 100 10 1 0 0 0 0 s 0 1 > rec",shell=True)
-        ret.wait()
-
-        a=linecache.getline(datafile, 4).strip().split(" ",1)
-        term = a[1].strip().split(" ",1)
-        var[nm] = int(term[0])
-        linecache.clearcache()
     return var
 
 def draw_month_traj(frae, month, nday, filname,lats,latn,lonl,lonr):
@@ -151,4 +126,27 @@ def draw_month_traj(frae, month, nday, filname,lats,latn,lonl,lonr):
     cfp.gclose()
     subprocess.run("mogrify -bordercolor white -trim ./"+figname,shell=True) 
     return var
+
+'''
+def calc_month( frae, month, nday, filname):
+    var  = np.empty( [len(month)], dtype=int ) # 4 or 12 
+    datafile = "/home/users/qd201969/uor_track/fig/match_ens1_yes.dat"
+    for nm in range(0,len(month),1):
+        fras = frae+1
+        frae = fras+24*nday[nm]-1
+        print("month=%s, frame_s=%d, frame_e=%d" %(month[nm],fras,frae))
+        rf = open("/home/users/qd201969/uor_track/fig/region.dat","w")
+        rf.write("0 360\n-90 90\n"+str(fras)+" "+str(frae))
+        rf.close()
+
+        ret=subprocess.Popen("/home/users/qd201969/TRACK-1.5.2/utils/bin/censemble2 "+\
+                filname+" "+filname+" 0 100 10 1 0 0 0 0 s 0 1 > rec",shell=True)
+        ret.wait()
+
+        a=linecache.getline(datafile, 4).strip().split(" ",1)
+        term = a[1].strip().split(" ",1)
+        var[nm] = int(term[0])
+        linecache.clearcache()
+    return var
+'''
 

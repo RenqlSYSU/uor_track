@@ -26,6 +26,14 @@ title_font=14
 label_font=10
 xbar=[0.05,0.37,0.69]
 
+plt.rcParams["font.weight"] = "bold"
+font = {'family': 'serif',
+        'style': 'normal',
+        'weight': 'bold',
+        'color':  'black', 
+        'size': title_font,
+        }
+
 # level == 0 #small range
 cnlvl=[[0    ,320  ,20  ], # 0Feature Density
        [0    ,3.2  ,0.2 ], # 1Genesis Density
@@ -129,7 +137,7 @@ for nl in range(0,len(lev),1):
         
         axe = ax[nl][nv]
         axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=1)
-        axe.set_title("%d %s"%(lev[nl],var1.long_name),fontsize=title_font)
+        axe.set_title("%d %s"%(lev[nl],var1.long_name),fontdict=font)
 
         shad = axe.contourf(ilon, ilat, var, cnlevels, 
                      transform=ccrs.PlateCarree(),cmap=fcolors,extend='both',norm=norm)

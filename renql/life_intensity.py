@@ -13,8 +13,39 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import cmaps
+from datetime import datetime, timedelta
 
-def calc_life_intensity(filname,flats=25,flatn=48,flonl=57,flonr=100):
+title_font=18
+label_font=14
+plt.rcParams["font.weight"] = "bold"
+font = {'family': 'serif',
+        'style': 'normal',
+        'weight': 'bold',
+        'color':  'black',
+        }
+
+def circle_distance(lat1,lon1,lat2,lon2):
+    # Calculate the distance between two points of a sphere
+    # The input parameters are scalar, from 1(start) to 2(end)
+    radiu = 6378.388 #the radius of earth, km
+    lat1 = lat1*np.pi/180.0
+    lat2 = lat2*np.pi/180.0
+
+    if lon1>180:
+        dlon = (lon2-lon1+360)*np.pi/180.0
+    else:
+        dlon = (lon2-lon1)*np.pi/180.0
+    
+    term = np.cos(lat1)*np.cos(lat2)*np.cos(dlon)+\
+        np.sin(lat1)*np.sin(lat2)
+    dist = radiu*np.arccos(term)
+
+    if abs(dlon) > np.pi:
+        dist = 2*radiu*np.pi-dist
+
+    return dist
+
+def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
     ff = open(filname,"r") 
     line1 = ff.readline()
     line2 = ff.readline()
@@ -24,9 +55,11 @@ def calc_life_intensity(filname,flats=25,flatn=48,flonl=57,flonr=100):
     tid = []
     life = []
     inte = [] #  max intensity
+    dist = []
     tlat = []  # max intensity location
     tlon = []  # max intensity location
     line = ff.readline()
+    start=datetime(1995, 11, 30, 23, 00)
     while line:
         term = line.strip().split(" ")
         if term[0] == "TRACK_ID":
@@ -35,18 +68,27 @@ def calc_life_intensity(filname,flats=25,flatn=48,flonl=57,flonr=100):
             linenum = ff.readline()
             term1 =linenum.strip().split(" ")
             num = int(term1[-1])
-            life.append(num/24.0)
             
             data=[]
+            ct1=[]
             for nl in range(0,num,1):
                 term = list(map(float, ff.readline().strip().split(" ")))
+                ct1.append(start+timedelta(hours=int(term[0])))
                 if term[1]>=flonl and term[1]<=flonr and term[2]>=flats and term[2]<=flatn:
                     data.append(term)
+                if nl==0:
+                    lon1 = term[1]
+                    lat1 = term[2]
+                if nl==num-1:
+                    lon2 = term[1]
+                    lat2 = term[2]
 
             data = np.array(data)
-            if len(data.shape) == 2:
+            if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+                life.append(num/24.0)
                 inte.append(data[:,3].mean())
                 #inte.append(data[:,3].max())
+                dist.append(circle_distance(lat1,lon1,lat2,lon2))
                 loc = np.argmax(data[:,3])
                 tlat.append(data[loc,2])
                 tlon.append(data[loc,1])
@@ -58,17 +100,15 @@ def calc_life_intensity(filname,flats=25,flatn=48,flonl=57,flonr=100):
     print("total cyclone number in %s : %s" %(ff.name,term[0]))
     ff.close()
 
-    print("tid life(days) intensity longitude latitude")
-    for ni in range(0,len(tid),1):
-        print("%s "%tid[ni] + "%f "*4 %(life[ni],inte[ni],tlon[ni],tlat[ni]))
+    #print("tid life(days) intensity longitude latitude")
+    #for ni in range(0,len(tid),1):
+    #    print("%s "%tid[ni] + "%f "*4 %(life[ni],inte[ni],tlon[ni],tlat[ni]))
 
-    return life, inte, int(term[0])
+    return life, inte, dist, len(life)
 
-def hist_life_intensity(filname,ax=None,title=None,figsave=False,flats=25,flatn=45,flonl=60,flonr=90):
-    title_font=18
-    label_font=14
-
-    life, inte, numb = calc_life_intensity(filname,\
+def hist_life_intensity(filname,ax=None,title=None,figsave=False,\
+        flats=25,flatn=45,flonl=60,flonr=90):
+    life, inte, dist, numb = calc_life_intensity(filname,\
         flats=flats-3,flatn=flatn+3,flonl=flonl-3,flonr=flonr+3)
 
     #cnlevels = np.arange(0,85,5)
@@ -83,12 +123,12 @@ def hist_life_intensity(filname,ax=None,title=None,figsave=False,flats=25,flatn=
     if not ax:
         fig = plt.figure(figsize=(9,9),dpi=200)
         ax = plt.axes()
-        ax.set_xlabel("lifetime (days)",fontsize=label_font)
-        ax.set_ylabel("Max intensity ($10^{-5} s^{-1}$)",fontsize=label_font)
+        ax.set_xlabel("lifetime (days)",fontsize=label_font,fontdict=font)
+        ax.set_ylabel("Mean intensity ($10^{-5} s^{-1}$)",fontsize=label_font,fontdict=font)
 
     h,xedge,yedge,patches = ax.hist2d(life,inte,bins=[xbin,ybin],\
             cmap=cmaps.precip2_17lev,norm=norm, density=True )
-    ax.set_title("%s (%d)"%(title,numb),fontsize=title_font)
+    ax.set_title("%s (%d)"%(title,numb),fontsize=title_font,fontdict=font)
 
     if figsave == True:
         plt.colorbar(patches, ax=ax, shrink=.7)

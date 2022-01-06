@@ -111,18 +111,19 @@ if [ $pro == 2 ];then
         
         echo $file
         season=0 # 0 = monthly; 1 = seasonal; -1 all year
-        #sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
-        #cdo -r -copy ${output}_[1-9].nc ${output}_1[0-2].nc ${output}.nc 
-        #rm ${output}_[1-9].nc 
-        #rm ${output}_1[0-2].nc
-        
-        python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
-            ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
-            1 ${lats} ${latn} ${lonl} ${lonr}
+        if [ ! -f ${output}.nc ];then
+            sh ~/uor_track/stat_1hr_dec_jan.sh ${filname} ${output} ${season}
+            cdo -r -copy ${output}_[1-9].nc ${output}_1[0-2].nc ${output}.nc 
+            rm ${output}_[1-9].nc 
+            rm ${output}_1[0-2].nc
+        fi
+        #python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
+        #    ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
+        #    1 ${lats} ${latn} ${lonl} ${lonr}
         np=$((np+1))
     done
-    #python ~/uor_track/2109-draw_stat_con_xr_mp.py \
-    #    ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
+    python ~/uor_track/2109-draw_stat_con_xr_mp.py \
+        ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 3 ];then
