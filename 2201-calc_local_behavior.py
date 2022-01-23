@@ -36,10 +36,14 @@ def calcbehv():
 
         if not os.path.isfile(filname) :
             filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0
-            var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,time,1,"left")
+            ret=subprocess.Popen("/home/users/qd201969/TRACK-1.5.2/utils/bin/box "+ \
+                    filname0+" "+str(lats[0])+" "+str(latn[0])+\
+                    " "+str(lonl[0])+" "+str(lonr[0])+" "+str(option)+" 0 0.0",shell=True)
+            ret.wait()
+            subprocess.run("mv "+filname0+".new "+filname,shell=True)
 
         var[0,nl,:] = cyc_filter.west_behavior(filname,
-                lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
+                lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)],lonx=105)
 
         for nr in range(0,len(behv),1):
             if nr == 0:
@@ -118,9 +122,9 @@ def draw_3var_distri():
     nrow = len(lev)
     ncol = 3
     bmlo = 0.4
-    xbin = [np.arange(1, 8,0.5),
-            np.arange(1,15, 1 ),
-            np.arange(0,4200,300)]
+    xbin = [np.arange(1,11  ,0.5), # num=(end-start)/inv
+            np.arange(1,17  ,0.8), 
+            np.arange(0,8000,400)]
     var = np.empty( [len(varname),len(behv),len(xbin[0])-1],dtype=float )   
     
     fig = plt.figure(figsize=(9,9),dpi=200)
@@ -136,6 +140,7 @@ def draw_3var_distri():
             
             life1, inte1, dist1, numb1 = life_intensity.calc_life_intensity(
                     filname1,flats=25,flatn=45,flonl=57,flonr=110)
+            print("%s :%d"%(filname1,numb1))
             var[0,nb,:],term = np.histogram(life1,xbin[0])
             var[1,nb,:],term = np.histogram(inte1,xbin[1])
             var[2,nb,:],term = np.histogram(dist1,xbin[2])
@@ -174,7 +179,7 @@ def drawannual():
         ax[nl][1].set_title(str(lev[nl])+" percent "+suffix,fontsize=title_font,fontdict=font)
         ax[nl][0].set_xlim(1, 12)
         ax[nl][1].set_xlim(1, 12)
-        for nr in range(1,len(lats)-1,1):
+        for nr in range(1,len(lats),1):
             ax[nl][0].plot(imonth,var[1:len(month),nl,nr],linewidth=2)
             ax[nl][1].plot(imonth,perc[1:len(month),nl,nr],linewidth=2)
         ax[nl][0].grid(True, which="both", color='grey', linestyle='--', linewidth=1)
@@ -275,14 +280,14 @@ def draw_table():
     subprocess.run("mogrify -bordercolor white -trim %sbehv4_table_%s.png"%(figdir,suffix),shell=True) 
 
 if len(sys.argv) < 2 :
-    option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+    option=0 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
     flats = 25  #int(sys.argv[2])
     flatn = 45  #int(sys.argv[3])
     flonl = 60  #int(sys.argv[4])
-    flonr = 60 #int(sys.argv[5])
+    flonr = 105 #int(sys.argv[5])
     time = 24 # threshold, hour
     prefix = "ff"
-    suffix0 = "_5_2545-60110"
+    suffix0 = ""
     season = 0 # 0 monthly, 1 seasonal
 else:
     option= int(sys.argv[1]) 
@@ -298,11 +303,11 @@ suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/"
 fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
 
-flonr2 = 105
+flonr2 = 110
 flatn2 = 40
 flats2 = 30
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
-lats = [flatn ,flats2,flatn2,flats2,flatn ,flats ,flats ]
+lats = [flats ,flats2,flatn2,flats2,flatn ,flats ,flats ]
 latn = [flatn ,flatn2,flatn2,flats2,flatn ,flats ,flatn ]
 lonl = [flonl ,flonr2,flonr2,flonr2,flonl ,flonl ,flonl ]
 lonr = [flonr ,flonr2,flonr2,flonr2,flonr2,flonr2,flonr2]
@@ -323,8 +328,8 @@ path = '/home/users/qd201969/ERA5-1HR-lev/'
 os.chdir("/home/users/qd201969/uor_track/fig")
 
 #calcbehv()
-#draw_hist()
 #drawannual()
-#drawbox()
 #draw_table()
 draw_3var_distri()
+#drawbox()
+

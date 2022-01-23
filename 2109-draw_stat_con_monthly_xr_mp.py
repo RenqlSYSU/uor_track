@@ -53,7 +53,7 @@ draw=[1,2,14]
 #draw=[14]
 #draw=[1,2,14,8,9,6]
 
-if sys.argv[1] == "0" :
+if len(sys.argv) < 2 :
     filename = 'ff_250_1980-2020' #_2_2545-6080
     files = '/home/users/qd201969/ERA5-1HR-lev/statistic/'+filename+'_stat.nc'
     level = 2

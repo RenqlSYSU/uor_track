@@ -82,7 +82,7 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
         print("all time when cyclone in %d-%dE,%d-%dN : %d"\
                 %(flonl,flonr,flats,flatn,len(ct1)))
     else:
-        ct1=list(np.array(ct1)[inty>np.percentile(np.array(inty),95)]) # top 5%
+        #ct1=list(np.array(ct1)[inty>np.percentile(np.array(inty),95)]) # top 5%
         #ct1=list(np.array(ct1)[inty<np.percentile(np.array(inty),5)]) # low 5%
         ct2=list(set(ct1))
         print("all time when cyclone in %d-%dE,%d-%dN : %d, %d, %d, %.2f%%, %.2f%%"\
@@ -93,13 +93,14 @@ def composite_time(filname,flats,flatn,flonl,flonr,alltime):
 
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 27 #int(sys.argv[2])
+    flats = 25 #int(sys.argv[2])
     flatn = 45 #int(sys.argv[3])
     flonl = 60 #int(sys.argv[4])
-    flonr = 90 #int(sys.argv[5])
+    flonr = 105 #int(sys.argv[5])
     time = 24 # threshold, hour
     prefix = "fft"
-    season = 0 # 0 monthly, 1 seasonal
+    suffix = '5_2545-60110_2_2545-6060'
+    behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
 else:
     option= int(sys.argv[1]) 
     flats = int(sys.argv[2])
@@ -107,13 +108,9 @@ else:
     flonl = int(sys.argv[4])
     flonr = int(sys.argv[5])
     prefix = int(sys.argv[6])
-    season = int(sys.argv[7])
     time = int(sys.argv[8])
 
-suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonl)
 fileout="/home/users/qd201969/uor_track/mdata/comp_6h_season_daily00_"
-
-behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
 levc = [850,500,250,200]
 lev  = [850,500,250]
 path = '/home/users/qd201969/ERA5-1HR-lev/'

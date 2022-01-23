@@ -38,8 +38,8 @@ if [ $pro == -1 ];then
     for ny in {1980..2020};do
         starttime=$((ny-1))120100
         for nl in {0..2};do
-            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos
-            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos
+            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos-1211
+            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos-1211
             if [ ! -f "$filname2" ]; then
                 utils/bin/count $filname1 0 0 5 4 0 $starttime $timestep
                 mv ${filname1}.new ${filname2}
@@ -67,7 +67,7 @@ if [ $pro == 1 ];then
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos
+            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos-1211
             echo $filname >> combine.in_${lev[$nl]}
         
             if [ ! -f "$filname" ]; then
@@ -87,8 +87,8 @@ if [ $pro == 1 ];then
         done
         
         ~/TRACK-1.5.2/utils/bin/combine < combine.in_${lev[$nl]} > record_combine
-        mv ./combined_tr_trs ./${prefix}_${lev[$nl]}_1980-2020
-        awk 'NR==4 {print FILENAME, $2}' ./${prefix}_${lev[$nl]}_1980-2020 | tee -a ${OUTDIR}number
+        mv ./combined_tr_trs ./${prefix}1211_${lev[$nl]}_1980-2020
+        awk 'NR==4 {print FILENAME, $2}' ./${prefix}1211_${lev[$nl]}_1980-2020 | tee -a ${OUTDIR}number
     done
 fi
 
@@ -117,13 +117,18 @@ if [ $pro == 2 ];then
             rm ${output}_[1-9].nc 
             rm ${output}_1[0-2].nc
         fi
-        #python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
-        #    ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
-        #    1 ${lats} ${latn} ${lonl} ${lonr}
+        if [ $filt == 1 ]; then 
+            python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
+                ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
+                1 ${lats} ${latn} ${lonl} ${lonr}
+        else
+            python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
+                ${file} ${output}.nc 2 ${lev[$np]}${suffix} 0
+        fi
         np=$((np+1))
     done
-    python ~/uor_track/2109-draw_stat_con_xr_mp.py \
-        ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
+    #python ~/uor_track/2109-draw_stat_con_xr_mp.py \
+    #    ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 3 ];then

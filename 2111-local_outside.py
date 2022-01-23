@@ -53,7 +53,7 @@ if len(sys.argv) < 2 :
     flonl = 60 #int(sys.argv[4])
     flonr = 110 #int(sys.argv[5])
     time = 24 # threshold, hour
-    prefix = "ff48"
+    prefix = "fft"
 else:
     flats = int(sys.argv[1])
     flatn = int(sys.argv[2])
@@ -67,8 +67,8 @@ figdir ="/home/users/qd201969/uor_track/fig/annual_ts"
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 lev  = [850,500,250]
 months = range(1,13,1)
-timefilt = 0
-draw_hist = 1
+timefilt = 1
+draw_hist = 0
 draw_annual_ts = 0
 
 if timefilt == 1:
@@ -78,7 +78,7 @@ if timefilt == 1:
             filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
             #numb = cyc_filter.time_filt(filname,time)
         # calc statistics and draw figure 
-        com = "sh ~/uor_track/control_era5_1hr_track.sh %s 2 1 %d %d %d %d %d"\
+        com = "sh ~/uor_track/control_era5_1hr_track.sh %s 3 1 %d %d %d %d %d"\
             %(prefix,option[nop],flats,flatn,flonl,flonr)
         #com = "sh ~/uor_track/control_era5_1hr_track.sh %s%d 2 1 %d %d %d %d %d"\
         #    %(prefix,time,option[nop],flats,flatn,flonl,flonr)

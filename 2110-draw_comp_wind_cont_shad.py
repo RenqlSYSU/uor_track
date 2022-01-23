@@ -29,20 +29,24 @@ def draw_vect_shad(month,var,uwnd,vwnd,numb,vari,uvari,vvari):
         for nr in range(0,nrow,1):
             nb = nr+1
             if diff == 1:
-                t,pvar = stats.ttest_ind_from_stats(var[nl1,nb,:,:,:],vari[nl1,nb,:,:,:],numb[nl1,nb],
-                        var[nl1,0,:,:,:],vari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
-                t,pu = stats.ttest_ind_from_stats(uwnd[nl1,nb,:,:,:],uvari[nl1,nb,:,:,:],numb[nl1,nb],
-                        uwnd[nl1,0,:,:,:],uvari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
-                t,pv = stats.ttest_ind_from_stats(vwnd[nl1,nb,:,:,:],vvari[nl1,nb,:,:,:],numb[nl1,nb],
-                        vwnd[nl1,0,:,:,:],vvari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
-                print(pvar)
+                #t,pvar = stats.ttest_ind_from_stats(var[nl1,nb,:,:,:],vari[nl1,nb,:,:,:],numb[nl1,nb],
+                #        var[nl1,0,:,:,:],vari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
+                #t,pu = stats.ttest_ind_from_stats(uwnd[nl1,nb,:,:,:],uvari[nl1,nb,:,:,:],numb[nl1,nb],
+                #        uwnd[nl1,0,:,:,:],uvari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
+                #t,pv = stats.ttest_ind_from_stats(vwnd[nl1,nb,:,:,:],vvari[nl1,nb,:,:,:],numb[nl1,nb],
+                #        vwnd[nl1,0,:,:,:],vvari[nl1,0,:,:,:],numb[nl1,0],equal_var=True)
+                #print(pvar)
+                
                 var[nl1,nb,:,:,:] = (var[nl1,nb,:,:,:] - var[nl1,0,:,:,:])/9.8
                 uwnd[nl1,nb,:,:,:]=uwnd[nl1,nb,:,:,:] - uwnd[nl1,0,:,:,:]
                 vwnd[nl1,nb,:,:,:]=vwnd[nl1,nb,:,:,:] - vwnd[nl1,0,:,:,:]
-                var[nl1,nb,:,:,:].values=np.ma.array(var[nl1,nb,:,:,:].values,mask=(pvar>siglvl))
-                mask = np.array([pu>siglvl,pv>siglvl]).all(axis=0)
-                uwnd[nl1,nb,:,:,:].values=np.ma.array(uwnd[nl1,nb,:,:,:].values,mask=mask)
-                vwnd[nl1,nb,:,:,:].values=np.ma.array(vwnd[nl1,nb,:,:,:].values,mask=mask)
+                
+                #var[nl1,nb,:,:,:].values=np.ma.array(var[nl1,nb,:,:,:].values,mask=(pvar>siglvl))
+                
+                #mask = np.array([pu>siglvl,pv>siglvl]).all(axis=0)
+                #uwnd[nl1,nb,:,:,:].values=np.ma.array(uwnd[nl1,nb,:,:,:].values,mask=mask)
+                #vwnd[nl1,nb,:,:,:].values=np.ma.array(vwnd[nl1,nb,:,:,:].values,mask=mask)
+            
             for nc in range(0,ncol,1):
                 nl = nc
                 if cnlvl[nl][0] < 0 :
@@ -96,20 +100,20 @@ lat_sp = 20
 lon_sp = 30
 
 diff=1 # if diff=1, then draw diff
-nrow = 4
+nrow = 6
 ncol = 3
-bmlo = 0.4
+bmlo = 0.25
 BIGFONT=22
 MIDFONT=14
 SMFONT=10
 
 lev = [850,500,250]
 levc = [850,500,250]
-behv = ["ALL" ,"NTN" ,"STN" ,"PAS" ,"LYS" ]#,"DIF"]
-filname = '/home/users/qd201969/uor_track/mdata/regr_interannual_' # t.nc'
-#filname = '/home/users/qd201969/uor_track/mdata/comp_6h_season_1_' # t.nc'
-varname = ['regr','prob']
-#varname = ['var','vari']
+behv = ["PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
+#filname = '/home/users/qd201969/uor_track/mdata/regr_interannual_' # t.nc'
+#varname = ['regr','prob']
+filname = '/home/users/qd201969/uor_track/mdata/comp_6h_season_daily00_' # t.nc'
+varname = ['var','vari']
 drawvar = ['z']
 unit    = ['m']
 if diff == 1:
@@ -124,10 +128,10 @@ else:
             [9300 ,100]]
 q_mis=5
 dbox = 1
-flats = 27 #int(sys.argv[2])
+flats = 25 #int(sys.argv[2])
 flatn = 45 #int(sys.argv[3])
 flonl = 60 #int(sys.argv[4])
-flonr = 90 #int(sys.argv[5])
+flonr = 105 #int(sys.argv[5])
 figdir = "/home/users/qd201969/uor_track/fig/"
 months = ["DJF","MAM","JJA","SON"]
 
@@ -138,7 +142,7 @@ ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 numb = f['numb']
 var = f[varname[0]].sel(level=levc,lon=ilon,lat=ilat).load()
-vari = f['vari'].sel(level=levc,lon=ilon,lat=ilat).load()
+vari = f[varname[1]].sel(level=levc,lon=ilon,lat=ilat).load()
 var.data = var.data
 print("var[0,0,1,2,:,:]")
 print(var[0,0,1,2,:,:])
@@ -147,11 +151,11 @@ print(var[0,1,1,2,:,:])
 
 ds = xr.open_dataset(filname+'u.nc')
 uwnd = ds[varname[0]].sel(level=levc,lon=ilon,lat=ilat).load()
-uvari = ds['vari'].sel(level=levc,lon=ilon,lat=ilat).load()
+uvari = ds[varname[1]].sel(level=levc,lon=ilon,lat=ilat).load()
 
 ds = xr.open_dataset(filname+'v.nc')
 vwnd = ds[varname[0]].sel(level=levc,lon=ilon,lat=ilat).load()
-vvari = ds['vari'].sel(level=levc,lon=ilon,lat=ilat).load()
+vvari = ds[varname[1]].sel(level=levc,lon=ilon,lat=ilat).load()
 print("uwnd")
 print(uwnd[0,0,1,2,:,:])
 print(uwnd[0,1,1,2,:,:])

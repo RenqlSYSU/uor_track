@@ -36,17 +36,17 @@ def calcbehv():
 
         if not os.path.isfile(filname) :
             filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0
-            var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,time,1,"north")
+            var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,time,1,"left")
 
-        var[0,nl,:] = cyc_filter.north_behavior(filname,
-                lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)],lonx=105)
+        var[0,nl,:] = cyc_filter.west_behavior(filname,
+                lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
 
         for nr in range(0,len(behv),1):
             if nr == 0:
                 filname1 = filname
             else:
                 filname1 = filname+"_"+behv[nr]
-            var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
+            #var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
             #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
             #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
     var[0,:,:] = np.sum(var[1:len(month),:,:],axis=0)
@@ -175,7 +175,7 @@ def drawannual():
         ax[nl][1].set_title(str(lev[nl])+" percent "+suffix,fontsize=title_font,fontdict=font)
         ax[nl][0].set_xlim(1, 12)
         ax[nl][1].set_xlim(1, 12)
-        for nr in range(1,len(lats),1):
+        for nr in range(1,len(lats)-1,1):
             ax[nl][0].plot(imonth,var[1:len(month),nl,nr],linewidth=2)
             ax[nl][1].plot(imonth,perc[1:len(month),nl,nr],linewidth=2)
         ax[nl][0].grid(True, which="both", color='grey', linestyle='--', linewidth=1)
@@ -277,12 +277,12 @@ def draw_table():
 
 if len(sys.argv) < 2 :
     option=2 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 45  #int(sys.argv[2])
+    flats = 25  #int(sys.argv[2])
     flatn = 45  #int(sys.argv[3])
     flonl = 60  #int(sys.argv[4])
-    flonr = 110 #int(sys.argv[5])
+    flonr = 60 #int(sys.argv[5])
     time = 24 # threshold, hour
-    prefix = "ff"
+    prefix = "fft"
     suffix0 = "_5_2545-60110"
     season = 0 # 0 monthly, 1 seasonal
 else:
@@ -300,13 +300,13 @@ figdir = "/home/users/qd201969/uor_track/fig/"
 fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
 
 flonr2 = 105
-flatn2 = 45
-flats2 = 25
-behv = ["ALL" ,"EPAS","ELYS","WPAS","WNTP","WNTL","WLYS" ]#,"DIF"]
-lats = [flats ,flats ,flats ,flats2,flatn2,flatn ,flats2]
-latn = [flatn ,flatn ,flatn ,flatn2,flatn2,flatn ,flatn2]
-lonl = [flonl ,85    ,85    ,flonr2,flonr2,flonl ,flonl ]
-lonr = [flonr ,flonr ,flonr ,flonr2,flonr2,flonr2,flonr2]
+flatn2 = 40
+flats2 = 30
+behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
+lats = [flatn ,flats2,flatn2,flats2,flatn ,flats ,flats ]
+latn = [flatn ,flatn2,flatn2,flats2,flatn ,flats ,flatn ]
+lonl = [flonl ,flonr2,flonr2,flonr2,flonl ,flonl ,flonl ]
+lonr = [flonr ,flonr2,flonr2,flonr2,flonr2,flonr2,flonr2]
 lev = [850,500,250]
 
 if season == 0:
@@ -323,11 +323,9 @@ imonth=range(1,len(month),1)
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 os.chdir("/home/users/qd201969/uor_track/fig")
 
-#calcbehv()
-#drawannual()
-#draw_table()
-draw_3var_distri()
-#drawbox()
-
+calcbehv()
 #draw_hist()
-
+#drawannual()
+#drawbox()
+#draw_table()
+#draw_3var_distri()
