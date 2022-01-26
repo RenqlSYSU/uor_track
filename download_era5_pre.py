@@ -12,7 +12,7 @@ def down_single_level(var,year):
         'reanalysis-era5-single-levels',
         {
             'product_type': 'reanalysis',
-            'format': 'netcdf',
+            'format': 'grib',
             'expver': '1',
             'variable': [
                 '10m_u_component_of_wind',
@@ -50,14 +50,15 @@ def down_single_level(var,year):
             ],
             'grid': [0.25, 0.25],
         },
-        '%s%s/ERA5_%s_%d.nc'%(path,var,var,year))
+        '%s%s/ERA5_%s_%d.grib'%(path,var,var,year))
 
 variables = {'precip':'total_precipitation','slp':'mean sea level pressure',
         'wind10':'10m u-component of wind','v10':'10m v-component of wind'}
-path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/'
+path = '/work/scratch-pw2/renql/ERA5_hourly/'
+#path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/'
 
 for var in ('wind10',):
-    for year in range(1980,2021):
+    for year in range(1979,1980):
         down_single_level(var,year)
 #        com = "cdo expr,’speed=sqrt(sqr(uwnd)+sqr(vwnd))’ infile outfile"
 #

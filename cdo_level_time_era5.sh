@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd /gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/z/
+#cd /gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/z/
+cd /work/scratch-pw2/renql/ERA5_hourly/z/ 
 
 lev=(250 500 850)
 
@@ -13,7 +14,7 @@ lev=(250 500 850)
 #    fi
 #done
 
-for ny in {1982..2006};do
+for ny in {1986..2006};do
 ny1=$((ny+1))
 ny0=$((ny-1))
 for nl in ${lev[@]};do

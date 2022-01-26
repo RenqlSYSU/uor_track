@@ -3,7 +3,7 @@ import cdsapi, os
 
 varname = ['u_component_of_wind','v_component_of_wind','temperature','geopotential']
 filname = ['u','v','t','z']
-path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/'
+path = '/work/scratch-pw2/renql/ERA5_hourly/'
 
 c = cdsapi.Client()
 
@@ -11,14 +11,16 @@ for nv in range(3,len(varname),1):
     if not os.path.exists(path+filname[nv]):
         os.makedirs(path+filname[nv])
 
-    for year in range(1980,1981,1):
+    for year in range(1979,1982,1):
         c.retrieve(
             'reanalysis-era5-pressure-levels',
             {
                 'product_type': 'reanalysis',
                 'expver': '1',
                 'variable': varname[nv],
-                'pressure_level': '500',
+                'pressure_level': [
+                    '250', '500', '850',
+                ],
                 'grid': [0.25, 0.25],
                 'year': str(year), 
                 'month': [
@@ -52,10 +54,7 @@ for nv in range(3,len(varname),1):
                 ],
                 'format': 'netcdf',
             },
-            '%s%s/ERA5_250%s_%d.nc'%(path,filname[nv],filname[nv],year))
+            '%s%s/ERA5_%s_%d.nc'%(path,filname[nv],filname[nv],year))
 
 '''        
-        'pressure_level': [
-                    '250', '500', '850',
-                ],
 '''
