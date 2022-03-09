@@ -17,6 +17,7 @@ import matplotlib.dates as mdates
 from matplotlib import colors
 import cartopy.crs as ccrs
 from wrf import (to_np, getvar, interplevel,ll_to_xy,xy_to_ll,ALL_TIMES)
+from datetime import datetime, timedelta
 
 def read_wrf_height_rh(ncfile,hgt,lats,lonl): 
     term= getvar(ncfile, "rh", timeidx=ALL_TIMES, method="cat")
@@ -67,6 +68,7 @@ unit = ['m/s','°','m/s','°','m/s','°','°C','%']
 stime  = ['2019','11','30'] # year, month, date, hour
 ftime  = pd.date_range(start='2019-12-01 00',end='2019-12-31 00',freq='1H',closed=None)
 ftime0 = pd.date_range(start='2021-09-16 00',end='2021-09-25 23',freq='1H',closed=None) # use for rainfall
+ftime8 = ftime + timedelta(hours=8)
 print(ftime)
 
 case = ["Obs","Coupled"]#,'Uncoupled'
@@ -82,7 +84,7 @@ for nv in range(0,8):
 
     var = np.zeros((len(case),len(ftime)), dtype = float)
     df = pd.read_csv(path[0],index_col=0, usecols=['Date/Time',varname])
-    var[0,:] = df[df.index.isin(ftime.strftime('%Y-%m-%d %H:00'))].to_numpy()[:,0]
+    var[0,:] = df[df.index.isin(ftime8.strftime('%Y-%m-%d %H:00'))].to_numpy()[:,0]
     #df = pd.read_excel(path[0], index_col=0, usecols=['日期',varname])
     #var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
     del df
@@ -113,11 +115,11 @@ for nv in range(0,8):
     axe.set_title(title,fontsize=MIDFONT) 
     for nc in range(len(case)):
         if nc == 0:
-            axe.plot(ftime, var[nc,:], label=case[nc])
+            axe.plot(ftime8, var[nc,:], label=case[nc])
         else:
             rmse = np.sqrt(np.power(np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0),2).mean())
             mae = np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0).mean()
-            axe.plot(ftime, var[nc,:], label="%s (RMSE: %.2f, MAE: %.2f)"%(case[nc],rmse,mae))
+            axe.plot(ftime8, var[nc,:], label="%s (RMSE: %.2f, MAE: %.2f)"%(case[nc],rmse,mae))
     #axe.set_ylabel("wind speed (m/s)",fontsize=MIDFONT)  # Add an x-label to the axes.
     axe.set_xlabel("time",fontsize=MIDFONT)  # Add a y-label to the axes.
     axe.tick_params(axis='both', which='major', labelsize=SMFONT)

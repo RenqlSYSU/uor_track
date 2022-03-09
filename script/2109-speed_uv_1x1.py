@@ -29,8 +29,8 @@ SMFONT=14
 stime  = ['2021','09','23'] # year, month, date, hour
 ftime  = ['2021','09','23','12']
 ftime0 = ['2021','09','23','16'] # use to calc accumulated pr,large than ftime
-#data = "/home/dataop/data/nmodel/wrf_fc/2021/202109/2021092312/wrfout_d04_2021-09-23_12:00:00"
-data = "/home/dataop/data/nmodel/wrf_fc/2021/202109/"+"".join(stime)+"12/wrfout_d04_2021-09-23_12:00:00"
+data = "/home/lzhenn/array74/Njord_Calypso/archive/njord//2021112612/wrfout_d01_2021-11-26_12:00:00"
+#data = "/home/dataop/data/nmodel/wrf_fc/2021/202109/"+"".join(stime)+"12/wrfout_d04_2021-09-23_12:00:00"
 
 varname = ['slp','U10','V10']
 drawvar = 'UV10 (m/s)'
@@ -41,7 +41,7 @@ drawvar = 'UV10 (m/s)'
 lev = 500 #hPa
 
 case = ['Njord','PATH']
-nc = 1
+nc = 0
 lat_sp = 1.0 #5.0
 lon_sp = 1.0 #10.0
 

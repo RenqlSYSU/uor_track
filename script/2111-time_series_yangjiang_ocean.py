@@ -14,6 +14,7 @@ import subprocess
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import colors
+from datetime import datetime, timedelta
 
 def read_romsnc_point(filname,varname,ftime,lats,lonl):
     f  = xr.open_dataset(filname) #yc,xc
@@ -76,6 +77,7 @@ obsvar  = ["H3","Tp" ,'表  层','Unnamed: 4']
 # define date of start time and forcast time
 stime  = ['2019','11','30'] # year, month, date, hour
 ftime  = pd.date_range(start='2019-12-01 00',end='2019-12-31 00',freq='1H',closed=None)
+ftime8 = ftime + timedelta(hours=8)
 case = ["Obs","Coupled"]#,'Uncoupled'
 path = ["/home/lzhenn/array74/data/yangjiang-windfarm/",
         '/home/lzhenn/cooperate/data/case_study/yangjiang-windfarm/'+''.join(stime)+'00/']
@@ -88,10 +90,10 @@ for nv in range(0,4,1):
 
     if nv <= 1 :
         df = pd.read_excel(path[0]+"201912wave.xlsx", index_col=0, usecols=['日期',obsvar[nv]],skiprows=[1])
-        var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
+        var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime8.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
     else:
         df = pd.read_excel(path[0]+"201912current.xlsx", index_col=0, usecols=['日   期',obsvar[nv]],skiprows=[1])
-        var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
+        var[0,:] = df[df.index.strftime('%Y-%m-%d %H').isin(ftime8.strftime('%Y-%m-%d %H'))].to_numpy()[:,0]
 
     nc = 1
     for nt in range(0,len(ftime)-1,24):
@@ -107,11 +109,11 @@ for nv in range(0,4,1):
     axe.set_title(title,fontsize=MIDFONT) 
     for nc in range(len(var)):
         if nc == 0:
-            axe.plot(ftime, var[nc,:], label=case[nc])
+            axe.plot(ftime8, var[nc,:], label=case[nc])
         else:
             rmse = np.sqrt(np.power(np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0),2).mean())
             mae = np.nan_to_num((var[nc,:] - var[0,:]),copy=False,nan=0).mean()
-            axe.plot(ftime, var[nc,:], label="%s (RMSE: %.2f, MAE: %.2f)"%(case[nc],rmse,mae))
+            axe.plot(ftime8, var[nc,:], label="%s (RMSE: %.2f, MAE: %.2f)"%(case[nc],rmse,mae))
     #axe.set_ylabel("wind speed (m/s)",fontsize=MIDFONT)  # Add an x-label to the axes.
     axe.set_xlabel("time",fontsize=MIDFONT)  # Add a y-label to the axes.
     axe.tick_params(axis='both', which='major', labelsize=SMFONT)

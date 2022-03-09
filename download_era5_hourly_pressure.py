@@ -11,7 +11,7 @@ for nv in range(3,len(varname),1):
     if not os.path.exists(path+filname[nv]):
         os.makedirs(path+filname[nv])
 
-    for year in range(1979,1982,1):
+    for year in range(2007,2008,1):
         c.retrieve(
             'reanalysis-era5-pressure-levels',
             {

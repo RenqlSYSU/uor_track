@@ -38,12 +38,14 @@ if [ $pro == -1 ];then
     for ny in {1980..2020};do
         starttime=$((ny-1))120100
         for nl in {0..2};do
-            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos-1211
-            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos-1211
-            if [ ! -f "$filname2" ]; then
-                utils/bin/count $filname1 0 0 5 4 0 $starttime $timestep
-                mv ${filname1}.new ${filname2}
-            fi
+            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos
+            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos.addZ_addwind10m_precip
+            rm ${filname1}.addZ
+            rm ${filname1}.addZ_addwind10m
+            #if [ ! -f "$filname2" ]; then
+                #utils/bin/count $filname1 0 0 5 4 0 $starttime $timestep
+                #mv ${filname1}.new ${filname2}
+            #fi
         done
     done
 fi
@@ -62,12 +64,12 @@ if [ $pro == 1 ];then
     cd $OUTDIR
     pwd
     echo "combine ${prefix}_trs_pos"
-    for nl in {0..2};do
+    for nl in {2..2};do
         echo 41 > combine.in_${lev[$nl]}
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos-1211
+            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip
             echo $filname >> combine.in_${lev[$nl]}
         
             if [ ! -f "$filname" ]; then
@@ -87,8 +89,8 @@ if [ $pro == 1 ];then
         done
         
         ~/TRACK-1.5.2/utils/bin/combine < combine.in_${lev[$nl]} > record_combine
-        mv ./combined_tr_trs ./${prefix}1211_${lev[$nl]}_1980-2020
-        awk 'NR==4 {print FILENAME, $2}' ./${prefix}1211_${lev[$nl]}_1980-2020 | tee -a ${OUTDIR}number
+        mv ./combined_tr_trs ./${prefix}add_${lev[$nl]}_1980-2020
+        awk 'NR==4 {print FILENAME, $2}' ./${prefix}add_${lev[$nl]}_1980-2020 | tee -a ${OUTDIR}number
     done
 fi
 
@@ -145,12 +147,18 @@ if [ $pro == 3 ];then
 
         #python ~/uor_track/2110-line_filter.py ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 24 
         if [ $option -le 4 ];then 
-            utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 
+            utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} $option 0 0.0 << EOF
+n
+EOF
             mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
         else
-            utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} 2 0 0.0 
+            utils/bin/box ${OUTDIR}$file ${lats} ${latn} ${lonl} ${lonr} 2 0 0.0 << EOF
+n
+EOF
             mv ${OUTDIR}${file}.new ${OUTDIR}${file}${suffix}
-            utils/bin/box ${OUTDIR}${file}${suffix} ${lats} ${latn} ${lonl} ${lonr} 0 1 0.0 
+            utils/bin/box ${OUTDIR}${file}${suffix} ${lats} ${latn} ${lonl} ${lonr} 0 1 0.0 <<EOF 
+n
+EOF
             mv ${OUTDIR}${file}${suffix}.new ${OUTDIR}${file}${suffix}
         fi
         awk 'NR==4 {print FILENAME, $2}' ${OUTDIR}${file}${suffix} | tee -a ${OUTDIR}number

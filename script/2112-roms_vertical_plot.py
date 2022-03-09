@@ -1,5 +1,5 @@
 """
-read Whole_HK_DTM_5m.asc, 
+read Whole_HK_DTM_6m.asc, 
 Interpolate to a resolution of 100m
 calculate latitude and longitude,
 convert to nc file

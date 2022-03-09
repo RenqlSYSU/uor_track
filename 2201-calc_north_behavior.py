@@ -282,7 +282,7 @@ if len(sys.argv) < 2 :
     flonl = 60  #int(sys.argv[4])
     flonr = 110 #int(sys.argv[5])
     time = 24 # threshold, hour
-    prefix = "ff"
+    prefix = "fft"
     suffix0 = "_5_2545-60110"
     season = 0 # 0 monthly, 1 seasonal
 else:
@@ -323,10 +323,13 @@ imonth=range(1,len(month),1)
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 os.chdir("/home/users/qd201969/uor_track/fig")
 
+for nl in range(0,len(lev),1):
+    filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0
+    cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,time,1,"north")
 #calcbehv()
 #drawannual()
 #draw_table()
-draw_3var_distri()
+#draw_3var_distri()
 #drawbox()
 
 #draw_hist()

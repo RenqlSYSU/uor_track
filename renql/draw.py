@@ -108,3 +108,72 @@ def behavior(filname,flats,flatn,flonl,flonr):
 
     fig.savefig("/home/users/qd201969/uor_track/fig/life_inte_"+term[-1]+".png")
 
+def monthly_contour(var,cnlev,figtitle,cblabel,figdir):
+    print(var.min())
+    print(var.max())
+    lat_sp = 20
+    lon_sp = 30 #60 #
+    nrow = 4 #6 #
+    ncol = 3 #2 #
+    bmlo = 0.37 #0.25 #
+    title_font=14
+    label_font=10
+    titls=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    
+    ds = xr.open_dataset('/gws/nopw/j04/ncas_generic/users/renql/ERA5_mon/ERA5_mon_u_1979-2020.nc')
+    da = ds['u'].sel(level=200,longitude=ilon,latitude=ilat,method="nearest").load()
+    uwnd = da.groupby(da.time.dt.month).mean('time')
+    del ds, da
+
+    ds = xr.open_dataset("/home/users/qd201969/gtopo30_0.9x1.25.nc")
+    phis = ds['PHIS'].sel(lon=ilon,lat=ilat,method="nearest").load()
+    phis = phis/9.8 # transfer from m2/s2 to m
+    del ds
+    
+    cnlevels = np.arange(cnlev[0], cnlev[1], cnlev[2])
+    fcolors = cmaps.precip2_17lev
+    norm = colors.BoundaryNorm(boundaries=cnlevels, 
+        ncolors=fcolors.N,extend='both')
+    
+    fig = plt.figure(figsize=(12,12),dpi=300)
+    ax = fig.subplots(nrow, ncol, subplot_kw=dict(
+        projection=ccrs.PlateCarree(central_longitude=180.0)))
+    nm = -1
+    for nr in range(0,nrow,1):
+        for nc in range(0,ncol,1):
+            nm = nm+1 
+            axe = ax[nr][nc]
+            axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k')
+                    , linewidth=0.8, zorder=1)
+            axe.set_title(figtitle+" "+titls[nm],fontsize=title_font)
+
+            cont = axe.contourf(ilon, ilat, var[nm,:,:], cnlevels, 
+                 transform=ccrs.PlateCarree(),cmap=fcolors,
+                 extend='both',norm=norm)
+            topo = axe.contour(ilon, ilat, phis, [1500,3000], 
+                 transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
+            axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
+                 linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
+            jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,40,50], 
+                 transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=1.5)
+            
+            if nc == 0:
+                axe.set_yticks(np.arange(lats,latn,lat_sp), crs=ccrs.PlateCarree())
+                axe.yaxis.set_major_formatter(LatitudeFormatter(degree_symbol=''))
+            if nr == (nrow-1):
+                axe.set_xticks(np.arange(lonl,lonr,lon_sp), crs=ccrs.PlateCarree())
+                axe.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
+
+    if (nrow/ncol) >= 2.0: 
+        position = fig.add_axes([0.99, bmlo+0.05, 0.01, 0.6]) #left, bottom, width, height
+        cb = plt.colorbar(cont, cax=position ,orientation='vertical')#, shrink=.9)
+        cb.set_label(label=cblabel, size=title_font) #, weight='bold'
+    else:
+        position = fig.add_axes([0.2, bmlo+0.005, 0.7, 0.01]) #left, bottom, width, height
+        cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
+        plt.figtext(0.02,bmlo-0.005, cblabel,fontsize=title_font,
+                horizontalalignment='left',verticalalignment='bottom')
+    
+    plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
+    plt.savefig(figdir, bbox_inches='tight',pad_inches=0.01)
+

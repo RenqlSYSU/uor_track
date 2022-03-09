@@ -106,6 +106,64 @@ def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
 
     return life, inte, dist, len(life)
 
+def calc_close_cyclone(filname,flats=25,flatn=45,flonl=57,flonr=110):
+    ff = open(filname,"r") 
+    line1 = ff.readline()
+    line2 = ff.readline()
+    line3 = ff.readline()
+    line4 = ff.readline()
+    
+    tid = []
+    clse1= [] # close / total time
+    clse2= [] # close / cyclone around TP
+    pinte= [] # geopotential intensity
+    wind = [] # max 10m wind
+    mrain= [] # max rainfall
+    train= [] # rain time %
+    line = ff.readline()
+    start=datetime(1995, 11, 30, 23, 00)
+    while line:
+        term = line.strip().split(" ")
+        if term[0] == "TRACK_ID":
+            tid.append(term[-1])
+            
+            linenum = ff.readline()
+            term1 =linenum.strip().split(" ")
+            num = int(term1[-1])
+            
+            data=[]
+            ct1=[]
+            clse_time=0
+            for nl in range(0,num,1):
+                term = list(map(float, 
+                    ff.readline().strip().replace(" &","").split(" ")))
+                ct1.append(start+timedelta(hours=int(term[0])))
+                if term[1]>=flonl and term[1]<=flonr and term[2]>=flats and term[2]<=flatn:
+                    data.append(term)
+                if term[4]==1e+25 and term[5]==1e+25 :
+                    clse_time = clse_time + 1
+
+            if (len(data)>1) :
+                data = np.array(data)
+                if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+                    wind.append(data[:,9].max())
+                    mrain.append(data[:,10].max()*24)
+                    train.append(sum(i>1e-1 for i in data[:,10])*100/len(data))
+
+                    #pinte.append(data[:,6].mean())
+                    pinte.append(data[:,6].max())
+                    clse1.append(100-clse_time*100.0/num)
+                    clse2.append(100-sum(i==1e+25 for i in data[:,4])*100/len(data))
+
+        line = ff.readline()
+
+    a = line4.strip().split(" ",1)
+    term = a[1].strip().split(" ",1)
+    #print("total cyclone number in %s : %s" %(ff.name,term[0]))
+    ff.close()
+    return wind, mrain, train, len(wind) 
+    #return clse1, clse2, pinte, len(pinte) 
+
 def hist_life_intensity(filname,ax=None,title=None,figsave=False,\
         flats=25,flatn=45,flonl=60,flonr=90):
     life, inte, dist, numb = calc_life_intensity(filname,\

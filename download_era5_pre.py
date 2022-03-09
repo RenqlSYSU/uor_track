@@ -49,6 +49,7 @@ def down_single_level(var,year):
                 '21:00', '22:00', '23:00',
             ],
             'grid': [0.25, 0.25],
+            'area': [70, 0, 15, 150, ],
         },
         '%s%s/ERA5_%s_%d.grib'%(path,var,var,year))
 
@@ -58,7 +59,7 @@ path = '/work/scratch-pw2/renql/ERA5_hourly/'
 #path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/'
 
 for var in ('wind10',):
-    for year in range(1979,1980):
+    for year in range(1979,2022):
         down_single_level(var,year)
 #        com = "cdo expr,’speed=sqrt(sqr(uwnd)+sqr(vwnd))’ infile outfile"
 #

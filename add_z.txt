@@ -1,0 +1,880 @@
+/home/users/qd201969/TRACK-1.5.2
+add additional fields
+***WARNING***, file /home/users/qd201969//TRACK-1.5.2/indat/linux                              
+               does not exist, input a valid filname
+               possibly with full path.               
+
+***INFORMATION***, data file:-                              
+                   /work/scratch-pw2/renql/ERA5_hourly/z/ERA5_z850_1hr_dec-jan1980.nc                                       
+                   exists and will be opened for data input.
+
+do you want to load a country map, 'y' or 'n'
+do you want to use an existing initialization, '0' for no, '1' for yes
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/initial.linux 
+ opened for 'w'
+
+what format is the data
+Input '0' for UNIX binary format       
+Input '1' for standard ASCII format.   
+Input '2' for UTF format.              
+Input '3' for Met. Office PP format.   
+Input '4' for NETCDF.                  
+
+Print file summary information, 'y' or 'n'
+
+Use netcdf id's or variable names and dimension values, input '0' or '1'
+
+Is the data organized according to the COARDS convention, 'y' or 'n'
+
+Available fields are:-   
+
+Field Id. 4 is z Geopotential m**2 s**-2
+
+
+****INFORMATION*****, field z chosen.
+
+the current grid dimensions are 1440 * 721 
+
+do you want to translate the grid 'y' or 'n'?
+
+****WARNING****, grid is not periodic.
+
+****WARNING****, grid is inverted to expected ordering
+                 grid will be corrected.              
+
+****WARNING****, data contains the equator, do you want to retain it, 'y' or 'n'
+
+***WARNING***, data contains a SH pole, do you want to retain it, 'y' or 'n'
+
+***WARNING***, data contains a NH pole, do you want to retain it, 'y' or 'n'
+
+
+ the NEW grid dimensions are 1440 * 719 
+
+****INFORMATION*****, level 8.500000e+02 chosen.
+
+****INFORMATION****, data has missing values,     
+                     missing value is -3.276700e+04.            
+
+The current grid is global but not periodic, do you
+want to make the grid periodic, 'y' or 'n'.        
+This is required for tracking on a global domain,  
+but is not required for spectral filtering.        
+
+****WARNING*****, translating grid by 0.000000
+
+ the NEW grid dimensions are 1441 * 719
+
+what distance norm is required, input 'e' for euclidean,
+input 'g' for geodesic norm (if working on a sphere)
+***WARNING***,if the data is defined on a lat-long grid,       
+              a Plate Caree projection is used by default. 
+
+Is a different projection required, 'y' or 'n'
+
+Use this if data are already on a projection different from Plate Caree.
+
+ the maximum possible search area is
+ X= 0.000000 to 360.000000 
+ Y= -89.750000 to 89.750000 
+
+
+define a search area in terms of the grid numbering
+X grid numbers =
+****INFORMATION****, chosen search area is inconsistent with data 
+                      hierachy, but will be padded out to continue
+
+ X= 0.000000 to 360.000000
+
+Y grid numbers =
+****INFORMATION****, chosen search area is inconsistent with data 
+                      hierachy, but will be padded out to continue
+
+ Y= -89.750000 to 89.750000
+
+do you want to combine existing sets of track data and display them,    
+or display exsisting sets of combined tracks,                           
+and/or perform statistical analysis and display,                        
+or compute time series analyses, e.g. mean, varience,                   
+filtered varience, filtered fields, or                                  
+combine weighted statistics from time series analysis,                  
+or perform spatial spectral filtering of fields,                        
+or convert data to binary format,                                       
+or extract fields from a file at a chosen sampling,                     
+or compute vorticity from wind fields,                                  
+or interpolate to a new grid.                                           
+y or n.                                                                 
+
+do you want to use any of the analysis routines
+Input  '0' to exit
+Input  '1' to combine track data sets, analyse and display.          
+Input  '2' to display only existing statistical analyses             
+Input  '3' to compute time average, varience and                     
+           filtered varience fields, note this can also              
+           be done as part of the feature identification.            
+Input  '4' to perform spectral filtering of fields by,               
+           spherical harmonic decomposition.                         
+Input  '5' to perform a time domain filtering of fields using        
+           a Lanczos filter.                                         
+Input  '6' to perform a spectral domain (time) filtering of fields.  
+Input  '7' to convert data to standard binary format with            
+           header.                                                   
+Input  '8' to extract fields from a file at chosen sampling,         
+           fill missing data holes by simple interpolation,          
+           apply mathematical transformation and convert to          
+           binary format.                                            
+Input  '9' to perform field smoothing using B-splines.               
+Input '10' to combine weighted time analysis fields from option '3'  
+           seperate files for each period.                           
+Input '11' to combine weighted time analysis fields from option '3'  
+           single file for all periods.                              
+Input '12' to compute vorticty, EKE or wind speed from wind fields.  
+Input '13' to compute gradient fields and thermal front parameter.   
+Input '14' to interpolate data to a new grid using B-splines.        
+
+do you want to use an existing combined track data file, 'y' or 'n'
+Do you want to use a track file different from the default, 'y' or 'n'.
+
+what is the name of the combined file to be read
+What is the track file type, i.e. 's' or 'v'
+
+
+File /home/users/qd201969/ERA5-1HR-lev/ERA5_VOR850_1hr_1980_DET/ff_trs_pos 
+ opened for 'r'
+
+***INFORMATION***, there are no additional fields associated with this track data.
+
+****INFORMATION****, number of tracks is 7412
+***INFORMATION***, you can now filter the tracks according  
+                   to lifetime and/or displacement distance,
+                   and/or maximum strength (i.e. system must
+                   reach this strength to be included. Also,
+                   it is possible to filter according to    
+                   mean propgation direction.               
+
+input the min. and max. number of points in a track
+
+***INFORMATION***, current number of tracks is 7412
+
+Do you want to filter according to distance, 'y' or 'n'
+
+Do you want to filter according to system strength, 'y' or 'n'.
+
+Do you want to filter according to propogation direction,
+and/or speed, 'y' or 'n'.                                    
+
+Do you want to restrict the frame range, 'y' or 'n'
+This will identify tracks that overlap with the    
+frame range by at least 50.00%                    
+
+Do you want to use all tracks or a selected track, 'a' for all and 's' for selected.
+
+****INFORMATION****, using all available tracks.
+
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux 
+ opened for 'w'
+
+****INFORMATION****, writing netcdf file /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux.nc
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux 
+ opened for 'r'
+
+***INFORMATION***, there are no additional fields associated with this track data.
+
+****INFORMATION****, number of tracks is 7412
+Do you want nearest grid point positions, 'y' or 'n'
+
+do you want the combined track data plotted, y or n
+
+do you want to change the minimum lifetime and re-plot
+or analyse a different combined data set
+or change the area of interest, 'y' or 'n'
+
+do you want to perform any analyses, or display     
+existing results:                                   
+Input '0' to exit                                   
+Input '1' for calculation of addtional field values 
+Input '2' for propog. speeds, and statistics        
+Input '3' for combining statistical distributions   
+
+****INFORMATION****, lowest frame Id is 1 and highest frame Id is 10272
+
+***WARNING***, additional fields should be on the same grid as initial data file,
+               and in the same format.                                           
+
+How many additional fields are required to be sampled at 
+the track feature points.                                
+
+Do you want to orographically mask data, 'y' or 'n'
+
+Input '0' for basic interpolation, max/min      
+Input '1' for area averages or variance         
+Input '2' for regional radial or lat-lng values 
+Input '3' for sampling at fixed locations.      
+
+Sample at point offset from actual point, 'y' or 'n'
+
+Do you want to remove the regional average, '1' for yes or '0' for no.
+
+Do you want to choose start and end time frames or use the calculated values, '0' or '1',    
+use '0' and -1 for frame interval for referencing longitudes and latitudes for regional data.
+
+What is the file containing field ID 1
+
+What scaling is required for field ID 1
+
+Do you want values at the feature point or try and find an associated max or min,
+for this field, input '-1' for Min, '0' for at feature point or '1' for Max.     
+
+****INFORMATION****, NETCDF file to open is:- 
+                     /work/scratch-pw2/renql/ERA5_hourly/z/ERA5_z850_1hr_dec-jan1980.nc
+
+****INFORMATION****, NETCDF file /work/scratch-pw2/renql/ERA5_hourly/z/ERA5_z850_1hr_dec-jan1980.nc opened for 'r'.
+
+Available fields are:-   
+
+Field Id. 4 is z
+****INFORMATION****, using field Id. 4, z
+
+****INFORMATION****, data has missing values,     
+                     missing value is -3.276700e+04.            
+
+When finding maxima or minima do you want to use the spline interpolation 
+and steepest ascent/descent or a general search, input '0' for spline and 
+ steepest ascent or '1' for general search.                               
+
+Are there missing values? 'y' or 'n'
+
+What is the missing data value to test against?
+
+How do you want to compare with missing value?
+'0' -- equality.                              
+'1' -- less than.                             
+'2' -- greater than.                          
+
+Do you want to return additional fields to their unscaled values, 'y' or 'n'.
+
+Do you want time in terms of frame Id's or actual time, '0' or '1'
+
+If tracks are translated in longitude, convert back to actual longitude, 
+or if grid has been translated translate tracks and fixed sampling       
+locations accordingly? 'y' or 'n'                                        
+
+What is the maximum distance a new Max or Min can be from the feature point 
+or the region to average over in the correct units, input an outer and inner
+value?
+
+Output new position of Min or Max, '1' for yes, '0' for no.
+
+Do you want last identified new position to be used as the 
+starting point for the determination of the next new point.
+Input '1' for yes and '0' for no.                          
+
+What form of interpolation is required,                       
+Input '0' for bi-cubic spline, no missing values.             
+Input '1' for nearest neigbour interpolation, missing values, 
+Input '2' for bi-linear interpolation, missing values.        
+Input '3' for bi-cubic interpolation, missing values.         
+
+****INFORMATION****, using interpolation option 0
+what kind of interpolation/smoothing is required?             
+
+input '0' to use smoopy (rect. mesh, no spherical continuity).
+          Mostely used for whole field or reduced field surface fit.
+input '1' to use sphery (rect. mesh, spherical continuity).   
+          Used exclusively for whole sphere fitting.      
+
+Frame 1, time 700512.000000 of Variable 4, Geopotential
+What smoothing factor do you wish to use with SMOOPY
+    s = 0  interpolating B-spline surface 
+    s > 0  least squares B-spline surface   
+surfit.c ier = -1 residual = 9.485530e-20
+do you want constrained optimization, 'y' or 'n'
+***IMPORTANT***, see the file 'data/constraints.dat' for restrictions
+do you want to use the default constraints 
+or the object extent constraints, 'd' or 'o'.   
+***INFORMATION***, using constarint file /home/users/qd201969//TRACK-1.5.2/data/constraints.dat.reg
+
+
+File /home/users/qd201969//TRACK-1.5.2/data/constraints.dat.reg 
+ opened for 'r'
+
+Frame 2, time 700513.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.494586e-20
+Frame 31, time 700542.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.512687e-20
+Frame 32, time 700543.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.482866e-20
+Frame 33, time 700544.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.500405e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 34, time 700545.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.484847e-20
+Frame 146, time 700657.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.685751e-20
+Frame 212, time 700723.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.614946e-20
+Frame 213, time 700724.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.627303e-20
+***Warning*** in gdfp_optimize.c line 405, no max. on line within limits
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 214, time 700725.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.630623e-20
+Frame 221, time 700732.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.628292e-20
+Frame 222, time 700733.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.625591e-20
+Frame 223, time 700734.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.623414e-20
+***Warning*** in gdfp_optimize.c line 405, no max. on line within limits
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 224, time 700735.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.616885e-20
+Frame 450, time 700961.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.691261e-20
+Frame 451, time 700962.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.675410e-20
+***Warning*** in gdfp_optimize.c line 405, no max. on line within limits
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 452, time 700963.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.689751e-20
+Frame 945, time 701456.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.678955e-20
+Frame 946, time 701457.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.691579e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 947, time 701458.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.763045e-20
+Frame 1483, time 701994.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.782000e-20
+Frame 1507, time 702018.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.757766e-20
+Frame 1508, time 702019.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.746536e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 1509, time 702020.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.749103e-20
+Frame 2175, time 702686.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.671509e-20
+Frame 2176, time 702687.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.652873e-20
+Frame 2177, time 702688.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.656980e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 2178, time 702689.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.684174e-20
+Frame 2289, time 702800.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.679682e-20
+Frame 2290, time 702801.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.686864e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 2291, time 702802.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.779552e-20
+Frame 2912, time 703423.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.758790e-20
+Frame 2916, time 703427.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.739258e-20
+Frame 2917, time 703428.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.731596e-20
+Frame 2918, time 703429.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.743972e-20
+***Warning*** in gdfp_optimize.c line 405, no max. on line within limits
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 2934, time 703445.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.674149e-20
+Frame 2935, time 703446.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.672077e-20
+Frame 2936, time 703447.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.661163e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 4047, time 704558.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.980456e-20
+Frame 4064, time 704575.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.925129e-20
+Frame 4065, time 704576.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.964568e-20
+Frame 4066, time 704577.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.941795e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 4067, time 704578.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.769608e-20
+Frame 4550, time 705061.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.762888e-20
+Frame 4551, time 705062.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.764726e-20
+Frame 4552, time 705063.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.795337e-20
+***Warning*** in gdfp_optimize.c line 405, no max. on line within limits
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 4553, time 705064.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.770156e-20
+Frame 4719, time 705230.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.611478e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 4720, time 705231.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.614933e-20
+Frame 4843, time 705354.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.704461e-20
+Frame 4844, time 705355.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.701347e-20
+***Warning*** in gdfp_optimize.c line 405, no max. on line within limits
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 4845, time 705356.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.675912e-20
+Frame 4886, time 705397.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.719233e-20
+Frame 4887, time 705398.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.702630e-20
+Frame 4888, time 705399.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.721021e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 4889, time 705400.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.718404e-20
+Frame 4925, time 705436.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.772675e-20
+Frame 4927, time 705438.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.801341e-20
+Frame 4928, time 705439.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.778464e-20
+***WARNING***, maximum number of iterations in gdfp_optimize.c exceeded
+****WARNING****, a problem was encountered during the    
+                 during optimization for feature points. 
+                 Defaulting to grid point feature points.
+
+Frame 10269, time 710780.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.586876e-20
+Frame 10270, time 710781.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.611055e-20
+Frame 10271, time 710782.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.592622e-20
+Frame 10272, time 710783.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.596043e-20
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux_addfld 
+ opened for 'w'
+
+do you want to use any of the analysis routines
+Input  '0' to exit
+Input  '1' to combine track data sets, analyse and display.          
+Input  '2' to display only existing statistical analyses             
+Input  '3' to compute time average, varience and                     
+           filtered varience fields, note this can also              
+           be done as part of the feature identification.            
+Input  '4' to perform spectral filtering of fields by,               
+           spherical harmonic decomposition.                         
+Input  '5' to perform a time domain filtering of fields using        
+           a Lanczos filter.                                         
+Input  '6' to perform a spectral domain (time) filtering of fields.  
+Input  '7' to convert data to standard binary format with            
+           header.                                                   
+Input  '8' to extract fields from a file at chosen sampling,         
+           fill missing data holes by simple interpolation,          
+           apply mathematical transformation and convert to          
+           binary format.                                            
+Input  '9' to perform field smoothing using B-splines.               
+Input '10' to combine weighted time analysis fields from option '3'  
+           seperate files for each period.                           
+Input '11' to combine weighted time analysis fields from option '3'  
+           single file for all periods.                              
+Input '12' to compute vorticty, EKE or wind speed from wind fields.  
+Input '13' to compute gradient fields and thermal front parameter.   
+Input '14' to interpolate data to a new grid using B-splines.        
+
+***WARNING***, file /home/users/qd201969//TRACK-1.5.2/indat/linux                              
+               does not exist, input a valid filname
+               possibly with full path.               
+
+***INFORMATION***, data file:-                              
+                   /work/scratch-pw2/renql/ERA5_hourly/z/ERA5_z850_1hr_dec-jan1980.nc                                       
+                   exists and will be opened for data input.
+
+do you want to load a country map, 'y' or 'n'
+do you want to use an existing initialization, '0' for no, '1' for yes
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/initial.linux 
+ opened for 'w'
+
+what format is the data
+Input '0' for UNIX binary format       
+Input '1' for standard ASCII format.   
+Input '2' for UTF format.              
+Input '3' for Met. Office PP format.   
+Input '4' for NETCDF.                  
+
+Print file summary information, 'y' or 'n'
+
+Use netcdf id's or variable names and dimension values, input '0' or '1'
+
+Is the data organized according to the COARDS convention, 'y' or 'n'
+
+Available fields are:-   
+
+Field Id. 4 is z Geopotential m**2 s**-2
+
+
+****INFORMATION*****, field z chosen.
+
+the current grid dimensions are 1440 * 721 
+
+do you want to translate the grid 'y' or 'n'?
+
+****WARNING****, grid is not periodic.
+
+****WARNING****, grid is inverted to expected ordering
+                 grid will be corrected.              
+
+****WARNING****, data contains the equator, do you want to retain it, 'y' or 'n'
+
+***WARNING***, data contains a SH pole, do you want to retain it, 'y' or 'n'
+
+***WARNING***, data contains a NH pole, do you want to retain it, 'y' or 'n'
+
+
+ the NEW grid dimensions are 1440 * 719 
+
+****INFORMATION*****, level 8.500000e+02 chosen.
+
+****INFORMATION****, data has missing values,     
+                     missing value is -3.276700e+04.            
+
+The current grid is global but not periodic, do you
+want to make the grid periodic, 'y' or 'n'.        
+This is required for tracking on a global domain,  
+but is not required for spectral filtering.        
+
+****WARNING*****, translating grid by 0.000000
+
+ the NEW grid dimensions are 1441 * 719
+
+what distance norm is required, input 'e' for euclidean,
+input 'g' for geodesic norm (if working on a sphere)
+***WARNING***,if the data is defined on a lat-long grid,       
+              a Plate Caree projection is used by default. 
+
+Is a different projection required, 'y' or 'n'
+
+Use this if data are already on a projection different from Plate Caree.
+
+ the maximum possible search area is
+ X= 0.000000 to 360.000000 
+ Y= -89.750000 to 89.750000 
+
+
+define a search area in terms of the grid numbering
+X grid numbers =
+****INFORMATION****, chosen search area is inconsistent with data 
+                      hierachy, but will be padded out to continue
+
+ X= 0.000000 to 360.000000
+
+Y grid numbers =
+****INFORMATION****, chosen search area is inconsistent with data 
+                      hierachy, but will be padded out to continue
+
+ Y= -89.750000 to 89.750000
+
+do you want to combine existing sets of track data and display them,    
+or display exsisting sets of combined tracks,                           
+and/or perform statistical analysis and display,                        
+or compute time series analyses, e.g. mean, varience,                   
+filtered varience, filtered fields, or                                  
+combine weighted statistics from time series analysis,                  
+or perform spatial spectral filtering of fields,                        
+or convert data to binary format,                                       
+or extract fields from a file at a chosen sampling,                     
+or compute vorticity from wind fields,                                  
+or interpolate to a new grid.                                           
+y or n.                                                                 
+
+do you want to use any of the analysis routines
+Input  '0' to exit
+Input  '1' to combine track data sets, analyse and display.          
+Input  '2' to display only existing statistical analyses             
+Input  '3' to compute time average, varience and                     
+           filtered varience fields, note this can also              
+           be done as part of the feature identification.            
+Input  '4' to perform spectral filtering of fields by,               
+           spherical harmonic decomposition.                         
+Input  '5' to perform a time domain filtering of fields using        
+           a Lanczos filter.                                         
+Input  '6' to perform a spectral domain (time) filtering of fields.  
+Input  '7' to convert data to standard binary format with            
+           header.                                                   
+Input  '8' to extract fields from a file at chosen sampling,         
+           fill missing data holes by simple interpolation,          
+           apply mathematical transformation and convert to          
+           binary format.                                            
+Input  '9' to perform field smoothing using B-splines.               
+Input '10' to combine weighted time analysis fields from option '3'  
+           seperate files for each period.                           
+Input '11' to combine weighted time analysis fields from option '3'  
+           single file for all periods.                              
+Input '12' to compute vorticty, EKE or wind speed from wind fields.  
+Input '13' to compute gradient fields and thermal front parameter.   
+Input '14' to interpolate data to a new grid using B-splines.        
+
+do you want to use an existing combined track data file, 'y' or 'n'
+Do you want to use a track file different from the default, 'y' or 'n'.
+
+what is the name of the combined file to be read
+What is the track file type, i.e. 's' or 'v'
+
+
+File /home/users/qd201969/ERA5-1HR-lev/ERA5_VOR850_1hr_1980_DET/ff_trs_pos 
+ opened for 'r'
+
+***INFORMATION***, there are no additional fields associated with this track data.
+
+****INFORMATION****, number of tracks is 7412
+***INFORMATION***, you can now filter the tracks according  
+                   to lifetime and/or displacement distance,
+                   and/or maximum strength (i.e. system must
+                   reach this strength to be included. Also,
+                   it is possible to filter according to    
+                   mean propgation direction.               
+
+input the min. and max. number of points in a track
+
+***INFORMATION***, current number of tracks is 7412
+
+Do you want to filter according to distance, 'y' or 'n'
+
+Do you want to filter according to system strength, 'y' or 'n'.
+
+Do you want to filter according to propogation direction,
+and/or speed, 'y' or 'n'.                                    
+
+Do you want to restrict the frame range, 'y' or 'n'
+This will identify tracks that overlap with the    
+frame range by at least 50.00%                    
+
+Do you want to use all tracks or a selected track, 'a' for all and 's' for selected.
+
+****INFORMATION****, using all available tracks.
+
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux 
+ opened for 'w'
+
+****INFORMATION****, writing netcdf file /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux.nc
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux 
+ opened for 'r'
+
+***INFORMATION***, there are no additional fields associated with this track data.
+
+****INFORMATION****, number of tracks is 7412
+Do you want nearest grid point positions, 'y' or 'n'
+
+do you want the combined track data plotted, y or n
+
+do you want to change the minimum lifetime and re-plot
+or analyse a different combined data set
+or change the area of interest, 'y' or 'n'
+
+do you want to perform any analyses, or display     
+existing results:                                   
+Input '0' to exit                                   
+Input '1' for calculation of addtional field values 
+Input '2' for propog. speeds, and statistics        
+Input '3' for combining statistical distributions   
+
+****INFORMATION****, lowest frame Id is 1 and highest frame Id is 10272
+
+***WARNING***, additional fields should be on the same grid as initial data file,
+               and in the same format.                                           
+
+How many additional fields are required to be sampled at 
+the track feature points.                                
+
+Do you want to orographically mask data, 'y' or 'n'
+
+Input '0' for basic interpolation, max/min      
+Input '1' for area averages or variance         
+Input '2' for regional radial or lat-lng values 
+Input '3' for sampling at fixed locations.      
+
+Sample at point offset from actual point, 'y' or 'n'
+
+Do you want to remove the regional average, '1' for yes or '0' for no.
+
+Do you want to choose start and end time frames or use the calculated values, '0' or '1',    
+use '0' and -1 for frame interval for referencing longitudes and latitudes for regional data.
+
+What is the file containing field ID 1
+
+What scaling is required for field ID 1
+
+Do you want values at the feature point or try and find an associated max or min,
+for this field, input '-1' for Min, '0' for at feature point or '1' for Max.     
+
+****INFORMATION****, NETCDF file to open is:- 
+                     /work/scratch-pw2/renql/ERA5_hourly/z/ERA5_z850_1hr_dec-jan1980.nc
+
+****INFORMATION****, NETCDF file /work/scratch-pw2/renql/ERA5_hourly/z/ERA5_z850_1hr_dec-jan1980.nc opened for 'r'.
+
+Available fields are:-   
+
+Field Id. 4 is z
+****INFORMATION****, using field Id. 4, z
+
+****INFORMATION****, data has missing values,     
+                     missing value is -3.276700e+04.            
+
+When finding maxima or minima do you want to use the spline interpolation 
+and steepest ascent/descent or a general search, input '0' for spline and 
+ steepest ascent or '1' for general search.                               
+
+Are there missing values? 'y' or 'n'
+
+What is the missing data value to test against?
+
+How do you want to compare with missing value?
+'0' -- equality.                              
+'1' -- less than.                             
+'2' -- greater than.                          
+
+Do you want to return additional fields to their unscaled values, 'y' or 'n'.
+
+Do you want time in terms of frame Id's or actual time, '0' or '1'
+
+If tracks are translated in longitude, convert back to actual longitude, 
+or if grid has been translated translate tracks and fixed sampling       
+locations accordingly? 'y' or 'n'                                        
+
+What is the maximum distance a new Max or Min can be from the feature point 
+or the region to average over in the correct units, input an outer and inner
+value?
+
+Output new position of Min or Max, '1' for yes, '0' for no.
+
+Do you want last identified new position to be used as the 
+starting point for the determination of the next new point.
+Input '1' for yes and '0' for no.                          
+
+What form of interpolation is required,                       
+Input '0' for bi-cubic spline, no missing values.             
+Input '1' for nearest neigbour interpolation, missing values, 
+Input '2' for bi-linear interpolation, missing values.        
+Input '3' for bi-cubic interpolation, missing values.         
+
+****INFORMATION****, using interpolation option 0
+what kind of interpolation/smoothing is required?             
+
+input '0' to use smoopy (rect. mesh, no spherical continuity).
+          Mostely used for whole field or reduced field surface fit.
+input '1' to use sphery (rect. mesh, spherical continuity).   
+          Used exclusively for whole sphere fitting.      
+
+Frame 1, time 700512.000000 of Variable 4, Geopotential
+What smoothing factor do you wish to use with SMOOPY
+    s = 0  interpolating B-spline surface 
+    s > 0  least squares B-spline surface   
+surfit.c ier = -1 residual = 9.485530e-20
+do you want constrained optimization, 'y' or 'n'
+***IMPORTANT***, see the file 'data/constraints.dat' for restrictions
+do you want to use the default constraints 
+or the object extent constraints, 'd' or 'o'.   
+***INFORMATION***, using constarint file /home/users/qd201969//TRACK-1.5.2/data/constraints.dat.reg
+
+
+File /home/users/qd201969//TRACK-1.5.2/data/constraints.dat.reg 
+ opened for 'r'
+
+Frame 2, time 700513.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.494586e-20
+Frame 10269, time 710780.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.586876e-20
+Frame 10270, time 710781.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.611055e-20
+Frame 10271, time 710782.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.592622e-20
+Frame 10272, time 710783.000000 of Variable 4, Geopotential
+surfit.c ier = -1 residual = 9.596043e-20
+
+File /home/users/qd201969//TRACK-1.5.2/outdat/ff_trs.linux_addfld 
+ opened for 'w'
+
+do you want to use any of the analysis routines
+Input  '0' to exit
+Input  '1' to combine track data sets, analyse and display.          
+Input  '2' to display only existing statistical analyses             
+Input  '3' to compute time average, varience and                     
+           filtered varience fields, note this can also              
+           be done as part of the feature identification.            
+Input  '4' to perform spectral filtering of fields by,               
+           spherical harmonic decomposition.                         
+Input  '5' to perform a time domain filtering of fields using        
+           a Lanczos filter.                                         
+Input  '6' to perform a spectral domain (time) filtering of fields.  
+Input  '7' to convert data to standard binary format with            
+           header.                                                   
+Input  '8' to extract fields from a file at chosen sampling,         
+           fill missing data holes by simple interpolation,          
+           apply mathematical transformation and convert to          
+           binary format.                                            
+Input  '9' to perform field smoothing using B-splines.               
+Input '10' to combine weighted time analysis fields from option '3'  
+           seperate files for each period.                           
+Input '11' to combine weighted time analysis fields from option '3'  
+           single file for all periods.                              
+Input '12' to compute vorticty, EKE or wind speed from wind fields.  
+Input '13' to compute gradient fields and thermal front parameter.   
+Input '14' to interpolate data to a new grid using B-splines.        
+
