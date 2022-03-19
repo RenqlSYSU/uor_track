@@ -154,7 +154,7 @@ def mask_precip(nl):
 
     var  = np.empty( [12,len(ilat),len(ilon)],dtype=float )  
     for ny in range(1980,2021,1):
-        print(ny)
+        print('task [%d]:%d'%(nl,ny))
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
                 ,longitude=ilon,latitude=ilat)
@@ -162,11 +162,10 @@ def mask_precip(nl):
         ctime1 = ctime.where(ctime.dt.year.isin(ny),drop=True)
         clat1 = clat.where(ctime.dt.year.isin(ny),drop=True)
         clon1 = clon.where(ctime.dt.year.isin(ny),drop=True)
-        print(ctime1)
         for ct,clo,cla in zip(ctime1,clon1,clat1):
-            print(ct)
-            term.loc[ct,:,:] = term.sel(time=ct).where(
-                (np.square(term.longitude-clo)+np.square(term.latitude-cla))>25, 0)
+            indx = np.argwhere(term.time.data==ct.data)[0][0]
+            term[indx:(indx+3),:,:] = term[indx:(indx+3),:,:].where(
+                (np.square(term.longitude-clo)+np.square(term.latitude-cla))>(radiu*radiu), 0)
         #term = term/term.time.dt.days_in_month
         var = var + term.groupby(term.time.dt.month).sum('time') 
     var = var*1000/41
@@ -215,6 +214,7 @@ behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
 title= {'0_2545-60110':'local',
         '5_2545-60110_2_4545-60110':'northern',
         '5_2545-60110_2_2545-6060':'western'}
+radiu=5
 
 fileout="/home/users/qd201969/uor_track/mdata/"
 lev  = [850,500,250]
@@ -249,7 +249,7 @@ var = ds['tp']
 
 for nl in lev:
     ds = xr.open_dataset("%s%s_precip_%d_%s.nc"%(fileout,sy,nl,suffix))
-    term = (var-ds['tp'])*100/var
+    #ds = xr.open_dataset("%s%s_precip_%d_%s_%ddegree.nc"%(fileout,sy,nl,suffix,radiu))
+    term = (var-ds['tp'].data)*100/var
     draw_precip(term,[2,104,6],'%s %s %d'%(title[suffix],sy,nl),
             'precip percent','%sclim_precip%d_%s'%(figdir,nl,suffix))
-
