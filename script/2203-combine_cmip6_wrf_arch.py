@@ -20,21 +20,22 @@ indir = '/home/lzhenn/cmip6-wrf-arch/'
 otdir = '/home/lzhenn/array74/data/ssp_rainfall/'
 case = ['hist_2010s','ssp245_2040s_wholeyear','ssp245_2090s_wholeyear']
 years= [range(2011,2021),range(2040,2050),range(2090,2100)]
+dom = 'd02'
 
 def main_run():
     #bins = [0.1,0.5,1,2,3,5,8,12,16,20,25,30,40,50,70,100,150] # hourly preci
     #bins = [0.1,0.5,1,3,5,8,12,16,20,25,30,40,50,70,100,150,200] # 3h preci
     bins = [0.1,0.5,1,3,5,10,15,20,30,40,60,80,100,120,150,200,250] #24h accumulated preci
     for i in range(len(case)):
-    #    calc_monthly_preci(i,case[i],years[i])
-        draw_precip_pdf(case[i],years[i],24,bins)
+        calc_monthly_preci(i,case[i],years[i])
+    #    draw_precip_pdf(case[i],years[i],24,bins)
     '''
-    ntask = 2#len(case)
+    ntask = len(case)
     process_pool = Pool(processes=ntask)
     results=[]
-    for i in range(1,ntask+1):
+    for i in range(0,ntask):
         result=process_pool.apply_async(calc_monthly_preci,
-            args=(i,case[i],years[i],))
+            args=(i,case[i],years[i]))
         results.append(result)
     print(results)
     print(results[0].get())
@@ -43,11 +44,22 @@ def main_run():
     print(results[0].get())
     '''
 
-def calc_hourly_preci(i,case,year,nm,datafile):
-    fn_stream = subprocess.check_output(
-        'ls %s%s/%d/analysis/wrfout_d04_%d-%02d-*'%(
-        indir,case,year,year,nm), shell=True).decode('utf-8')
-    fn_list = fn_stream.split()
+def calc_monthly_preci(i,case,years):
+    for year in years:
+        fn_stream = subprocess.check_output(
+            'ls %s%s/%d/analysis/wrfout_%s_%d-*'%(
+            indir,case,year,dom,year), shell=True).decode('utf-8')
+        fn_list = np.array(fn_stream.split())
+        iyear  = np.array([int(a.rsplit('_')[-2].split('-')[0]) for a in fn_list])
+        imonth = np.array([int(a.rsplit('_')[-2].split('-')[1]) for a in fn_list])
+
+        for nm in range(1,13):
+            datafile = "%s%s/wrfout_%s.precc.%d%02d.nc"%(otdir,case,dom,year,nm)
+            if not os.path.exists(datafile):
+                indx = np.argwhere(np.array([iyear==year,imonth==nm]).all(axis=0))
+                calc_hourly_preci(i,case,year,nm,datafile,fn_list[indx[:,0]])
+
+def calc_hourly_preci(i,case,year,nm,datafile,fn_list):
     wrf_list=[Dataset(itm) for itm in fn_list]
     ntime = len(wrf_list)
     print("task[%d] %s %d-%2d time frames: %d"%(i,case,year,nm,ntime))
@@ -68,25 +80,21 @@ def calc_hourly_preci(i,case,year,nm,datafile):
    
     if nm > 1:
         a = (time[0]-timedelta(hours=1)).strftime("%Y-%m-%d_%H:00:00")
-        ncfile = Dataset('%s%s/%d/analysis/wrfout_d04_%s'%(
-            indir,case,year,a))
-        var[0,:,:] = var[0,:,:] - (wrf.getvar(ncfile,"RAINC")[0].data 
-            + wrf.getvar(ncfile,"RAINNC")[0].data)
+        print(fn_list[0])
+        print('%s%s/%d/analysis/wrfout_%s_%s'%(indir,case,year,dom,a))
+        ncfile = Dataset('%s%s/%d/analysis/wrfout_%s_%s'%(
+            indir,case,year,dom,a))
+        b = wrf.getvar(ncfile,"RAINC").values
+        c = wrf.getvar(ncfile,"RAINNC").values
+        var[0,:,:] = var[0,:,:] - (b+c)
     
     da = xr.DataArray(var,coords=[time,lat[:,0],lon[0,:]],dims=['time','lat','lon'])
     da.attrs['units']='mm/h'
     ds = da.to_dataset(name="temp")
     ds.to_netcdf(datafile,"w")
 
-def calc_monthly_preci(i,case,years):
-    for year in years:
-        for nm in range(1,13):
-            datafile = "%s%s/wrfout_d04.precc.%d%02d.nc"%(otdir,case,year,nm)
-            if not os.path.exists(datafile):
-                calc_hourly_preci(i,case,year,nm,datafile)
-
 def draw_precip_pdf(case,years,hr,bins):
-    datafile = "%s%s/wrfout_d04.precc.*.nc"%(otdir,case)
+    datafile = "%s%s/wrfout_%s.precc.*.nc"%(otdir,case,dom)
     ds = xr.open_mfdataset(datafile,concat_dim='time', combine='nested')
     var = ds['temp'].data
     dim = np.array(var.shape)

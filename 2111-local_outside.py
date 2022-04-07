@@ -112,7 +112,7 @@ if len(sys.argv) < 2 :
     flonl = 60 #int(sys.argv[4])
     flonr = 110 #int(sys.argv[5])
     time = 24 # threshold, hour
-    prefix = "ffadd"
+    prefix = "fftadd"
 else:
     flats = int(sys.argv[1])
     flatn = int(sys.argv[2])
@@ -126,12 +126,12 @@ figdir ="/home/users/qd201969/uor_track/fig/"
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 lev  = [850,500,250]
 months = range(1,13,1)
-timefilt = 0
+timefilt = 1
 draw_hist = 0
 draw_annual_ts = 0
 
 if timefilt == 1:
-    for nop in range(1,len(option)):
+    for nop in range(0,len(option)):
         for nl in range(len(lev)):
             suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
             filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
@@ -144,7 +144,7 @@ if timefilt == 1:
         #    %(prefix,time,option[nop],flats,flatn,flonl,flonr)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
-draw_3var_distri()
+#draw_3var_distri()
 
 if draw_annual_ts == 1:
     var = np.zeros( [len(lev),3,12], dtype=float )

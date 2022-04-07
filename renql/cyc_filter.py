@@ -90,6 +90,7 @@ def lys_behavior(filname,flats,flatn,flonl,flonr):
 
 def north_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
     behv = ["EPAS","ELYS","WPAS" ,"WNTP" ,"WNTL" ,"WLYS" ]#,"DIF"]
+    prefix = filname.split("_",1)[0].rsplit("/")[-1]
 
     ff = open(filname,"r") 
     line1 = ff.readline()
@@ -125,7 +126,10 @@ def north_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
             for nl in range(0,num,1):
                 line = ff.readline()
                 value.append(line)
-                data.append(list(map(float, line.strip().split(" "))))
+                if prefix in ['ffadd','fftadd']:
+                    data.append(list(map(float, line.strip().replace(" &","").split(" "))))
+                else:
+                    data.append(list(map(float, line.strip().split(" "))))
            
             signal=-10
             for nl in range(0,num-1,1):
@@ -185,6 +189,7 @@ def north_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
 
 def west_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
     behv = ["PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
+    prefix = filname.split("_",1)[0].rsplit("/")[-1]
 
     ff = open(filname,"r") 
     line1 = ff.readline()
@@ -220,7 +225,10 @@ def west_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
             for nl in range(0,num,1):
                 line = ff.readline()
                 value.append(line)
-                data.append(list(map(float, line.strip().split(" "))))
+                if prefix in ['ffadd','fftadd']:
+                    data.append(list(map(float, line.strip().replace(" &","").split(" "))))
+                else:
+                    data.append(list(map(float, line.strip().split(" "))))
            
             signal=-10
             if data[-1][1]>=flonl[0]:
@@ -371,6 +379,7 @@ def line_filt(filname,flats,flatn,flonl,flonr,time=24,gens=0,orit="left"):
     renql
     '''
     suffix="2_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+    prefix = filname.split("_",1)[0].rsplit("/")[-1]
 
     ff = open(filname,"r") 
     line1 = ff.readline()
@@ -402,7 +411,10 @@ def line_filt(filname,flats,flatn,flonl,flonr,time=24,gens=0,orit="left"):
             for nl in range(0,num,1):
                 line = ff.readline()
                 value.append(line)
-                data.append(list(map(float, line.strip().split(" "))))
+                if prefix in ['ffadd','fftadd']:
+                    data.append(list(map(float, line.strip().replace(" &","").split(" "))))
+                else:
+                    data.append(list(map(float, line.strip().split(" "))))
            
             signal = 0
             if num >= time :

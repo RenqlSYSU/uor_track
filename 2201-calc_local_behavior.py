@@ -28,6 +28,61 @@ font = {'family': 'serif',
         'color':  'black',
         }
 
+if len(sys.argv) < 2 :
+    option=0 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+    flats = 25  #int(sys.argv[2])
+    flatn = 45  #int(sys.argv[3])
+    flonl = 60  #int(sys.argv[4])
+    flonr = 105 #int(sys.argv[5])
+    time = 24 # threshold, hour
+    prefix = "fftadd"
+    suffix0 = ""
+    season = 0 # 0 monthly, 1 seasonal
+else:
+    option= int(sys.argv[1]) 
+    flats = int(sys.argv[2])
+    flatn = int(sys.argv[3])
+    flonl = int(sys.argv[4])
+    flonr = int(sys.argv[5])
+    prefix = int(sys.argv[6])
+    season = int(sys.argv[7])
+    time = int(sys.argv[8])
+
+suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+figdir = "/home/users/qd201969/uor_track/fig/"
+fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
+
+flonr2 = 110
+flatn2 = 40
+flats2 = 30
+behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
+lats = [flats ,flats2,flatn2,flats2,flatn ,flats ,flats ]
+latn = [flatn ,flatn2,flatn2,flats2,flatn ,flats ,flatn ]
+lonl = [flonl ,flonr2,flonr2,flonr2,flonl ,flonl ,flonl ]
+lonr = [flonr ,flonr2,flonr2,flonr2,flonr2,flonr2,flonr2]
+lev = [850,500,250]
+
+if season == 0:
+    nday=[365,31,28,31,30,31,30,31,31,30,31,30,31]
+    month=["ALL","Jan","Feb","Mar","Apr","May","Jun",\
+            "Jul","Aug","Sep","Oct","Nov","Dec"]
+    frae=744
+else:
+    nday=[365,90,92,92,91]
+    month=["ALL","DJF","MAM","JJA","SON"]
+    frae=0
+
+imonth=range(1,len(month),1)
+path = '/home/users/qd201969/ERA5-1HR-lev/'
+os.chdir("/home/users/qd201969/uor_track/fig")
+
+def main_run():
+    #calcbehv()
+    #drawannual()
+    #draw_table()
+    draw_3var_distri()
+    #drawbox()
+
 def calcbehv():
     var  = np.empty( [len(month),len(lev),len(behv)],dtype=int )  
     perc = np.empty( [len(month),len(lev),len(behv)],dtype=float )  
@@ -50,11 +105,11 @@ def calcbehv():
                 filname1 = filname
             else:
                 filname1 = filname+"_"+behv[nr]
-            var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
+            #var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
             #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
             #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
     var[0,:,:] = np.sum(var[1:len(month),:,:],axis=0)
-
+    '''
     f = open("%sbehv3_month_%dh_%s"%(figdir,time,suffix),'w')
     f.write(path+prefix+"_1980-2020_"+suffix+"\n")
     f.write("*"*50+"\n")
@@ -88,7 +143,7 @@ def calcbehv():
             )
     ds.attrs["description"] = "number and percent of cycle, minimum lifetime %d hour"%time
     ds.to_netcdf(fileout,"w")
-
+    '''
 def draw_hist():
     nrow = len(lev)
     ncol = len(behv)-1
@@ -118,18 +173,33 @@ def draw_hist():
     fig.savefig("%slife_inte_%s.png"%(figdir,suffix), bbox_inches='tight',pad_inches=0.08)
 
 def draw_3var_distri():
-    varname = ["Lifetime(day)","Intensity ($10^{-5} s^{-1}$)","Distance(km)"]
+    #varname = ["Lifetime(day)","Intensity ($10^{-5} s^{-1}$)","Distance(km)"]
+    #varname = ["close1 (%)","close2 (%)","GeopoHeight (m)"]
+    varname = ["10mWind (m/s)","MaxRain (mm/d)","GeopoHeight (m)"]
     nrow = len(lev)
     ncol = 3
     bmlo = 0.4
-    xbin = [np.arange(1,11  ,0.5), # num=(end-start)/inv
-            np.arange(1,17  ,0.8), 
-            np.arange(0,8000,400)]
+    #xbin = [np.arange(0,101,5), # num=(end-start)/inv
+    #        np.arange(0,101,5), # close1,close2,geopotion  
+    #        np.arange(0,8001,400)]
+    xbin = [np.arange(2,22.1,1), # num=(end-start)/inv
+            np.arange(0,50.1,2.5), # 10mwind, maxrain, raintime 
+            np.arange(0,101,5)]
+    #xbin = [np.arange(1,11  ,0.5), # num=(end-start)/inv
+    #        np.arange(1,17  ,0.8), 
+    #        np.arange(0,8000,400)]
     var = np.empty( [len(varname),len(behv),len(xbin[0])-1],dtype=float )   
     
     fig = plt.figure(figsize=(9,9),dpi=200)
     ax = fig.subplots(nrow, ncol) #sharex=True, sharey=True
     for nl in range(0,len(lev),1):
+        if nl==0 : # for geopotential
+            xbin[2]=np.arange(1200,1701,25)
+        elif nl==1 :
+            xbin[2]=np.arange(5000,6001,50)
+        elif nl==2 :
+            xbin[2]=np.arange(9500,11001,75)
+
         numb = []
         filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0+"_"+suffix#+"_"+str(time)
         for nb in range(1,len(behv),1):
@@ -138,8 +208,10 @@ def draw_3var_distri():
             else:
                 filname1 = filname+"_"+behv[nb]
             
-            life1, inte1, dist1, numb1 = life_intensity.calc_life_intensity(
-                    filname1,flats=25,flatn=45,flonl=57,flonr=110)
+            #life1, inte1, dist1, numb1 = life_intensity.calc_life_intensity(
+            #        filname1,flats=25,flatn=45,flonl=57,flonr=110)
+            life1, inte1, dist1, numb1 = life_intensity.calc_close_cyclone(
+                    filname1,flats=20,flatn=90,flonl=50,flonr=130)
             print("%s :%d"%(filname1,numb1))
             var[0,nb,:],term = np.histogram(life1,xbin[0])
             var[1,nb,:],term = np.histogram(inte1,xbin[1])
@@ -148,7 +220,6 @@ def draw_3var_distri():
             numb.append(numb1)
                 
         for nv in range(0,3,1):
-            #ax[nl][nv].set_title("%d hPa"%lev[nl],fontsize=title_font-4,fontdict=font)
             ax[nl][nv].grid(True, which="both", color='grey', linestyle='--', linewidth=1)
             ax[nl][nv].yaxis.set_major_formatter(mtick.FormatStrFormatter('%i'))
             for nb in range(1,len(behv),1):
@@ -279,57 +350,5 @@ def draw_table():
     fig.savefig("%sbehv4_table_%s.png"%(figdir,suffix), bbox_inches='tight',pad_inches=0.08)
     subprocess.run("mogrify -bordercolor white -trim %sbehv4_table_%s.png"%(figdir,suffix),shell=True) 
 
-if len(sys.argv) < 2 :
-    option=0 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
-    flats = 25  #int(sys.argv[2])
-    flatn = 45  #int(sys.argv[3])
-    flonl = 60  #int(sys.argv[4])
-    flonr = 105 #int(sys.argv[5])
-    time = 24 # threshold, hour
-    prefix = "ff"
-    suffix0 = ""
-    season = 0 # 0 monthly, 1 seasonal
-else:
-    option= int(sys.argv[1]) 
-    flats = int(sys.argv[2])
-    flatn = int(sys.argv[3])
-    flonl = int(sys.argv[4])
-    flonr = int(sys.argv[5])
-    prefix = int(sys.argv[6])
-    season = int(sys.argv[7])
-    time = int(sys.argv[8])
-
-suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
-figdir = "/home/users/qd201969/uor_track/fig/"
-fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
-
-flonr2 = 110
-flatn2 = 40
-flats2 = 30
-behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
-lats = [flats ,flats2,flatn2,flats2,flatn ,flats ,flats ]
-latn = [flatn ,flatn2,flatn2,flats2,flatn ,flats ,flatn ]
-lonl = [flonl ,flonr2,flonr2,flonr2,flonl ,flonl ,flonl ]
-lonr = [flonr ,flonr2,flonr2,flonr2,flonr2,flonr2,flonr2]
-lev = [850,500,250]
-
-if season == 0:
-    nday=[365,31,28,31,30,31,30,31,31,30,31,30,31]
-    month=["ALL","Jan","Feb","Mar","Apr","May","Jun",\
-            "Jul","Aug","Sep","Oct","Nov","Dec"]
-    frae=744
-else:
-    nday=[365,90,92,92,91]
-    month=["ALL","DJF","MAM","JJA","SON"]
-    frae=0
-
-imonth=range(1,len(month),1)
-path = '/home/users/qd201969/ERA5-1HR-lev/'
-os.chdir("/home/users/qd201969/uor_track/fig")
-
-#calcbehv()
-#drawannual()
-#draw_table()
-draw_3var_distri()
-#drawbox()
-
+if __name__=='__main__':
+    main_run()

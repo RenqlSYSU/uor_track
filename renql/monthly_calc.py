@@ -19,7 +19,7 @@ def calc_month(filname, time):
     term = a[1].strip().split(" ",1)
     print("total cyclone number in %s : %s" %(ff.name,term[0]))
     
-    term2 = filname.split("_",1)[0].rsplit("/")[-1]
+    prefix = filname.split("_",1)[0].rsplit("/")[-1]
     start=datetime(1995, 11, 30, 23, 00)
     line = ff.readline()
     while line:
@@ -33,8 +33,16 @@ def calc_month(filname, time):
                 ct1=[]
                 for nl in range(0,num,1):
                     line = ff.readline()
-                    data = list(map(float,line.strip().split(" ")))
-                    ct1.append(start+timedelta(hours=int(data[0])))
+                    if prefix in ['ffadd','fftadd']:
+                        data = list(map(float, line.strip().replace(" &","").split(" ")))
+                    else:
+                        data = list(map(float,line.strip().split(" ")))
+                    
+                    if prefix in ['fft','fftadd']:
+                        a = str(int(data[0]))
+                        ct1.append(datetime.strptime(a,'%Y%m%d%H'))
+                    else:
+                        ct1.append(start+timedelta(hours=int(data[0])))
 
                 if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
                     if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 

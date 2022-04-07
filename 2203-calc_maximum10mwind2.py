@@ -18,13 +18,15 @@ flatn = 45  #int(sys.argv[3])
 flonl = 60  #int(sys.argv[4])
 flonr = 105 #int(sys.argv[5])
 prefix = "fft"
-#suffix = '0_2545-60110'
-#suffix = '5_2545-60110_2_4545-60110'
-suffix = '5_2545-60110_2_2545-6060'
-title= {'0_2545-60110':'local',
-        '5_2545-60110_2_4545-60110':'northern',
-        '5_2545-60110_2_2545-6060':'western'}
-radiu=5
+#suffix = '_0_2545-60110'
+#suffix = '_5_2545-60110_2_4545-60110'
+#suffix = '_5_2545-60110_2_2545-6060'
+suffix = ''
+title= {'_0_2545-60110':'local',
+        '_5_2545-60110_2_4545-60110':'northern',
+        '_5_2545-60110_2_2545-6060':'western',
+        '':'All'}
+radiu=6
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
 lagd = 2
 lagh = 1
@@ -42,44 +44,48 @@ latn=70 #
 
 def main_run():
     perc = 99
+    lag = 0
+    
     #max10mwind_threshold(perc)
-    ds = xr.open_dataset("%smax10mwind_%dthreshold_month.nc"%(fileout,perc))
+    ds = xr.open_dataset("%smax10mwind_%dthreshold_month.nc"%(fileout,99))
     ilon = ds.lon
     ilat = ds.lat
     thre = ds['threshold'].data
-    #monthly_contour(thre,ilon,ilat,[2,19,1],'max10mwind','m/s',figdir+'max10mwind')
-    
     var  = np.empty( [12,len(ilat),len(ilon)],dtype=float ) 
-    #ctrl_max10mwind_event(thre,var)
-    #count_max10mwind_event(thre,var,850)
+    start_time = datetime.now()
+    #ctrl_max10mwind_event(perc,thre,var)
+    #monthly_contour(thre,ilon,ilat,[2,19,1],'max10mwind','m/s',figdir+'max10mwind',perc)
+    
     process_pool = Pool(processes=3)
     results=[]
     for nl in range(len(lev)):
         result=process_pool.apply_async(count_max10mwind_event,
-                args=(perc,thre,var,lev[nl],))
+                args=(perc,thre,var,lev[nl],lag,))
         results.append(result)
     print(results) 
     process_pool.close()
     process_pool.join() 
     print(results[0].get()) 
-    
-    '''
-    days =[31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
-    ds = xr.open_dataset("%sclim_max10mwind_event.nc"%(fileout))
+    print(start_time)
+    print(datetime.now())
+    print("%d 10mwind lag %d: %s"%(perc,lag,title[suffix]))
+
+    days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
+    ds = xr.open_dataset("%sclim_%dmax10mwind_event.nc"%(fileout,perc))
     ilon = ds.lon
     ilat = ds.lat
     var = ds['event'].data
     #term = var
     #for i in range(len(days)):
     #    term[i,:,:] = var[i,:,:]/days[i]
-    #monthly_contour(term*30,ilon,ilat,[23,40,1],'max10mwind','h/30day',figdir+'max10mwind')
-
+    #monthly_contour(term*30,ilon,ilat,[0,17,1],'max10mwind','h/30day',figdir+'max10mwind',perc)
     for nl in lev:
-        ds = xr.open_dataset("%sclim_max10mwind_event_%d_%s.nc"%(fileout,nl,suffix))
-        term = (var-ds['event'].data)*100/var
+        ds = xr.open_dataset("%sclim_%dmax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix))
+        term = ds['event'].data
+        term = xr.where(var>0,(var-term)*100/var,0)
         monthly_contour(term,ilon,ilat,[2,104,6],'%s %d'%(
-            title[suffix],nl),'max10mwind (%)','%smax10mwind%d_%s'%(figdir,nl,suffix))
-    '''
+            title[suffix],nl),'max10mwind (%)','%smax10mwind%d_%s'%(figdir,nl,suffix),perc)
+
 def max10mwind_threshold(perc):
     ds  = xr.open_dataset(datapath+"1980.nc")
     ilon = ds.lon
@@ -104,14 +110,35 @@ def max10mwind_threshold(perc):
     ds2 = da.to_dataset(name='threshold')
     ds2.to_netcdf("%smax10mwind_%dthreshold_month.nc"%(fileout,perc),"w")
 
-def count_max10mwind_event(perc,thre,var,lev):
-    ctime,clat,clon = composite_time("%s%s_%d_1980-2020_%s"%(
+def ctrl_max10mwind_event(perc,thre,var):
+    for ny in range(1980,2021,1):
+        print('task [0]:%d'%(ny))
+        ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
+        term = ds['var1'].sel(time=ds.time.dt.year.isin(ny))
+        term = xr.where(term>=perc,1,0)
+        #index = np.argwhere(term.data>20)
+        #print('task [0]:%d, wind>20: %d'%(ny,len(index)))
+        #if len(index)>0:
+        #    for i in range(len(index)):
+        #        print("%s : lat=%f lon=%f "%(term.time[index[i,0]].data,
+        #            term.lat[index[i,1]].data,term.lon[index[i,2]].data))
+        #for nm in range(12):
+        #    term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
+        #        term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
+        var = var + term.groupby(term.time.dt.month).sum('time') 
+    var = var/41
+    ds1 = var.to_dataset(name='event')
+    ds1.to_netcdf("%sclim_%dmax10mwind_event.nc"%(fileout,perc),"w")
+
+def count_max10mwind_event(perc,thre,var,lev,lag):
+    ctime,clat,clon = composite_time("%s%s_%d_1980-2020%s"%(
         path,prefix,lev,suffix),lats,latn,lonl,lonr)
 
     for ny in range(1980,2021,1):
         print('task [%d]:%d'%(lev,ny))
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['var1'].sel(time=ds.time.dt.year.isin(ny))
+        #term = xr.where(term>=perc,1,0)
         for nm in range(12):
             term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
                 term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
@@ -122,14 +149,14 @@ def count_max10mwind_event(perc,thre,var,lev):
         for ct,clo,cla in zip(ctime1,clon1,clat1):
             if ct.dt.dayofyear==366:
                 continue
-            #indx = np.argwhere(term.time.data==ct.data)[0][0]
-            #term[indx,:,:] = term[indx,:,:].where(
-            term.loc[ct,:,:] = term.sel(time=ct).where(
+            #term.loc[ct,:,:] = term.sel(time=ct).where(
+            indx = np.argwhere(term.time.data==ct.data)[0][0]
+            term[indx-lag:indx+lag+1,:,:] = term[indx-lag:indx+lag+1,:,:].where(
                 (np.square(term.lon-clo)+np.square(term.lat-cla))>(radiu*radiu), 0)
         var = var + term.groupby(term.time.dt.month).sum('time') 
     var = var/41
     ds1 = var.to_dataset(name='event')
-    ds1.to_netcdf("%sclim_%dmax10mwind_event_%d_%s.nc"%(fileout,perc,lev,suffix),"w")
+    ds1.to_netcdf("%sclim_%dmax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,lev,suffix),"w")
 
 def composite_time(filname,flats,flatn,flonl,flonr):
     ff = open(filname,"r") 
@@ -176,9 +203,11 @@ def composite_time(filname,flats,flatn,flonl,flonr):
     clon = xr.DataArray(clon)
     return ctime,clat,clon
 
-def monthly_contour(var,ilon,ilat,cnlev,figtitle,cblabel,figdir):
-    print(var.min())
-    print(var.max())
+def monthly_contour(var,ilon,ilat,cnlev,figtitle,cblabel,figdir,perc):
+    sample = np.array([30504,27816,30504,29520,30504,29520,30504,30504,29520,30504,29520,30504])
+    sample = sample*(1-perc)/41
+    print(sample)
+    
     lat_sp = 20
     lon_sp = 30 #60 #
     nrow = 4 #6 #
@@ -209,7 +238,12 @@ def monthly_contour(var,ilon,ilat,cnlev,figtitle,cblabel,figdir):
     nm = -1
     for nr in range(0,nrow,1):
         for nc in range(0,ncol,1):
-            nm = nm+1 
+            nm = nm+1
+            if perc<1 :
+                var[nm,:,:] = (sample[nm]-var[nm,:,:])*100/sample[nm]
+                print('percent')
+            print(var[nm,:,:].min())
+            print(var[nm,:,:].max())
             axe = ax[nr][nc]
             axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k')
                     , linewidth=0.8, zorder=1)

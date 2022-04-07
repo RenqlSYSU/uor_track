@@ -137,7 +137,7 @@ def calc_close_cyclone(filname,flats=25,flatn=45,flonl=57,flonr=110):
             for nl in range(0,num,1):
                 term = list(map(float, 
                     ff.readline().strip().replace(" &","").split(" ")))
-                ct1.append(start+timedelta(hours=int(term[0])))
+                #ct1.append(start+timedelta(hours=int(term[0])))
                 if term[1]>=flonl and term[1]<=flonr and term[2]>=flats and term[2]<=flatn:
                     data.append(term)
                 if term[4]==1e+25 and term[5]==1e+25 :
@@ -145,15 +145,15 @@ def calc_close_cyclone(filname,flats=25,flatn=45,flonl=57,flonr=110):
 
             if (len(data)>1) :
                 data = np.array(data)
-                if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
-                    wind.append(data[:,9].max())
-                    mrain.append(data[:,10].max()*24)
-                    train.append(sum(i>1e-1 for i in data[:,10])*100/len(data))
+                #if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+                wind.append(data[:,9].max())
+                mrain.append(data[:,10].max()*24)
+                train.append(sum(i>1e-1 for i in data[:,10])*100/len(data))
 
-                    #pinte.append(data[:,6].mean())
-                    pinte.append(data[:,6].max())
-                    clse1.append(100-clse_time*100.0/num)
-                    clse2.append(100-sum(i==1e+25 for i in data[:,4])*100/len(data))
+                #pinte.append(data[:,6].mean())
+                pinte.append(data[:,6].min())
+                clse1.append(100-clse_time*100.0/num)
+                clse2.append(100-sum(i==1e+25 for i in data[:,4])*100/len(data))
 
         line = ff.readline()
 
@@ -161,7 +161,7 @@ def calc_close_cyclone(filname,flats=25,flatn=45,flonl=57,flonr=110):
     term = a[1].strip().split(" ",1)
     #print("total cyclone number in %s : %s" %(ff.name,term[0]))
     ff.close()
-    return wind, mrain, train, len(wind) 
+    return wind, mrain, pinte, len(wind) 
     #return clse1, clse2, pinte, len(pinte) 
 
 def hist_life_intensity(filname,ax=None,title=None,figsave=False,\

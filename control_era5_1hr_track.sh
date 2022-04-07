@@ -10,7 +10,8 @@ OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=$1 #ff # tr is original cyclone ; ff is the filtered cyclone
 # fft is the file that has been converted to real time
 
-pro=$2 #2  # -1=convert to real time ;0 = run track ; 1 = combine ; 2 = statistics ; 3 = box filt 
+pro=$2 #2  # -1=convert to real time ;0 = run track ; 1 = combine ; 
+# 2 = statistics ; 3 = box filt 
 # 4 = three level match ;5 = two level match ; 6 = combine match file
 filt=$3 #1 #filt=1, then use filter track to match
 nl1=0
@@ -38,14 +39,13 @@ if [ $pro == -1 ];then
     for ny in {1980..2020};do
         starttime=$((ny-1))120100
         for nl in {0..2};do
-            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos
-            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos.addZ_addwind10m_precip
-            rm ${filname1}.addZ
-            rm ${filname1}.addZ_addwind10m
-            #if [ ! -f "$filname2" ]; then
-                #utils/bin/count $filname1 0 0 5 4 0 $starttime $timestep
-                #mv ${filname1}.new ${filname2}
-            #fi
+            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip-1211
+            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos.addZ_addwind10m_precip-1211
+            rm ${filname1}
+            if [ ! -f "${filname2}" ]; then
+                utils/bin/count ${filname1} 0 0 5 4 0 $starttime $timestep
+                mv ${filname1}.new ${filname2}
+            fi
         done
     done
 fi
@@ -64,12 +64,12 @@ if [ $pro == 1 ];then
     cd $OUTDIR
     pwd
     echo "combine ${prefix}_trs_pos"
-    for nl in {2..2};do
+    for nl in {0..2};do
         echo 41 > combine.in_${lev[$nl]}
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip
+            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip-1211
             echo $filname >> combine.in_${lev[$nl]}
         
             if [ ! -f "$filname" ]; then
