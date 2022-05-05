@@ -60,7 +60,10 @@ path = '/work/scratch-pw2/renql/ERA5_hourly/'
 
 for var in ('wind10',):
     for year in range(1979,2022):
-        down_single_level(var,year)
+        if os.path.isfile('%s%s/ERA5_%s_%d.grib'%(path,var,var,year)):
+            print('%s%s/ERA5_%s_%d.grib exist'%(path,var,var,year))
+        else:
+            down_single_level(var,year)
 #        com = "cdo expr,’speed=sqrt(sqr(uwnd)+sqr(vwnd))’ infile outfile"
 #
 #    os.chdir("%s%s"%(path,var))

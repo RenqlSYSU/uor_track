@@ -1,13 +1,4 @@
 #!/usr/bin/env python
-'''
-1. when cyclone located in the defined region, read datetime
-2. then convert hourly date to 6 hourly date,
-3. composite corresponding u,v,t,z and their variances 
-4. store the data
-
-20211014
-renql
-'''
 import xarray as xr
 import numpy as np
 import pandas as pd
@@ -30,13 +21,16 @@ prefix = "fft"
 #suffix = '_0_2545-60110'
 #suffix = '_5_2545-60110_2_4545-60110'
 #suffix = '_5_2545-60110_2_2545-6060'
-suffix = ''
+#suffix = ''
+suffix = sys.argv[1] 
+radiu = int(sys.argv[2])
+perc = int(sys.argv[3])
 title= {'_0_2545-60110':'local',
         '_5_2545-60110_2_4545-60110':'northern',
         '_5_2545-60110_2_2545-6060':'western',
+        '_2_2545-60110':'passing',
         '':'All'}
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
-radiu=6
 
 fileout="/home/users/qd201969/uor_track/mdata/"
 lev  = [850,500,250]
@@ -51,22 +45,23 @@ latn=70 #
 sy='clim'
 
 def main_run():
-    perc = 99
     lag = 0
+    
     #maxpreci_threshold(perc) 
     ds = xr.open_dataset("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc))
     ilon = ds.lon
     ilat = ds.lat
-    var = ds['threshold'].data
-    print(var)
+    thre = ds['threshold'].data
+    print(thre)
     start_time = datetime.now()
-    #draw_precip(var*1000*24,[0,170,10],'%s'%sy,'max%dprecip (mm/day)'%perc
+    #draw_precip(thre*1000*24,[0,170,10],'%s'%sy,'max%dprecip (mm/day)'%perc
     #        ,figdir+'clim_precip',ilon,ilat)
     #mask_precip(perc,var,0,850)
+    
     process_pool = Pool(processes=3)
     results=[]
     for nl in range(len(lev)):
-        result=process_pool.apply_async(mask_precip, args=(perc,var,lag,lev[nl],))
+        result=process_pool.apply_async(mask_precip, args=(perc,thre,lag,lev[nl],))
         results.append(result)
     print(results) 
     print(results[0].get()) 
@@ -77,8 +72,8 @@ def main_run():
     print(datetime.now())
     print("%d precip lag %d: %s"%(perc,lag,title[suffix]))
     #mask_precip_oneyear(sy)
-     
     #ds = xr.open_dataset("%s%s_precip.nc"%(fileout,sy))
+    
     days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
     ds = xr.open_dataset("%sclim_max%dprecip_event.nc"%(fileout,perc))
     ilon = ds.longitude
@@ -97,6 +92,14 @@ def main_run():
         term = xr.where(var>0,(var-term)*100/var,0)
         draw_precip(term,[2,104,6],'%s %s %d'%(title[suffix],sy,nl),
                 'precip percent','%sclim_precip%d%s'%(figdir,nl,suffix),ilon,ilat,perc)
+        #ds = xr.open_dataset("%sclim_max%dprecip_6rad_lag%d_%d%s.nc"%(fileout,perc,lag,nl,suffix))
+        #term = ds['tp'].data
+        #term = xr.where(var>0,(var-term)*100/var,0)
+        #ds = xr.open_dataset("%sclim_max%dprecip_7rad_lag%d_%d%s.nc"%(fileout,perc,lag,nl,suffix))
+        #term2 = ds['tp'].data
+        #term2 = xr.where(var>0,(var-term2)*100/var,0)
+        #draw_precip(term2-term,[0,51,3],'7rad-6rad %s %s %d'%(title[suffix],sy,nl),
+        #        'precip percent','%sclim_precip_diff%d%s'%(figdir,nl,suffix),ilon,ilat,perc)
 
 def maxpreci_threshold(perc):
     ds  = xr.open_dataset(datapath+"1980.nc")

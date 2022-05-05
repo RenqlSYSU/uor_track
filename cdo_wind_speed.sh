@@ -3,7 +3,7 @@
 #cd /gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/z/
 cd /work/scratch-pw2/renql/ERA5_hourly/wind10/ 
 
-for ny in {2019..2021};do
+for ny in {1979..2021};do
     if [ -f ERA5_wind10_${ny}.grib ];then
         cdo expr,'speed=sqrt(sqr(var165)+sqr(var166))' \
             ERA5_wind10_${ny}.grib ERA5_speed10_${ny}.grib
@@ -13,7 +13,7 @@ for ny in {2019..2021};do
     fi
 done
 
-for ny in {2018..2020};do
+for ny in {1980..2020};do
     ny1=$((ny+1))
     ny0=$((ny-1))
     if [ ! -f ERA5_speed10_1hr_dec-jan${ny}.nc -a -f ERA5_speed10_${ny1}.nc ];then
