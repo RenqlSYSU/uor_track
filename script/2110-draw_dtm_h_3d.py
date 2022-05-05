@@ -84,7 +84,7 @@ def draw_3d(title,lon,lat,var,norm,ncmap):
     plt.savefig("%s%s_3d.jpg"%(figdir,title),bbox_inches="tight",pad_inches=0.1)
     del fig, axe
 
-def draw_one(title,lon,lat,var,norm,ncmap):
+def draw_one_2d(title,lon,lat,var,norm,ncmap):
     fig = plt.figure(figsize=(12,9),dpi=300)
     axe = plt.axes(projection=ccrs.PlateCarree())
     axe.set_title(title,fontsize=MIDFONT) 
@@ -119,7 +119,7 @@ filname=["/home/lzhenn/cooperate/data/Whole_HK_DTM_100m.nc",\
          "/home/lzhenn/njord_implement/domaindb/gba_norm/roms_d01.nc",\
          "/home/metctm1/array/data/Calypso/roms_d02.nc",\
          "/home/metctm1/array/data/Calypso/roms_d03.nc"]
-fileout="/home/lzhenn/cooperate/data/dtm_bathymetry_100m.nc"
+fileout="/home/lzhenn/cooperate/data/dtm_bathymetry_100m3.nc"
 title1 = ["100m","2.2km","500m","100m"]
 
 #f  = xr.open_dataset(filname[3])
@@ -139,7 +139,7 @@ cnlevels = np.concatenate((np.arange(-63,0,1),np.arange(0,615,15)))
 norm  = colors.BoundaryNorm(boundaries=cnlevels, ncolors=ncmap.N,extend="both")
 print("cnlevel: %d, ncmap: %d"%(len(cnlevels),ncmap.N))
 #norm = colors.TwoSlopeNorm(vmin=-60, vcenter=0, vmax=450)
-draw_one("100m_terrain-bathy",lon,lat,var1,norm,ncmap)
+draw_one_2d("100m_terrain-bathy",lon,lat,var1,norm,ncmap)
 #draw_3d("100m_terrain-bathy",lon,lat,var,norm,ncmap)
 
 '''
@@ -162,6 +162,6 @@ for nf in range(1,4,1):#len(filname),1):
     #term = filname[nf].split("/")
     #title=term[-1].split(".")
     
-    #draw_one("%s_terrain-bathy"%title1[nf],ilon,ilat,var,norm,ncmap)
+    #draw_one_2d("%s_terrain-bathy"%title1[nf],ilon,ilat,var,norm,ncmap)
     draw_3d("%s_terrain-bathy"%title1[nf],ilon,ilat,var,norm,ncmap)
 '''

@@ -6,7 +6,11 @@ from datetime import datetime
 import subprocess
 
 def inter2d(var, dst_lat, dst_lon):
-    print("interplate %s"%var.long_name)
+    '''
+    first fill the missing value
+    then interpolate to new 2d grid 
+    '''
+    print("interpolate %s"%var.long_name)
     var = var.interpolate_na(dim="lon", 
         method="linear", fill_value="extrapolate")
     dst_value = var.interp(lat=dst_lat,lon=dst_lon,
