@@ -47,7 +47,17 @@ sy='clim'
 def main_run():
     lag = 0
     
+    ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
+    ilon = ds.longitude
+    ilat = ds.latitude
+    tp = ds['tp'].data
+    #days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
+    #for i in range(len(days)):
+    #    tp[i,:,:] = tp[i,:,:]/days[i]
+    #draw_precip(tp,[0,170,10],'%s'%sy,'precip (mm/month)'
+    #        ,figdir+'clim_precip',ilon,ilat,perc)
     #maxpreci_threshold(perc) 
+    
     ds = xr.open_dataset("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc))
     ilon = ds.lon
     ilat = ds.lat
@@ -55,9 +65,9 @@ def main_run():
     print(thre)
     start_time = datetime.now()
     #draw_precip(thre*1000*24,[0,170,10],'%s'%sy,'max%dprecip (mm/day)'%perc
-    #        ,figdir+'clim_precip',ilon,ilat)
+    #        ,figdir+'clim_precip',ilon,ilat,perc)
     #mask_precip(perc,var,0,850)
-    
+   
     process_pool = Pool(processes=3)
     results=[]
     for nl in range(len(lev)):
@@ -79,13 +89,15 @@ def main_run():
     ilon = ds.longitude
     ilat = ds.latitude
     var = ds['tp'].data
+    var = tp
     #term1 = var
     #for i in range(len(days)):
     #    term1[i,:,:] = var[i,:,:]/days[i]
     #draw_precip(term1*30,[0,8.5,0.5],'%s extreme precip'%sy,'precip (h/30day)',figdir+'clim_precip',ilon,ilat,perc)
 
     for nl in lev:
-        ds = xr.open_dataset("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix))
+        #ds = xr.open_dataset("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix))
+        ds = xr.open_dataset("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix))
         #ds = xr.open_dataset("%s%s_precip_%d%s.nc"%(fileout,sy,nl,suffix))
         #ds = xr.open_dataset("%s%s_precip_%d%s_%ddegree.nc"%(fileout,sy,nl,suffix,radiu))
         term = ds['tp'].data
@@ -159,9 +171,9 @@ def mask_precip(perc,thre,lag,nl):
         term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
                 ,longitude=ilon,latitude=ilat)
         #term = xr.where(term>=perc,1,0)
-        for nm in range(12):
-            term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
-                term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
+        #for nm in range(12):
+        #    term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
+        #        term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
         
         ctime1 = ctime.where(ctime.dt.year.isin(ny),drop=True)
         clat1 = clat.where(ctime.dt.year.isin(ny),drop=True)
@@ -173,12 +185,13 @@ def mask_precip(perc,thre,lag,nl):
                 np.square(term.latitude-cla))>(radiu*radiu), 0)
         #term = term/term.time.dt.days_in_month
         var = var + term.groupby(term.time.dt.month).sum('time') 
-    #var = var*1000/41
-    #var.attrs['units']='mm/month'
-    var = var/41
-    var.attrs['units']='event'
+    var = var*1000/41
+    var.attrs['units']='mm/month'
+    #var = var/41
+    #var.attrs['units']='event'
     ds1 = var.to_dataset(name='tp')
-    ds1.to_netcdf("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix),"w")
+    #ds1.to_netcdf("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix),"w")
+    ds1.to_netcdf("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix),"w")
 
 def mask_precip_oneyear(ny):
     ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
@@ -233,7 +246,9 @@ def draw_precip(var,cnlev,figtitle,cblabel,figdir,ilon,ilat,perc):
     phis = phis/9.8 # transfer from m2/s2 to m
     del ds
     
-    cnlevels = np.arange(cnlev[0], cnlev[1], cnlev[2])
+    #cnlevels = np.arange(cnlev[0], cnlev[1], cnlev[2])
+    cnlevels = [0.1, 1, 3, 6, 10, 15, 25, 40, 60, 80, 100, 120, 150, 200, 250, 300, 350] #24h accumulated preci
+    #cnlevels = [0.1, 0.5, 1, 2, 3, 5, 8, 12, 16, 20, 25, 30, 40, 50, 70, 100, 150] #houly preci
     fcolors = cmaps.precip2_17lev
     norm = colors.BoundaryNorm(boundaries=cnlevels, 
         ncolors=fcolors.N,extend='both')

@@ -21,15 +21,16 @@ prefix = "fft"
 #suffix = '_0_2545-60110'
 #suffix = '_5_2545-60110_2_4545-60110'
 #suffix = '_5_2545-60110_2_2545-6060'
-suffix = ''
+#suffix = ''
+suffix = sys.argv[1] 
+radiu = int(sys.argv[2])
+perc = float(sys.argv[3])
 title= {'_0_2545-60110':'local',
         '_5_2545-60110_2_4545-60110':'northern',
         '_5_2545-60110_2_2545-6060':'western',
+        '_2_2545-60110':'passing',
         '':'All'}
-radiu=6
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
-lagd = 2
-lagh = 1
 
 fileout="/home/users/qd201969/uor_track/mdata/"
 lev  = [850,500,250]
@@ -43,7 +44,6 @@ lats=15  #
 latn=70 #
 
 def main_run():
-    perc = 99.9
     lag = 0
     #max10mwind_threshold(perc)
     ds = xr.open_dataset("%smax10mwind_%.1fthreshold_month.nc"%(fileout,perc))
@@ -68,19 +68,24 @@ def main_run():
     print(start_time)
     print(datetime.now())
     print("%.1f 10mwind lag %d: %s"%(perc,lag,title[suffix]))
-    
+    '''
     days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
     ds = xr.open_dataset("%sclim_%.1fmax10mwind_event.nc"%(fileout,perc))
+    print(ds)
     ilon = ds.lon
     ilat = ds.lat
     var = ds['event'].data
-    term1 = var
-    for i in range(len(days)):
-        term1[i,:,:] = var[i,:,:]/days[i]
+    print(var.min())
+    print(var.max())
+    #term1 = var
+    #for i in range(len(days)):
+    #    term1[i,:,:] = var[i,:,:]/days[i]
     #monthly_contour(term1*30,ilon,ilat,[0,1.7,0.1],'max10mwind','h/30day',figdir+'max10mwind_event',perc)
     for nl in lev:
         ds = xr.open_dataset("%sclim_%.1fmax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix))
         term = ds['event'].data
+        print(var.min())
+        print(var.max())
         term = xr.where(var>0,(var-term)*100/var,0)
         #ds = xr.open_dataset("%sclim_%dmax10mwind_6rad_lag%d_%d%s.nc"%(fileout,perc,lag,nl,suffix))
         #term2 = ds['event'].data
@@ -88,7 +93,8 @@ def main_run():
         #monthly_contour(term2-term,ilon,ilat,[0,51,3],'6rad-5rad %s %d'%(
         #    title[suffix],nl),'max10mwind (%)','%smax10mwind_diff%d%s'%(figdir,nl,suffix),perc)
         monthly_contour(term,ilon,ilat,[2,104,6],'%s %d'%(
-            title[suffix],nl),'max10mwind (%)','%smax10mwind%d_%s'%(figdir,nl,suffix),perc)
+            title[suffix],nl),'max10mwind (%)','%smax10mwind%d%s'%(figdir,nl,suffix),perc)
+    ''' 
 
 def max10mwind_threshold(perc):
     ds  = xr.open_dataset(datapath+"1980.nc")

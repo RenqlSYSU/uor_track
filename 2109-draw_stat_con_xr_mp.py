@@ -27,7 +27,7 @@ label_font=10
 xbar=[0.05,0.37,0.69]
 
 plt.rcParams["font.weight"] = "bold"
-font = {'family': 'serif',
+font = {'family': 'sans-serif',
         'style': 'normal',
         'weight': 'bold',
         'color':  'black', 
@@ -62,7 +62,7 @@ draw_var = ["fden","gden","lden","marea","mgdr","",
 draw=[1,2,14]
 #draw=[14]
 #draw=[1,2,14,8,9,6]
-lev = [250,500,850]
+lev = [850,500,250]
 if len(sys.argv) < 2 :
     prefix = "ff"
     suffix = ''
@@ -98,7 +98,7 @@ ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 del f,lat,lon
 
-ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
+ds = xr.open_dataset('/gws/nopw/j04/ncas_generic/users/renql/ERA5_mon/ERA5_mon_u_1979-2020.nc')
 da = ds['u'].sel(level=200,longitude=ilon,latitude=ilat,method="nearest").load()
 # increased performance by loading data into memory first, e.g., with load()
 uwnd = da.mean('time')

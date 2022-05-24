@@ -14,18 +14,27 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import shapely.geometry as sgeom
 import cmaps
 
+title_font=14
+label_font=10
+plt.rcParams["font.weight"] = "bold"
+font = {'family': 'sans-serif',
+        'style': 'normal',
+        'weight': 'bold',
+        'color':  'black',
+        }
+
 flats = 25  #int(sys.argv[2])
 flatn = 45  #int(sys.argv[3])
 flonl = 60  #int(sys.argv[4])
-flonr = 105 #int(sys.argv[5])
+flonr = 110 #int(sys.argv[5])
 prefix = "fftadd"
-suffix = ['_0_2545-60105','_5_2545-60110_2_4545-60110','_5_2545-60110_2_2545-6060']
-title= {'_0_2545-60105':'local',
-        '_5_2545-60110_2_4545-60110':'northern',
-        '_5_2545-60110_2_2545-6060':'western'}
+suffix = ['_0_2545-60105','_5_2545-60110_2_2545-6060','_5_2545-60110_2_4545-60110']
+title= {'_0_2545-60105':'Local',
+        '_5_2545-60110_2_2545-6060':'Western',
+        '_5_2545-60110_2_4545-60110':'Northern'}
 behv = {'_0_2545-60105':["PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS"],
-        '_5_2545-60110_2_4545-60110':["EPAS","ELYS","WPAS","WNTP","WNTL","WLYS"],
-        '_5_2545-60110_2_2545-6060':["PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]}
+        '_5_2545-60110_2_2545-6060':["PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ],
+        '_5_2545-60110_2_4545-60110':["EPAS","ELYS","WPAS","WNTP","WNTL","WLYS"]}
 lev  = [850,500,250]
 colrs= ['b','g','r','c','m','y']
 
@@ -57,7 +66,7 @@ def draw_comb_traj(tlons):
     norm  = colors.BoundaryNorm(boundaries=cnlvl1, 
             ncolors=ncmap.N,extend="both")
     
-    width = np.arange(5, 60, 5)
+    width = np.arange(0.1, 22.1, 2)
     cnlvl2 = np.arange(0, 1, 0.1)
 
     ds = xr.open_dataset("/home/users/qd201969/gtopo30_0.9x1.25.nc")
@@ -80,7 +89,8 @@ def draw_comb_traj(tlons):
             axe.set_ylim(lats,latn)
             axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k')
                     , linewidth=0.8, zorder=1)
-            axe.set_title('%s %dhPa'%(title[suffix[nc]],lev[nr]),fontsize=title_font)
+            axe.set_title('%s %dhPa'%(title[suffix[nc]],lev[nr]),
+                fontdict=font, fontsize=title_font)
             
             topo = axe.contour(ilon, ilat, phis, [1500,3000], 
                  transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
@@ -105,7 +115,7 @@ def draw_comb_traj(tlons):
                 if len(clon) > 2:
                     for i in range(len(clon)-1):
                         axe.add_geometries([sgeom.LineString([(clon[i],clat[i]),(clon[i+1],clat[i+1])])],
-                            color=colr,linewidth=3,crs=ccrs.PlateCarree())#get_width(numb[i]/total,width,cnlvl2)
+                            color=colr,linewidth=get_width(numb[i]/total,width,cnlvl2),crs=ccrs.PlateCarree())#
                             #get_color(inte[i],ncmap,cnlvl1)
                     axe.arrow(clon[-2],clat[-2],(clon[-1]-clon[-2]),(clat[-1]-clat[-2]),
                             color=colr,head_width=4,transform=ccrs.PlateCarree())
@@ -163,7 +173,7 @@ def combine_traj(filname,tlons):
         tlat,avginte = calc_average_traj(filname,tlon)
         # return two lists
 
-        if len(tlat) > 0 :
+        if len(tlat) > 5 :
             clon.append(tlon)
             numb.append(len(tlat))
             clat.append(avg_mvmaxmin(tlat))

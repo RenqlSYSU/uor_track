@@ -5,7 +5,7 @@
 #SBATCH --job-name=ew
 #SBATCH --time=10-00:00:00
 
-lev=(250 500 850)
+lev=(850 500 250)
 OUTDIR=/home/users/qd201969/ERA5-1HR-lev/
 prefix=$1 #ff # tr is original cyclone ; ff is the filtered cyclone
 # fft is the file that has been converted to real time
@@ -119,18 +119,18 @@ if [ $pro == 2 ];then
             rm ${output}_[1-9].nc 
             rm ${output}_1[0-2].nc
         fi
-        if [ $filt == 1 ]; then 
-            python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
-                ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
-                1 ${lats} ${latn} ${lonl} ${lonr}
-        else
-            python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
-                ${file} ${output}.nc 2 ${lev[$np]}${suffix} 0
-        fi
+        #if [ $filt == 1 ]; then 
+        #    python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
+        #        ${file} ${output}.nc ${level} ${lev[$np]}${suffix} \
+        #        1 ${lats} ${latn} ${lonl} ${lonr}
+        #else
+        #    python ~/uor_track/2109-draw_stat_con_monthly_xr_mp.py \
+        #        ${file} ${output}.nc 2 ${lev[$np]}${suffix} 0
+        #fi
         np=$((np+1))
     done
-    #python ~/uor_track/2109-draw_stat_con_xr_mp.py \
-    #    ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
+    python ~/uor_track/2109-draw_stat_con_xr_mp.py \
+        ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 3 ];then

@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 '''
-1. when cyclone reach the defined region, read datetime
-    , one cyclone only one time be read
-2. calc the cyclone number time series ([len(lev),len(behv),len(months),len(years)] 
-3. plot the time series and store the data
+1. read /home/users/qd201969/gtopo30_0.9x1.25.nc
+    set the phis larger than 1500m as 1
+2. if the 6degree cycle of cyclone center has 
+    encounter 1, then set this cyclone as the one
+    passing through the TP
+3. Using location of the first point to define 
+    local and remote cyclones
 
-2021-11-08
+20220518
 renql
 '''
 
@@ -28,6 +31,65 @@ font = {'family': 'serif',
         'weight': 'bold',
         'color':  'black',
         }
+
+if len(sys.argv) < 2 :
+    option=0 #int(sys.argv[1]) #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)
+    flats = 25  #int(sys.argv[2])
+    flatn = 45  #int(sys.argv[3])
+    flonl = 60  #int(sys.argv[4])
+    flonr = 105 #int(sys.argv[5])
+    time = 24 # threshold, hour
+    prefix = "fftadd"
+    suffix0 = ""
+    season = 0 # 0 monthly, 1 seasonal
+else:
+    option= int(sys.argv[1]) 
+    flats = int(sys.argv[2])
+    flatn = int(sys.argv[3])
+    flonl = int(sys.argv[4])
+    flonr = int(sys.argv[5])
+    prefix = int(sys.argv[6])
+    season = int(sys.argv[7])
+    time = int(sys.argv[8])
+
+suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+figdir = "/home/users/qd201969/uor_track/fig/"
+fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
+
+flonr2 = 110
+flatn2 = 40
+flats2 = 30
+behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
+lats = [flats ,flats2,flatn2,flats2,flatn ,flats ,flats ]
+latn = [flatn ,flatn2,flatn2,flats2,flatn ,flats ,flatn ]
+lonl = [flonl ,flonr2,flonr2,flonr2,flonl ,flonl ,flonl ]
+lonr = [flonr ,flonr2,flonr2,flonr2,flonr2,flonr2,flonr2]
+lev = [850,500,250]
+
+if season == 0:
+    nday=[365,31,28,31,30,31,30,31,31,30,31,30,31]
+    month=["ALL","Jan","Feb","Mar","Apr","May","Jun",\
+            "Jul","Aug","Sep","Oct","Nov","Dec"]
+    frae=744
+else:
+    nday=[365,90,92,92,91]
+    month=["ALL","DJF","MAM","JJA","SON"]
+    frae=0
+
+imonth=range(1,len(month),1)
+path = '/home/users/qd201969/ERA5-1HR-lev/'
+os.chdir("/home/users/qd201969/uor_track/fig")
+
+def main_run():
+    #calcbehv()
+    #drawannual()
+    #draw_table()
+    draw_3var_distri()
+    #drawbox()
+
+ds = xr.open_dataset("/home/users/qd201969/gtopo30_0.9x1.25.nc")
+phis = ds['PHIS'].sel(lon=ilon,lat=ilat,method="nearest").load()
+phis = phis/9.8 # transfer from m2/s2 to m
 
 def draw_3var_distri():
     #varname = ["close1 (%)","close2 (%)","GeopoHeight (m)"]
@@ -106,77 +168,6 @@ def draw_ts(var,figdir):
     axe.legend(ncol=3,fontsize=label_font)
     fig.savefig(figdir+"annual_ts.png", bbox_inches='tight',pad_inches=0.01)
 
-if len(sys.argv) < 2 :
-    flats = 25 #int(sys.argv[2])
-    flatn = 45 #int(sys.argv[3])
-    flonl = 60 #int(sys.argv[4])
-    flonr = 110 #int(sys.argv[5])
-    time = 24 # threshold, hour
-    prefix = "fftadd"
-else:
-    flats = int(sys.argv[1])
-    flatn = int(sys.argv[2])
-    flonl = int(sys.argv[3])
-    flonr = int(sys.argv[4])
-    time = int(sys.argv[5])
-
-option = [2,0,5]
-behv   = ["total","local","outside"]
-figdir ="/home/users/qd201969/uor_track/fig/"
-path = '/home/users/qd201969/ERA5-1HR-lev/'
-lev  = [850,500,250]
-months = range(1,13,1)
-timefilt = 1
-draw_hist = 0
-draw_annual_ts = 0
-
-if timefilt == 1:
-    for nop in range(0,len(option)):
-        for nl in range(len(lev)):
-            suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
-            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
-            #numb = cyc_filter.time_filt(filname,time)
-        # box filter 
-        #com = "sh ~/uor_track/control_era5_1hr_track.sh %s 3 1 %d %d %d %d %d"\
-        #    %(prefix,option[nop],flats,flatn,flonl,flonr)
-        # calc statistics and draw figure 
-        com = "sh ~/uor_track/control_era5_1hr_track.sh %s%d 2 1 %d %d %d %d %d"\
-            %(prefix,time,option[nop],flats,flatn,flonl,flonr)
-        ret=subprocess.Popen(com,shell=True)
-        ret.wait()
-#draw_3var_distri()
-
-if draw_annual_ts == 1:
-    var = np.zeros( [len(lev),3,12], dtype=float )
-    for nl in range(len(lev)):
-        for nop in range(len(option)):
-            suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
-            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
-            var[nl,nop,:] = monthly_calc.calc_month(filname,time)/41.0
-    draw_ts(var,figdir)
-
-if draw_hist == 1:
-    nrow = len(lev)
-    ncol = 2 
-    bmlo = 0.1
-    title_font=18
-    label_font=14
-    
-    fig = plt.figure(figsize=(9,9),dpi=200)
-    ax = fig.subplots(nrow, ncol, sharex=True, sharey=True)
-    for nl in range(len(lev)):
-        for nop in range(1,len(option)):
-            suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
-            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
-            patches = life_intensity.hist_life_intensity(filname, \
-                    ax=ax[nl,nop-1], title="%d %s"%(lev[nl],behv[nop]),\
-                    flats=flats,flatn=flatn,flonl=flonl,flonr=flonr)
-            if nl == 2:
-                ax[nl,nop-1].set_xlabel("lifetime (days)",fontsize=label_font,fontdict=font)
-
-    ax[1,0].set_ylabel("Mean intensity ($10^{-5} s^{-1}$)",fontsize=label_font,fontdict=font)
-    position = fig.add_axes([0.96, bmlo+0.05, 0.02, 0.8]) #left, bottom, width, height
-    cb = plt.colorbar(patches, cax=position ,orientation='vertical')#, shrink=.9)
-    fig.tight_layout(rect=(0,bmlo,0.94,1)) #w_pad=0.5,h_pad=0.001) #,
-    fig.savefig("%slife_inte_%s.png"%(figdir,suffix), bbox_inches='tight',pad_inches=0.08)
+if __name__=='__main__':
+    main_run()
 
