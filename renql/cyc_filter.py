@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys, os, subprocess, linecache
+import numpy as np
 
 def intersection_point_fixy(line1, y):
     xdiff = line1[0][0] - line1[1][0]
@@ -187,7 +188,7 @@ def north_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
     
     return number
 
-def west_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
+def west_behavior(filname,flats,flatn,flonl,flonr,lonx=105):
     behv = ["PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
     prefix = filname.split("_",1)[0].rsplit("/")[-1]
 
@@ -231,7 +232,7 @@ def west_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
                     data.append(list(map(float, line.strip().split(" "))))
            
             signal=-10
-            if data[-1][1]>=flonl[0]:
+            if data[-1][1]>flonl[0]:
                 for nl in range(0,num-1,1):
                     if data[nl][1]<lonx and data[nl+1][1]>=lonx:
                         point = intersection_point_fixx([data[nl][1:3], data[nl+1][1:3]], lonx)
@@ -251,12 +252,13 @@ def west_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
                     signal = 4 # STL
                 else:
                     signal = 5 # LYS
-            
-            locals().get('tid_%s'%behv[signal]).append(term[2])
-            outfile[signal].write(lineid)
-            outfile[signal].write(linenum)
-            for nll in value:
-                outfile[signal].write(nll)
+
+            if signal >= 0:
+                locals().get('tid_%s'%behv[signal]).append(term[2])
+                outfile[signal].write(lineid)
+                outfile[signal].write(linenum)
+                for nll in value:
+                    outfile[signal].write(nll)
 
         line = ff.readline()
 
@@ -272,6 +274,8 @@ def west_behavior(filname,flats,flatn,flonl,flonr,lonx=85):
         print("filter cyclone number in %s : %d" %(outfile[nb].name,number[nb+1]))
         outfile[nb].close()
     
+    ab = np.array(number[1:]).sum()
+    print("used cyclone %d, left cyclones %d"%(ab,number[0]-ab))
     return number
 
 def behavior(filname,flats,flatn,flonl,flonr):

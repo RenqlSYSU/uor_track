@@ -36,7 +36,8 @@ if len(sys.argv) < 2 :
     flonr = 60 #int(sys.argv[5])
     time = 24 # threshold, hour
     prefix = "fftadd"
-    suffix0 = "_5_2545-60110"
+    suffix0 = ""#_outside"
+    #suffix0 = "_5_2545-60110"
     season = 0 # 0 monthly, 1 seasonal
 else:
     option= int(sys.argv[1]) 
@@ -48,7 +49,7 @@ else:
     season = int(sys.argv[7])
     time = int(sys.argv[8])
 
-suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+suffix="outside"#str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/"
 fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
 
@@ -77,12 +78,12 @@ path = '/home/users/qd201969/ERA5-1HR-lev/'
 os.chdir("/home/users/qd201969/uor_track/fig")
 
 def main_run():
-    #calcbehv()
+    calcbehv()
     #draw_hist()
     #drawannual()
     #drawbox()
     #draw_table()
-    draw_3var_distri()
+    #draw_3var_distri()
 
 def calcbehv():
     var  = np.empty( [len(month),len(lev),len(behv)],dtype=int )  
@@ -91,8 +92,8 @@ def calcbehv():
         filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0+"_"+suffix#+"_"+str(time)
 
         #if not os.path.isfile(filname) :
-        filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0
-        var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,time,1,"left")
+        #filname0 = path+prefix+"_"+str(lev[nl])+"_1980-2020"+suffix0
+        #var[0,nl,0] = cyc_filter.line_filt(filname0,flats,flatn,flonl,flonr,time,1,"left")
         var[0,nl,:] = cyc_filter.west_behavior(filname,
                 lats[1:len(behv)],latn[1:len(behv)],lonl[1:len(behv)],lonr[1:len(behv)])
 
@@ -101,7 +102,7 @@ def calcbehv():
                 filname1 = filname
             else:
                 filname1 = filname+"_"+behv[nr]
-            #var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
+            var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
             #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
             #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
     var[0,:,:] = np.sum(var[1:len(month),:,:],axis=0)
@@ -156,7 +157,8 @@ def draw_hist():
                 filname1 = filname+"_"+behv[nr]
             
             patches = life_intensity.hist_life_intensity(filname1, \
-                    ax=ax[nl,nr-1], title="%d %s"%(lev[nl],behv[nr]))
+                    ax=ax[nl,nr-1], title="%d %s"%(lev[nl],behv[nr]),
+                    flats=0,flatn=90,flonl=30,flonr=150)
             if nl == 2:
                 ax[nl,nr-1].set_xlabel("lifetime (days)",fontsize=label_font,fontdict=font)
 
@@ -207,7 +209,7 @@ def draw_3var_distri():
             #life1, inte1, dist1, numb1 = life_intensity.calc_life_intensity(
             #        filname1,flats=25,flatn=45,flonl=57,flonr=110)
             life1, inte1, dist1, numb1 = life_intensity.calc_close_cyclone(
-                    filname1,flats=20,flatn=90,flonl=50,flonr=130)
+                    filname1,flats=0,flatn=90,flonl=30,flonr=150)
             print("%s :%d"%(filname1,numb1))
             var[0,nb,:],term = np.histogram(life1,xbin[0])
             var[1,nb,:],term = np.histogram(inte1,xbin[1])

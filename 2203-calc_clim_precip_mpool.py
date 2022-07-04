@@ -17,7 +17,7 @@ flats = 25  #int(sys.argv[2])
 flatn = 45  #int(sys.argv[3])
 flonl = 60  #int(sys.argv[4])
 flonr = 105 #int(sys.argv[5])
-prefix = "fft"
+prefix = "fftadd"
 #suffix = '_0_2545-60110'
 #suffix = '_5_2545-60110_2_4545-60110'
 #suffix = '_5_2545-60110_2_2545-6060'
@@ -25,10 +25,9 @@ prefix = "fft"
 suffix = sys.argv[1] 
 radiu = int(sys.argv[2])
 perc = int(sys.argv[3])
-title= {'_0_2545-60110':'local',
-        '_5_2545-60110_2_4545-60110':'northern',
-        '_5_2545-60110_2_2545-6060':'western',
-        '_2_2545-60110':'passing',
+title= {'_local':'local',
+        '_outside':'outside',
+        '_total':'total',
         '':'All'}
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
 
@@ -56,8 +55,8 @@ def main_run():
     #    tp[i,:,:] = tp[i,:,:]/days[i]
     #draw_precip(tp,[0,170,10],'%s'%sy,'precip (mm/month)'
     #        ,figdir+'clim_precip',ilon,ilat,perc)
+
     #maxpreci_threshold(perc) 
-    
     ds = xr.open_dataset("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc))
     ilon = ds.lon
     ilat = ds.lat
@@ -83,7 +82,7 @@ def main_run():
     print("%d precip lag %d: %s"%(perc,lag,title[suffix]))
     #mask_precip_oneyear(sy)
     #ds = xr.open_dataset("%s%s_precip.nc"%(fileout,sy))
-    
+    ''' 
     days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
     ds = xr.open_dataset("%sclim_max%dprecip_event.nc"%(fileout,perc))
     ilon = ds.longitude
@@ -112,7 +111,7 @@ def main_run():
         #term2 = xr.where(var>0,(var-term2)*100/var,0)
         #draw_precip(term2-term,[0,51,3],'7rad-6rad %s %s %d'%(title[suffix],sy,nl),
         #        'precip percent','%sclim_precip_diff%d%s'%(figdir,nl,suffix),ilon,ilat,perc)
-
+    '''
 def maxpreci_threshold(perc):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
@@ -171,9 +170,9 @@ def mask_precip(perc,thre,lag,nl):
         term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
                 ,longitude=ilon,latitude=ilat)
         #term = xr.where(term>=perc,1,0)
-        #for nm in range(12):
-        #    term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
-        #        term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
+        for nm in range(12):
+            term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
+                term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
         
         ctime1 = ctime.where(ctime.dt.year.isin(ny),drop=True)
         clat1 = clat.where(ctime.dt.year.isin(ny),drop=True)
@@ -185,13 +184,13 @@ def mask_precip(perc,thre,lag,nl):
                 np.square(term.latitude-cla))>(radiu*radiu), 0)
         #term = term/term.time.dt.days_in_month
         var = var + term.groupby(term.time.dt.month).sum('time') 
-    var = var*1000/41
-    var.attrs['units']='mm/month'
-    #var = var/41
-    #var.attrs['units']='event'
+    #var = var*1000/41
+    #var.attrs['units']='mm/month'
+    var = var/41
+    var.attrs['units']='event'
     ds1 = var.to_dataset(name='tp')
-    #ds1.to_netcdf("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix),"w")
-    ds1.to_netcdf("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix),"w")
+    ds1.to_netcdf("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix),"w")
+    #ds1.to_netcdf("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix),"w")
 
 def mask_precip_oneyear(ny):
     ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
@@ -323,7 +322,10 @@ def composite_time(filname,flats,flatn,flonl,flonr):
             
             for nl in range(0,num,1):
                 line = ff.readline()
-                data = list(map(float,line.strip().split(" ")))
+                if prefix in ['ffadd','fftadd']:
+                    data = list(map(float,line.strip().replace(" &","").split(" ")))
+                else:
+                    data = list(map(float,line.strip().split(" ")))
                 if data[1]<=flonr and data[1] >= flonl and\
                 data[2]<=flatn and data[2]>=flats :
                     ctime.append(datetime.strptime(str(int(data[0])),'%Y%m%d%H'))

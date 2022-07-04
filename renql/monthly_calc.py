@@ -44,7 +44,7 @@ def calc_month(filname, time):
                     else:
                         ct1.append(start+timedelta(hours=int(data[0])))
 
-                if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+                if prefix in ['fft','fftadd'] or sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
                     if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
                         var[ct1[0].month-1] += 1
                     else:

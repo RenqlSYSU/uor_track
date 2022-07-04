@@ -17,7 +17,7 @@ flats = 25  #int(sys.argv[2])
 flatn = 45  #int(sys.argv[3])
 flonl = 60  #int(sys.argv[4])
 flonr = 105 #int(sys.argv[5])
-prefix = "fft"
+prefix = "fftadd"
 #suffix = '_0_2545-60110'
 #suffix = '_5_2545-60110_2_4545-60110'
 #suffix = '_5_2545-60110_2_2545-6060'
@@ -25,11 +25,15 @@ prefix = "fft"
 suffix = sys.argv[1] 
 radiu = int(sys.argv[2])
 perc = float(sys.argv[3])
-title= {'_0_2545-60110':'local',
-        '_5_2545-60110_2_4545-60110':'northern',
-        '_5_2545-60110_2_2545-6060':'western',
-        '_2_2545-60110':'passing',
+title= {'_local':'local',
+        '_outside':'outside',
+        '_total':'total',
         '':'All'}
+#title= {'_0_2545-60110':'local',
+#        '_5_2545-60110_2_4545-60110':'northern',
+#        '_5_2545-60110_2_2545-6060':'western',
+#        '_2_2545-60110':'passing',
+#        '':'All'}
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
 
 fileout="/home/users/qd201969/uor_track/mdata/"
@@ -196,19 +200,15 @@ def composite_time(filname,flats,flatn,flonl,flonr):
             
             for nl in range(0,num,1):
                 line = ff.readline()
-                #data = list(map(float,line.strip().replace(" &","").split(" ")))
-                #if data[0]<=9504 and data[0]>=745 and \
-                #data[7]<=flonr and data[7]>=flonl and\
-                #data[8]<=flatn and data[8]>=flats :
-                data = list(map(float,line.strip().split(" ")))
+                if prefix in ['ffadd','fftadd']:
+                    data = list(map(float,line.strip().replace(" &","").split(" ")))
+                else:
+                    data = list(map(float,line.strip().split(" ")))
                 if data[1]<=flonr and data[1] >= flonl and\
                 data[2]<=flatn and data[2]>=flats :
                     ctime.append(datetime.strptime(str(int(data[0])),'%Y%m%d%H'))
                     clat.append(data[2])
                     clon.append(data[1])
-                    #clon.append(data[7])
-                    #clat.append(data[8])
-                    #mswd.append(data[9])
 
         line = ff.readline()
     ff.close()

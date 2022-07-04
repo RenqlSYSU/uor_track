@@ -25,11 +25,18 @@ font = {'family': 'sans-serif',
 fileout="/home/users/qd201969/uor_track/mdata/"
 figdir = '/home/users/qd201969/uor_track/fig/'
 lev  = [850,500,250]
-title= {'_0_2545-60110':'local',
-        '_5_2545-60110_2_4545-60110':'northern',
-        '_5_2545-60110_2_2545-6060':'western',
-        '_2_2545-60110':'passing',
+title= {'_local':'local',
+        '_outside':'outside',
+        '_total':'total',
         '':'All'}
+suffixs = ['_local','_outside','_total','']
+#title= {'_0_2545-60110':'local',
+#        '_5_2545-60110_2_4545-60110':'northern',
+#        '_5_2545-60110_2_2545-6060':'western',
+#        '_2_2545-60110':'passing',
+#        '':'All'}
+#suffixs = ['_0_2545-60110','_5_2545-60110_2_4545-60110',
+#        '_5_2545-60110_2_2545-6060','_2_2545-60110','']
 lonl=0  #0  #
 lonr=150#360#
 lats=15  #
@@ -40,13 +47,12 @@ flats = 25  #int(sys.argv[2])
 flatn = 45  #int(sys.argv[3])
 flonl = 60  #int(sys.argv[4])
 flonr = 110 #int(sys.argv[5])
-suffixs = ['_0_2545-60110','_5_2545-60110_2_4545-60110',
-        '_5_2545-60110_2_2545-6060','_2_2545-60110','']
 radiu = 6
 perc = 99
 
 def main_run():
-    #calc_associated_weather()
+    calc_associated_weather()
+    ''' 
     ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
     ilon = ds.longitude
     ilat = ds.latitude
@@ -58,7 +64,7 @@ def main_run():
         draw_seasonal_contour4x3(var,'tp','%s/clim_precip_%drad_lag0'%(fileout,radiu),
             suffixs[ns],[2,104,6],'preci (%)',
             '%s/precip%s_contri_4x3.jpg'%(figdir,suffixs[ns]),ilon,ilat)
-    ''' 
+    
     ds = xr.open_dataset("%s/clim_max%dprecip_event.nc"%(fileout,perc))
     ilon = ds.longitude
     ilat = ds.latitude
@@ -71,26 +77,27 @@ def main_run():
     #        suffixs[ns],[2,104,6],'maxpreci (%)',
     #        '%s/max%dprecip%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
     
+    ''' 
     ds = xr.open_dataset("%sclim_%.1fmax10mwind_event.nc"%(fileout,perc))
     ilon = ds.lon
     ilat = ds.lat
-    var = ds['event'].data
-    draw_annual_contour3x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
-        [2,104,6],'max10mwind (%)',
-        '%s/%.1fmax10mwind_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
+    #var = ds['event'].data
+    #draw_annual_contour3x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
+    #    [2,104,6],'max10mwind (%)',
+    #    '%s/%.1fmax10mwind_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
     #for ns in range(len(suffixs)):
     #    draw_seasonal_contour4x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
     #        suffixs[ns],[2,104,6],'max10mwind (%)',
     #        '%s/%.1fmax10mwind%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
-   # draw_annual_contour3x2([2,104,6],'percent',
-   #     '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
-    '''
+    draw_annual_contour3x2([2,104,6],'percent',
+        '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
+
 def calc_associated_weather():
     #for suffix in suffixs: 
-        #com = "python ~/uor_track/2203-calc_maximum10mwind2.py %s %d %d"\
-        #        %(suffix,radiu,perc)
+        com = "python ~/uor_track/2203-calc_maximum10mwind2.py %s %d %d"\
+                %(suffixs[2],radiu,perc)
         com = "python ~/uor_track/2203-calc_clim_precip_mpool.py %s %d %d"\
-                %(suffixs[4],radiu,perc)
+                %(suffixs[2],radiu,perc)
         print(com)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()

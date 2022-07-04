@@ -46,6 +46,7 @@ def circle_distance(lat1,lon1,lat2,lon2):
     return dist
 
 def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
+    prefix = filname.split("_",1)[0].rsplit("/")[-1]
     ff = open(filname,"r") 
     line1 = ff.readline()
     line2 = ff.readline()
@@ -72,8 +73,16 @@ def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
             data=[]
             ct1=[]
             for nl in range(0,num,1):
-                term = list(map(float, ff.readline().strip().split(" ")))
-                ct1.append(start+timedelta(hours=int(term[0])))
+                if prefix in ['ffadd','fftadd']:
+                    term = list(map(float, ff.readline().strip().replace(" &","").split(" ")))
+                else:
+                    term = list(map(float, ff.readline().strip().split(" ")))
+                
+                if prefix in ['fft','fftadd']:
+                    ct1.append(datetime.strptime(str(int(term[0])),'%Y%m%d%H'))
+                else:
+                    ct1.append(start+timedelta(hours=int(term[0])))
+                
                 if term[1]>=flonl and term[1]<=flonr and term[2]>=flats and term[2]<=flatn:
                     data.append(term)
                 if nl==0:
@@ -84,7 +93,8 @@ def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
                     lat2 = term[2]
 
             data = np.array(data)
-            if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+            print(data.shape)
+            if prefix in ['fft','fftadd'] or sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
                 life.append(num/24.0)
                 inte.append(data[:,3].mean())
                 #inte.append(data[:,3].max())
@@ -99,10 +109,6 @@ def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
     term = a[1].strip().split(" ",1)
     print("total cyclone number in %s : %s" %(ff.name,term[0]))
     ff.close()
-
-    #print("tid life(days) intensity longitude latitude")
-    #for ni in range(0,len(tid),1):
-    #    print("%s "%tid[ni] + "%f "*4 %(life[ni],inte[ni],tlon[ni],tlat[ni]))
 
     return life, inte, dist, len(life)
 

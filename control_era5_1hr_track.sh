@@ -14,21 +14,22 @@ pro=$2 #2  # -1=convert to real time ;0 = run track ; 1 = combine ;
 # 2 = statistics ; 3 = box filt 
 # 4 = three level match ;5 = two level match ; 6 = combine match file
 filt=$3 #1 #filt=1, then use filter track to match
+suffix=$4 #use to draw statistics, tpfilter, added on 20220601
 nl1=0
 nl2=1
 nl3=0
 
 # filter area
-option=$4 #5 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)/pass no genesis(5)
-lats=$5 #25 #25
-latn=$6 #45 #45
-lonl=$7 #60 #60
-lonr=$8 #110 #80
-if [ $filt == 1 ]; then 
-    suffix=_${option}_${lats}${latn}-${lonl}${lonr}
-else
-    suffix=""
-fi
+#option=$4 #5 #Genesis (0)/Lysis (1)/Passing(2)/Passing Time(3)/All Times(4)/pass no genesis(5)
+#lats=$5 #25 #25
+#latn=$6 #45 #45
+#lonl=$7 #60 #60
+#lonr=$8 #110 #80
+#if [ $filt == 1 ]; then 
+#    suffix=_${option}_${lats}${latn}-${lonl}${lonr}
+#else
+#    suffix=""
+#fi
 
 if [ $pro == -1 ];then
     cd /home/users/qd201969/TRACK-1.5.2
@@ -69,7 +70,7 @@ if [ $pro == 1 ];then
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip-1211
+            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip #-1211
             echo $filname >> combine.in_${lev[$nl]}
         
             if [ ! -f "$filname" ]; then
@@ -130,7 +131,9 @@ if [ $pro == 2 ];then
         np=$((np+1))
     done
     python ~/uor_track/2109-draw_stat_con_xr_mp.py \
-        ${prefix} ${suffix} ${level} 1 ${lats} ${latn} ${lonl} ${lonr}
+        ${prefix} ${suffix} ${level} 0 ${lats} ${latn} ${lonl} ${lonr}
+    python ~/uor_track/2109-draw_stat_con_seasonal_xr_mp.py \
+        ${prefix} ${suffix} ${level} 0 ${lats} ${latn} ${lonl} ${lonr}
 fi
 
 if [ $pro == 3 ];then

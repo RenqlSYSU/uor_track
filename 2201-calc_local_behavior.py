@@ -48,7 +48,7 @@ else:
     season = int(sys.argv[7])
     time = int(sys.argv[8])
 
-suffix=str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+suffix="local"#str(option)+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
 figdir = "/home/users/qd201969/uor_track/fig/"
 fileout="/home/users/qd201969/uor_track/mdata/behv4_month_%dh_%s.nc"%(time,suffix)
 
@@ -77,11 +77,11 @@ path = '/home/users/qd201969/ERA5-1HR-lev/'
 os.chdir("/home/users/qd201969/uor_track/fig")
 
 def main_run():
-    #calcbehv()
-    #drawannual()
-    #draw_table()
+    calcbehv()
+    drawannual()
+    draw_table()
     draw_3var_distri()
-    #drawbox()
+    drawbox()
 
 def calcbehv():
     var  = np.empty( [len(month),len(lev),len(behv)],dtype=int )  
@@ -105,11 +105,11 @@ def calcbehv():
                 filname1 = filname
             else:
                 filname1 = filname+"_"+behv[nr]
-            #var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
+            var[1:len(month),nl,nr] = monthly_calc.calc_month(filname1,time)
             #var[1:len(month),nl,nr] = monthly_calc.draw_month_traj(
             #   frae, month[1:len(month)],nday[1:len(month)],filname1,lats,latn,lonl,lonr)
     var[0,:,:] = np.sum(var[1:len(month),:,:],axis=0)
-    '''
+    
     f = open("%sbehv3_month_%dh_%s"%(figdir,time,suffix),'w')
     f.write(path+prefix+"_1980-2020_"+suffix+"\n")
     f.write("*"*50+"\n")
@@ -143,7 +143,7 @@ def calcbehv():
             )
     ds.attrs["description"] = "number and percent of cycle, minimum lifetime %d hour"%time
     ds.to_netcdf(fileout,"w")
-    '''
+
 def draw_hist():
     nrow = len(lev)
     ncol = len(behv)-1
@@ -211,7 +211,7 @@ def draw_3var_distri():
             #life1, inte1, dist1, numb1 = life_intensity.calc_life_intensity(
             #        filname1,flats=25,flatn=45,flonl=57,flonr=110)
             life1, inte1, dist1, numb1 = life_intensity.calc_close_cyclone(
-                    filname1,flats=20,flatn=90,flonl=50,flonr=130)
+                    filname1,flats=0,flatn=90,flonl=30,flonr=150)
             print("%s :%d"%(filname1,numb1))
             var[0,nb,:],term = np.histogram(life1,xbin[0])
             var[1,nb,:],term = np.histogram(inte1,xbin[1])
