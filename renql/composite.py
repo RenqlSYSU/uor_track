@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import sys, os, subprocess, linecache
 import numpy as np
+from datetime import datetime
 
-def composite_time(filname,flats,flatn,flonl,flonr):
+def composite_time(filname,flats,flatn,flonl,flonr,nint):
+    prefix = filname.split("_",1)[0].rsplit("/")[-1]
     ff = open(filname,"r") 
     line1 = ff.readline()
     line2 = ff.readline()
@@ -15,6 +17,7 @@ def composite_time(filname,flats,flatn,flonl,flonr):
     ctime=[]
     clat =[]
     clon =[]
+    cinte=[]
     line = ff.readline()
     while line:
         term = line.strip().split(" ")
@@ -34,11 +37,9 @@ def composite_time(filname,flats,flatn,flonl,flonr):
                     ctime.append(datetime.strptime(str(int(data[0])),'%Y%m%d%H'))
                     clat.append(data[2])
                     clon.append(data[1])
+                    cinte.append(data[nint])
 
         line = ff.readline()
     ff.close()
-    ctime = xr.DataArray(ctime)
-    clat = xr.DataArray(clat)
-    clon = xr.DataArray(clon)
-    return ctime,clat,clon
+    return ctime,clat,clon,cinte
 
