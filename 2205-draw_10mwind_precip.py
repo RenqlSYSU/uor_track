@@ -64,40 +64,44 @@ def main_run():
         draw_seasonal_contour4x3(var,'tp','%s/clim_precip_%drad_lag0'%(fileout,radiu),
             suffixs[ns],[2,104,6],'preci (%)',
             '%s/precip%s_contri_4x3.jpg'%(figdir,suffixs[ns]),ilon,ilat)
+    ''' 
     
     ds = xr.open_dataset("%s/clim_max%dprecip_event.nc"%(fileout,perc))
     ilon = ds.longitude
     ilat = ds.latitude
     var = ds['tp'].data
-    draw_annual_contour3x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
-        [2,104,6],'max precip (%)',
-        '%s/max%dprecip_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
-    #for ns in range(len(suffixs)):
-    #    draw_seasonal_contour4x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
-    #        suffixs[ns],[2,104,6],'maxpreci (%)',
-    #        '%s/max%dprecip%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
+    #draw_annual_contour3x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
+    #    [2,104,6],'max precip (%)',
+    #    '%s/max%dprecip_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
+    for ns in range(len(suffixs)):
+        draw_seasonal_contour4x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
+            suffixs[ns],[2,104,6],'maxpreci (%)',
+            '%s/max%dprecip%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
     
-    ''' 
     ds = xr.open_dataset("%sclim_%.1fmax10mwind_event.nc"%(fileout,perc))
     ilon = ds.lon
     ilat = ds.lat
-    #var = ds['event'].data
+    var = ds['event'].data
     #draw_annual_contour3x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
     #    [2,104,6],'max10mwind (%)',
     #    '%s/%.1fmax10mwind_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
-    #for ns in range(len(suffixs)):
-    #    draw_seasonal_contour4x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
-    #        suffixs[ns],[2,104,6],'max10mwind (%)',
-    #        '%s/%.1fmax10mwind%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
-    draw_annual_contour3x2([2,104,6],'percent',
-        '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
+    for ns in range(len(suffixs)):
+        draw_seasonal_contour4x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
+            suffixs[ns],[2,104,6],'max10mwind (%)',
+            '%s/%.1fmax10mwind%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
+    #draw_annual_contour3x2([2,104,6],'percent',
+    #    '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
 
 def calc_associated_weather():
-    #for suffix in suffixs: 
+    for suffix in suffixs[0:2]: 
         com = "python ~/uor_track/2203-calc_maximum10mwind2.py %s %d %d"\
-                %(suffixs[2],radiu,perc)
+                %(suffix,radiu,perc)
+        print(com)
+        ret=subprocess.Popen(com,shell=True)
+        ret.wait()
+        
         com = "python ~/uor_track/2203-calc_clim_precip_mpool.py %s %d %d"\
-                %(suffixs[2],radiu,perc)
+                %(suffix,radiu,perc)
         print(com)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
@@ -140,7 +144,7 @@ def draw_annual_contour3x2(cnlev,cblabel,figdir,ilon,ilat):
             varname = 'event'
         var = np.sum(var,axis=0) 
         for nr in range(0,nrow,1):
-            ds = xr.open_dataset("%s_%d%s.nc"%(filname,lev[nr],suffixs[3]))
+            ds = xr.open_dataset("%s_%d%s.nc"%(filname,lev[nr],suffixs[2]))
             term = ds[varname].data
             term = np.sum(term,axis=0) 
             term = xr.where(var>0,(var-term)*100/var,0)

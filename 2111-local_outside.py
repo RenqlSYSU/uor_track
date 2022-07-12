@@ -112,7 +112,7 @@ if len(sys.argv) < 2 :
     flonl = 60 #int(sys.argv[4])
     flonr = 110 #int(sys.argv[5])
     time = 24 # threshold, hour
-    prefix = "fftadd"
+    prefix = "ff"
 else:
     flats = int(sys.argv[1])
     flatn = int(sys.argv[2])
@@ -132,18 +132,18 @@ draw_annual_ts = 0
 
 if timefilt == 1:
     for nop in range(0,len(option)):
-        for nl in range(len(lev)):
-            suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
-            filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
+        suffix = str(option[nop])+"_"+str(flats)+str(flatn)+"-"+str(flonl)+str(flonr)
+        com = "sh ~/uor_track/control_era5_1hr_track.sh %s 2 1 _%s"\
+            %(prefix,suffix)
+        ret=subprocess.Popen(com,shell=True)
+        ret.wait()
+        #for nl in range(len(lev)):
+        #    filname  = path+prefix+"_"+str(lev[nl])+"_1980-2020_"+suffix
             #numb = cyc_filter.time_filt(filname,time)
         # box filter 
         #com = "sh ~/uor_track/control_era5_1hr_track.sh %s 3 1 %d %d %d %d %d"\
         #    %(prefix,option[nop],flats,flatn,flonl,flonr)
         # calc statistics and draw figure 
-        com = "sh ~/uor_track/control_era5_1hr_track.sh %s%d 2 1 %d %d %d %d %d"\
-            %(prefix,time,option[nop],flats,flatn,flonl,flonr)
-        ret=subprocess.Popen(com,shell=True)
-        ret.wait()
 #draw_3var_distri()
 
 if draw_annual_ts == 1:

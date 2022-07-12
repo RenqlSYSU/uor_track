@@ -22,7 +22,7 @@ otdir = '/home/lzhenn/array74/data/ssp_rainfall/'
 cases = ['hist_2010s','ssp245_2040s_wholeyear','ssp245_2090s_wholeyear','IMERG']
 label = ['2010s','2040s','2090s','IMERG']
 years = [range(2011,2021),range(2040,2050),range(2090,2100)]
-maskwater = False
+maskwater = True
 
 dom = 'd04'
 ncfile = Dataset('/home/lzhenn/cmip6-wrf-arch/hist_2010s/2011/'+

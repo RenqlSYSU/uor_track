@@ -57,8 +57,8 @@ cnlvl=[[0    ,320  ,20  ], # 0Feature Density
 draw_var = ["fden","gden","lden","marea","mgdr","",
             "mlif","msp" ,"mstr","mten" ,""    ,"",
             ""    ,""    ,"tden",""    ] # 7 variables
-#draw=[8,9,6]
-draw=[1,2,14]
+draw=[6,7,8]
+#draw=[1,2,14]
 #draw=[14]
 #draw=[1,2,14,8,9,6]
 lev = [850,500,250]

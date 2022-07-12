@@ -55,7 +55,7 @@ varname = 'z'
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 datapath = "/gws/nopw/j04/ncas_generic/users/renql/ERA5_subdaily"#t/ERA5_NH_t_1989.nc
 figdir = "/home/users/qd201969/uor_track/fig/"
-filname=['fft_850_1980-2020','fft_500_1980-2020','fft_250_1980-2020']
+filname=['fftadd_850_1980-2020','fftadd_500_1980-2020','fftadd_250_1980-2020']
 #filname=['ff_850_500_yes_250_yes_match',
 #    'ff_500_250_yes_850_yes_match','ff_250_500_yes_850_yes_match']
 radiu = 6
@@ -92,7 +92,8 @@ def draw_instant():
         #var1 = fvor['var1'].sel(time=dtime[nt]).load()
         fvor = xr.open_dataset("/gws/nopw/j04/ncas_generic/users/renql/ERA5_hourly/precip/ERA5_precip_1hr_dec-jan%d.nc"%(dtime[nt].year))
         var1 = fvor['tp'].sel(time=dtime[nt],longitude=ilon1,latitude=ilat1).load()
-        var1 = xr.where( var1>thre[dtime[0].month-1,:,:], 1, 0 )
+        #var1 = xr.where( var1>thre[dtime[0].month-1,:,:], 1, 0 )
+        var1 = xr.where( var1>0, 1, 0 )
         print('extreme weather point: %d'%(np.sum(var1.data==1)))
 
         for nl in range(len(lev)):
@@ -143,7 +144,8 @@ def read_point_fixtime(filname,fixtime,flonl,flonr,flats,flatn):
         if line.strip().split(" ")[0] == "TRACK_ID":
             num = int(ff.readline().strip().split(" ")[-1])
             for nl in range(0,num,1):
-                data = list(map(float,ff.readline().strip().split(" ")))
+                #data = list(map(float,ff.readline().strip().split(" ")))
+                data = list(map(float, ff.readline().strip().replace(" &","").split(" ")))
                 if str(int(data[0])) == fixtime and \
                 data[1]<=flonr and data[1] >= flonl and data[2]<=flatn and data[2]>=flats :
                     plat.append(data[2])

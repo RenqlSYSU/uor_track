@@ -35,7 +35,7 @@ def main_run():
     dom = ['d02','d03','d04']
     perid = ['Apr-Sep','AMJ','JAS']
     
-    for nd in [0]:
+    for nd in [2]:
         for ns in [0,1,2]:
             draw_precip_map(dom[nd],perid[ns],lat_sp[nd],lon_sp[nd])
 
@@ -57,7 +57,8 @@ def draw_precip_map(dom,season,lat_sp,lon_sp):
         nday = 183
     
     bmlo = 0.45
-    cnlevels = np.arange(10,1710,100) 
+    cnlevels = np.arange(1,18,1) 
+    #cnlevels = np.arange(10,1710,100) 
     fcolors = cmaps.precip2_17lev
     norm = colors.BoundaryNorm(boundaries=cnlevels, 
         ncolors=fcolors.N,extend='both')
@@ -73,7 +74,7 @@ def draw_precip_map(dom,season,lat_sp,lon_sp):
         coast_shp1 = Reader('/home/lzhenn/njord_pipeline/postprocess/shp/cnhimap.dbf').geometries()
         coastline1 = cfeat.ShapelyFeature(coast_shp1, ccrs.PlateCarree(), edgecolor="black", facecolor="none")
         ax.add_feature(coastline1, linewidth=0.8,zorder=1)
-        if dom == 'd03':
+        if dom in ['d03','do4']:
             coast_shp2 = Reader('/home/lzhenn/njord_pipeline/postprocess/shp/gadm36_CHN_2.dbf').geometries()
             coastline2 = cfeat.ShapelyFeature(coast_shp2, ccrs.PlateCarree(), edgecolor="black", facecolor="none")
             ax.add_feature(coastline2, linewidth=0.8,zorder=1)
@@ -98,17 +99,18 @@ def draw_precip_map(dom,season,lat_sp,lon_sp):
         var = var.mean('time')
         print(case[nc])
         print(var)
-        cont = ax.contourf(var.lon, var.lat, var*24*nday, cnlevels, 
+        cont = ax.contourf(var.lon, var.lat, var*24, cnlevels, 
             transform=ccrs.PlateCarree(),cmap=fcolors, extend='both',norm=norm)
         
-        ax.set_xticks(np.arange(np.ceil(lonl),np.ceil(lonr),lon_sp), crs=ccrs.PlateCarree())
-        ax.set_yticks(np.arange(np.ceil(lats),np.ceil(latn),lat_sp), crs=ccrs.PlateCarree())
+        ax.set_xticks(np.arange(np.ceil(lonl),lonr,lon_sp), crs=ccrs.PlateCarree())
+        ax.set_yticks(np.arange(np.ceil(lats),latn,lat_sp), crs=ccrs.PlateCarree())
         ax.yaxis.set_major_formatter(LatitudeFormatter(degree_symbol=''))
         ax.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
         
     position = fig.add_axes([0.2, bmlo+0.005, 0.7, 0.01]) #left, bottom, width, height
     cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
-    cb.set_label(label='precip (mm/month)', size=title_font) #, weight='bold'
+    cb.set_label(label='precip (mm/day)', size=title_font) #, weight='bold'
+    #cb.set_label(label='precip (mm/month)', size=title_font) #, weight='bold'
 
     plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
     fig.savefig("/home/lzhenn/cooperate/fig/obs_cmip6_%s_%s"%(dom,season)

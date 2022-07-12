@@ -36,23 +36,23 @@ lev  = [850,500,250]
 behv = ["total","local","outside"]
 path = '/home/users/qd201969/ERA5-1HR-lev'
 outdir = "/home/users/qd201969/uor_track/mdata"
-prefix = 'ffadd'
+prefix = 'ff'
 radiu = 6
 def main_run():
     thre = 1500
     if not os.path.isfile('%s/tp_loca_%d.txt'%(outdir,thre)):
         write_tp_grid(thre,'%s/tp_loca_%d.txt'%(outdir,thre))
     
-    for nl in lev:
-        tp_filt_cyclone('%s/%s_%d_1980-2020'%(path,prefix,nl),
-            '%s/tp_loca_%d.txt'%(outdir,thre))
+    #for nl in lev:
+    #    tp_filt_cyclone('%s/%s_%d_1980-2020'%(path,prefix,nl),
+    #        '%s/tp_loca_%d.txt'%(outdir,thre))
     
-    #for nb in range(0,len(behv),1):
-       # calc statistics and draw figure 
-    #    com = "sh ~/uor_track/control_era5_1hr_track.sh %s 2 1 _%s"\
-    #        %(prefix,behv[nb])
-    #    ret=subprocess.Popen(com,shell=True)
-    #    ret.wait()
+    for nb in range(0,len(behv),1):
+      # calc statistics and draw figure 
+        com = "sh ~/uor_track/control_era5_1hr_track.sh %s 2 1 _%s"\
+            %(prefix,behv[nb])
+        ret=subprocess.Popen(com,shell=True)
+        ret.wait()
 
 def tp_filt_cyclone(filname,tp_file):
     loca = np.loadtxt(tp_file,usecols = (0,1))
