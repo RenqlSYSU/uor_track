@@ -29,15 +29,18 @@ SMFONT=14
 stime  = ['2021','09','23'] # year, month, date, hour
 ftime  = ['2021','09','23','12']
 ftime0 = ['2021','09','23','16'] # use to calc accumulated pr,large than ftime
-data = "/home/lzhenn/array74/Njord_Calypso/archive/njord//2021112612/wrfout_d01_2021-11-26_12:00:00"
+#data = "/home/lzhenn/array74/Njord_Calypso/archive/njord//2021112612/wrfout_d01_2021-11-26_12:00:00"
+data = "/home/metctm1/array_hq133/data/s2s/wrfroms/clim/aegir_2011070100/wrfout_d01_2011-07-23_00:00:00"
+#data = "/home/metctm1/array_hq133/data/s2s/wrfonly/clim/2011070100/wrfout_d01_2011-07-23_00:00:00"
 #data = "/home/dataop/data/nmodel/wrf_fc/2021/202109/"+"".join(stime)+"12/wrfout_d04_2021-09-23_12:00:00"
 
-varname = ['slp','U10','V10']
-drawvar = 'UV10 (m/s)'
+#varname = ['slp','U10','V10']
+#drawvar = 'UV10 (m/s)'
 #varname = ['RAINNC','RAINC']
 #drawvar = 'preci(mm/24h)'
-#varname = ['z']
-#figtle = ''.join(ftime)+'_500Z(gpm)'
+varname = ['z']
+drawvar = '500 Z'
+figtle = ''.join(ftime)+'_500Z(gpm)'
 lev = 500 #hPa
 
 case = ['Njord','PATH']
@@ -53,8 +56,8 @@ coast_shp = Reader(os.getenv('SHP_LIB')+'/china_coast/china_coastline.dbf').geom
 #cnlevels = [0.1, 0.5, 1, 2, 3, 5, 8, 12, 16, 20, 25, 30, 40, 50, 70, 100, 150] #houly preci
 #cnlevels = [0.1, 0.5, 1, 3, 5, 10,15,20, 30, 40, 60, 80, 100, 120, 150, 200, 250] #24h accumulated preci
 #cnlevels = np.arange(1000,1017,1) #slp, hPa
-#cnlevels = np.arange(586,603,1) #500Z, gpm
-cnlevels = np.arange(0,17,1) #UV10 speeds
+cnlevels = np.arange(586,603,1) #500Z, gpm
+#cnlevels = np.arange(0,17,1) #UV10 speeds
 norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=cmaps.precip2_17lev.N,extend='both')
 #norm = colors.Normalize(vmin=1000, vmax=1015)
 

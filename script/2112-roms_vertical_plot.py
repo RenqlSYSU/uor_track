@@ -92,6 +92,7 @@ axe.set_title(title,fontsize=MIDFONT)
 cnlevels = np.arange(20,29.5,0.25) #500Z, gpm
 ncmap = colors.ListedColormap(cmaps.MPL_jet(range(0,127,3))) #cmaps.precip2_17lev
 norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=ncmap.N,extend='both')
+
 cont = axe.contourf(var.ocean_time, var.z_rho, var.transpose(), cnlevels, 
      cmap=ncmap,extend='both',norm=norm)
 plt.colorbar(cont, ax=axe)

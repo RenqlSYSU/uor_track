@@ -25,6 +25,7 @@ font = {'family': 'sans-serif',
 fileout="/home/users/qd201969/uor_track/mdata/"
 figdir = '/home/users/qd201969/uor_track/fig/'
 lev  = [850,500,250]
+dbox = False
 title= {'_local':'local',
         '_outside':'outside',
         '_total':'total',
@@ -51,7 +52,7 @@ radiu = 6
 perc = 99
 
 def main_run():
-    calc_associated_weather()
+    #calc_associated_weather()
     ''' 
     ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
     ilon = ds.longitude
@@ -70,9 +71,9 @@ def main_run():
     ilon = ds.longitude
     ilat = ds.latitude
     var = ds['tp'].data
-    #draw_annual_contour3x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
-    #    [2,104,6],'max precip (%)',
-    #    '%s/max%dprecip_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
+    draw_annual_contour3x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
+        [2,104,6],'max precip (%)',
+        '%s/max%dprecip_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
     for ns in range(len(suffixs)):
         draw_seasonal_contour4x3(var,'tp','%s/clim_max%dprecip_%drad_lag0'%(fileout,perc,radiu),
             suffixs[ns],[2,104,6],'maxpreci (%)',
@@ -82,15 +83,15 @@ def main_run():
     ilon = ds.lon
     ilat = ds.lat
     var = ds['event'].data
-    #draw_annual_contour3x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
-    #    [2,104,6],'max10mwind (%)',
-    #    '%s/%.1fmax10mwind_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
+    draw_annual_contour3x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
+        [2,104,6],'max10mwind (%)',
+        '%s/%.1fmax10mwind_contribution_3x3.jpg'%(figdir,perc),ilon,ilat,suffixs[0:3])
     for ns in range(len(suffixs)):
         draw_seasonal_contour4x3(var,'event','%s/clim_%.1fmax10mwind_%drad_lag0'%(fileout,perc,radiu),
             suffixs[ns],[2,104,6],'max10mwind (%)',
             '%s/%.1fmax10mwind%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
-    #draw_annual_contour3x2([2,104,6],'percent',
-    #    '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
+    draw_annual_contour3x2([2,104,6],'percent',
+        '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
 
 def calc_associated_weather():
     for suffix in suffixs[0:2]: 
@@ -162,8 +163,9 @@ def draw_annual_contour3x2(cnlev,cblabel,figdir,ilon,ilat):
                  extend='both',norm=norm)
             topo = axe.contour(ilon, ilat, phis, [1500,3000], 
                  transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                 linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
+            if dbox:
+                axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
+                     linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
             jets = axe.contour(ilon, ilat, uwnd, [30,40,50], 
                  transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=1.5)
             
@@ -231,8 +233,9 @@ def draw_seasonal_contour4x3(var,varname,filname,suffix,cnlev,cblabel,figdir,ilo
                  extend='both',norm=norm)
             topo = axe.contour(ilon, ilat, phis, [1500,3000], 
                  transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                 linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
+            if dbox:
+                axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
+                     linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
             jets = axe.contour(ilon, ilat, uwnd1, [30,40,50], 
                  transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=1.5)
             
@@ -293,8 +296,9 @@ def draw_annual_contour3x3(var,varname,filname,cnlev,cblabel,figdir,ilon,ilat,su
                  extend='both',norm=norm)
             topo = axe.contour(ilon, ilat, phis, [1500,3000], 
                  transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                 linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
+            if dbox:
+                axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
+                     linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
             jets = axe.contour(ilon, ilat, uwnd, [30,40,50], 
                  transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=1.5)
             
