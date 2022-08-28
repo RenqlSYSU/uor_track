@@ -22,6 +22,8 @@ from renql import monthly_calc, life_intensity, cyc_filter
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from matplotlib import colors
+import matplotlib as mpl
+import seaborn as sns
 
 title_font=18
 label_font=14
@@ -33,28 +35,109 @@ font = {'family': 'serif',
         }
 
 lev  = [850,500,250]
-behv = ["total","local","outside"]
 path = '/home/users/qd201969/ERA5-1HR-lev'
 outdir = "/home/users/qd201969/uor_track/mdata"
-prefix = 'ff'
+figdir = "/home/users/qd201969/uor_track/fig"
+prefix = 'fftadd'
 radiu = 6
+behv = ["%dtotal"%radiu,"%dlocal"%radiu,"%doutside"%radiu]
+
 def main_run():
     thre = 1500
+    varname = ['lifetime','distance','max vor','mean vor']
+    for nint in [2,3]:
+        draw_seasonal_box_1x2(varname[nint],nint)
+    '''
     if not os.path.isfile('%s/tp_loca_%d.txt'%(outdir,thre)):
         write_tp_grid(thre,'%s/tp_loca_%d.txt'%(outdir,thre))
     
-    #for nl in lev:
-    #    tp_filt_cyclone('%s/%s_%d_1980-2020'%(path,prefix,nl),
-    #        '%s/tp_loca_%d.txt'%(outdir,thre))
-    
+    for nl in lev:
+        tp_filt_cyclone('%s/%s_%d_1980-2020'%(path,prefix,nl),
+            '%s/tp_loca_%d.txt'%(outdir,thre))
     for nb in range(0,len(behv),1):
       # calc statistics and draw figure 
         com = "sh ~/uor_track/control_era5_1hr_track.sh %s 2 1 _%s"\
             %(prefix,behv[nb])
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
+    '''
+
+def draw_seasonal_box_1x2(varname,nint):
+    # nint: 0 lifetime, 1 distance, 2 max-vor
+    # 3 mean-vor, 4 min-pres, 5 mean-pres
+    nrow = 1 #6 #
+    ncol = 2 #2 #
+    bmlo = 0.35 #0.25 #
+    titls = ['DJF','MAM','JJA','SON']
+    
+    fig = plt.figure(figsize=(12,5),dpi=150)
+    ax = fig.subplots(nrow, ncol)
+    
+    for nc in range(2):
+        p90 = np.zeros([len(lev),len(titls)], dtype=float ) # 4 or 12 
+        dicts = {'lev':[],'season':[],varname:[]}
+        for nl in range(len(lev)):
+            filname  = '%s/fftadd_%d_1980-2020_%s'%(path,lev[nl],behv[nc+1])
+            var = life_intensity.calc_one_variable(filname,nint,
+                flats=10,flatn=60,flonl=50,flonr=120)
+            #var = life_intensity.calc_one_variable(filname,nint,
+            #    flats=0,flatn=90,flonl=0,flonr=180)
+            for nm in range(len(titls)):
+                p90[nl,nm] = np.percentile(np.array(var[nm]),90)
+                dicts['lev']  = dicts['lev']+[lev[nl]]*len(var[nm])
+                dicts['season'] = dicts['season']+[titls[nm]]*len(var[nm])
+                dicts[varname] = dicts[varname]+var[nm]
+                print('%s %d %d 90th %f'%(titls[nm],lev[nl],len(var[nm]),p90[nl,nm]))
+        df = pd.DataFrame(dicts)
+        print(df)
+
+        axe = ax[nc]
+        axe.set_title(behv[nc+1],fontsize=title_font,fontdict=font)
+        sns.boxplot(x='season', y=varname, hue='lev',hue_order=lev, 
+            data=df, palette="Set1",ax=axe, showfliers=False, whis=0,
+            showmeans=True,meanprops={"markerfacecolor":"k", "markeredgecolor":"k"})
+        #axe.set_ylim(1,10)
+        axe.set_ylabel(varname,fontsize=label_font,fontdict=font)
+        axe.set_xlabel('',fontsize=label_font,fontdict=font)
+        
+        width = 0.8
+        xloc = np.repeat(np.atleast_2d(np.arange(4)),3,axis=0
+            )+np.array([[-1*width/3.0],[0],[width/3.0]])
+        col = ['ro','bo','go']
+        for nl in range(len(lev)):
+            axe.plot(xloc[nl,:],p90[nl,:],col[nl])
+            #axe.plot(xloc.flatten(),p90.flatten(),'ko')
+        
+    plt.legend([],[], frameon=False)
+    plt.tight_layout()
+    plt.savefig('%s/box_%s.png'%(figdir,varname), 
+        bbox_inches='tight',pad_inches=0.01)
+
+def get_x_coordinates_of_seaborn_boxplot(ax):
+    display_coordinates = []
+    inv = ax.transData.inverted()    
+    for c in ax.get_children():
+        if type(c) == mpl.patches.PathPatch:
+            display_coordinates.append((c.get_extents().x0+c.get_extents().x1)/2)
+    return inv.transform(tuple(display_coordinates)) 
+
+def sea2mon(ns):
+    if ns == 'DJF':
+        lst = [12,1,2]
+    if ns == 'MAM':
+        lst = [3,4,5]
+    if ns == 'JJA':
+        lst = [6,7,8]
+    if ns == 'SON':
+        lst = [9,10,11]
+    return lst
 
 def tp_filt_cyclone(filname,tp_file):
+    if os.path.exists(filname+"_"+behv[0]):
+        print('%s_%s exists'%(filname,behv[0]))
+        return
+    else:
+        print('handle %s_%s'%(filname,behv[0]))
     loca = np.loadtxt(tp_file,usecols = (0,1))
     #prefix = filname.split("_",1)[0].rsplit("/")[-1]
 

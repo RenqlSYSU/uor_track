@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 import cdsapi, os
 
-varname = ['u_component_of_wind','temperature','geopotential','v_component_of_wind']
-filname = ['u','t','z','v']
+varname = ['u_component_of_wind','temperature','geopotential',
+    'v_component_of_wind','specific_humidity','vertical_velocity']
+filname = ['u','t','z','v','q','w']
 #path = '/work/scratch-pw2/renql/ERA5_hourly/'
 path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_subdaily/'
 
 c = cdsapi.Client()
 
-for nv in range(0,len(varname)-1,1):
+for nv in range(5,len(varname),1):
     if not os.path.exists(path+filname[nv]):
         os.makedirs(path+filname[nv])
 
-    for year in range(1980,2000,1):
+    for year in range(1980,2021,1):
         output = '%s%s/ERA5_%s_%d.nc'%(path,filname[nv],filname[nv],year)
         if os.path.exists(output):
             print('%s exists'%output)
@@ -30,7 +31,7 @@ for nv in range(0,len(varname)-1,1):
                     '550', '825', '850',
                     '875',
                 ],
-                'grid': [0.25, 0.25],
+                'grid': [1,1], #[0.25, 0.25],
                 'area': [75, 10, 10, 150, ],
                 'year': str(year), 
                 'month': [

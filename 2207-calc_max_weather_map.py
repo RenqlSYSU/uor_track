@@ -26,11 +26,12 @@ font = {'family': 'sans-serif',
 
 prefix = "fftadd"
 radiu = 2.5
-title= {'_local':'local',
-        '_outside':'outside',
-        '_total':'total',
+radius = 6
+title= {'_%dlocal'%radius:'local',
+        '_%doutside'%radius:'outside',
+        '_%dtotal'%radius:'total',
         '':'All'}
-suffixs = ['_local','_outside','_total']
+suffixs = ["_%dtotal"%radius,"_%dlocal"%radius,"_%doutside"%radius]
 lev  = [850,500,250]
 path = '/home/users/qd201969/ERA5-1HR-lev'
 datapath ="/home/users/qd201969/uor_track/mdata"
@@ -43,27 +44,31 @@ latn=70 #
 
 def main_run():
     #gene_grid()
-    for ns in range(2):
+    for ns in range(3):
         for nl in lev:
-            calc_monthly_max_mean(suffixs[ns],nl,9,
-                '%s/max_mean_10mwind_%d%s.nc'%(datapath,nl,suffixs[ns]))
-            calc_monthly_max_mean(suffixs[ns],nl,10,
-                '%s/max_mean_preci_%d%s.nc'%(datapath,nl,suffixs[ns]))
+            #calc_monthly_max_mean(suffixs[ns],nl,9,
+            #    '%s/max_mean_10mwind_%d%s.nc'%(datapath,nl,suffixs[ns]))
+            
+            if not os.path.exists('%s/max_mean_preci_%d%s.nc'%(datapath,nl,suffixs[ns])):
+                calc_monthly_max_mean(suffixs[ns],nl,13,
+                    '%s/max_mean_preci_%d%s.nc'%(datapath,nl,suffixs[ns]))
 
         ds = xr.open_dataset('%s/max_mean_preci_%d%s.nc'%(datapath,850,suffixs[ns]))
         ilat = ds['lat'].data
         ilon = ds['lon'].data
         dvars = ['maxv','numb','mean']
-        for varname in ['preci','10mwind']:
+        for varname in ['preci']:#,'10mwind'
             if varname=='preci':
-                cnlevs = [[0,3.4,0.2],[0,170,10],[0,1.7,0.1]]
+                cnlevs = [[50,900,50],[0,170,10],[10,350,20]]
+                scale = 24
             else:
                 cnlevs = [[2,27.5,1.5],[0,170,10],[0,17,1]]
+                scale = 1
             for dvar,cnlev in zip(dvars,cnlevs):
                 draw_seasonal_4x3(varname,suffixs[ns],dvar,cnlev,'%s %s'%(dvar,varname),
-                    '%s/seasonal_%s_%s_%s.png'%(figdir,varname,dvar,suffixs[ns]),ilon,ilat) 
+                    '%s/seasonal_%s_%s_%s.png'%(figdir,varname,dvar,suffixs[ns]),ilon,ilat,scale) 
 
-def draw_seasonal_4x3(varname,suffix,dvar,cnlev,cblabel,figdir,ilon,ilat):
+def draw_seasonal_4x3(varname,suffix,dvar,cnlev,cblabel,figdir,ilon,ilat,scale):
     # varname = 'preci','10mwind', dvar='mean','maxv','numb'
     nrow = 4 #6 #
     ncol = 3 #2 #
@@ -96,13 +101,13 @@ def draw_seasonal_4x3(varname,suffix,dvar,cnlev,cblabel,figdir,ilon,ilat):
             if nr == 0:
                 uwnd1 = (uwnd[0,:,:]+uwnd[1,:,:]+uwnd[11,:,:])/3.0
                 if dvar=='maxv':
-                    var = np.max(np.array(
+                    var = scale*np.max(np.array(
                         [term[0,:,:],term[1,:,:],term[11,:,:]]),axis=0)
                 if dvar=='numb':
                     var = np.sum(np.array(
                         [term[0,:,:],term[1,:,:],term[11,:,:]]),axis=0)/41.0
                 if dvar=='mean':
-                    var = np.sum(np.array(
+                    var = scale*np.sum(np.array(
                         [term[0,:,:],term[1,:,:],term[11,:,:]]),axis=0)
                     term1 = ds['numb'].data
                     numb = np.sum(np.array(
@@ -111,14 +116,15 @@ def draw_seasonal_4x3(varname,suffix,dvar,cnlev,cblabel,figdir,ilon,ilat):
             else:
                 uwnd1 = np.mean(uwnd[(3*nr-1):(3*nr+2),:,:],axis=0)
                 if dvar=='maxv':
-                    var = np.max(term[(3*nr-1):(3*nr+2),:,:],axis=0)
+                    var = scale*np.max(term[(3*nr-1):(3*nr+2),:,:],axis=0)
                 if dvar=='numb':
                     var = np.sum(term[(3*nr-1):(3*nr+2),:,:],axis=0)/41.0
                 if dvar=='mean':
-                    var = np.sum(term[(3*nr-1):(3*nr+2),:,:],axis=0)
+                    var = scale*np.sum(term[(3*nr-1):(3*nr+2),:,:],axis=0)
                     numb = np.sum(ds['numb'].data[(3*nr-1):(3*nr+2),:,:],axis=0)
                     var = np.where(numb>0,var/numb,0)
-            print('%s : min %f ; max %f'%(month[nr], var.min(), var.max()))
+            print('%dhPa %s %s : min %f ; max %f'%(lev[nc],title[suffix],
+                month[nr], var.min(), var.max()))
             axe = ax[nr][nc]
             axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k')
                     , linewidth=0.8, zorder=1)

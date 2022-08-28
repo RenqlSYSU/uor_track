@@ -40,9 +40,8 @@ if [ $pro == -1 ];then
     for ny in {1980..2020};do
         starttime=$((ny-1))120100
         for nl in {0..2};do
-            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip-1211
-            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos.addZ_addwind10m_precip-1211
-            rm ${filname1}
+            filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.${suffix}
+            filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos.${suffix}
             if [ ! -f "${filname2}" ]; then
                 utils/bin/count ${filname1} 0 0 5 4 0 $starttime $timestep
                 mv ${filname1}.new ${filname2}
@@ -70,7 +69,7 @@ if [ $pro == 1 ];then
         echo 1 >> combine.in_${lev[$nl]}
         
         for ny in {1980..2020};do
-            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.addZ_addwind10m_precip #-1211
+            filname=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.${suffix}
             echo $filname >> combine.in_${lev[$nl]}
         
             if [ ! -f "$filname" ]; then
@@ -108,7 +107,7 @@ if [ $pro == 2 ];then
     for file in ${prefix}_*_1980-2020${suffix} ; do
     #for file in ${prefix}_*_match ; do
         filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/${file}"
-        output=${OUTDIR}statistic/${file}_stat
+        output=${OUTDIR}statistic/${file}_ptstat
         #filname="\/home\/users\/qd201969\/ERA5-1HR-lev\/match${suffix}\/${file}"
         #output=${OUTDIR}match${suffix}/statistic/${file}_stat
         

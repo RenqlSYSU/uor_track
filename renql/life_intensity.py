@@ -45,6 +45,77 @@ def circle_distance(lat1,lon1,lat2,lon2):
 
     return dist
 
+def mon2sea(nm):
+# convert month to season index
+    if nm in [1,2,12]:
+        sea = 0
+    elif nm in [3,4,5]:
+        sea = 1
+    elif nm in [6,7,8]:
+        sea = 2
+    elif nm in [9,10,11]:
+        sea = 3
+    return sea
+
+def calc_one_variable(filname,nint,flats=25,flatn=45,flonl=57,flonr=110):
+    # use fftadd
+    # nint: 0 lifetime, 1 distance, 2 max-vor
+    # 3 mean-vor, 4 min-pres, 5 mean-pres
+    ff = open(filname,"r") 
+    line1 = ff.readline()
+    line2 = ff.readline()
+    line3 = ff.readline()
+    line4 = ff.readline()
+    
+    inte = [[],[],[],[]] #  max intensity
+    line = ff.readline()
+    while line:
+        term = line.strip().split(" ")
+        if term[0] == "TRACK_ID":
+            linenum = ff.readline()
+            term1 = linenum.strip().split(" ")
+            num = int(term1[-1])
+            
+            data=[]
+            ct1=[]
+            for nl in range(0,num,1):
+                term = list(map(float, ff.readline().strip().replace(" &","").split(" ")))
+                ct1.append(datetime.strptime(str(int(term[0])),'%Y%m%d%H'))
+                if term[1]>=flonl and term[1]<=flonr and term[2]>=flats and term[2]<=flatn:
+                    data.append(term)
+                if nl==0:
+                    lon1 = term[1]
+                    lat1 = term[2]
+                if nl==num-1:
+                    lon2 = term[1]
+                    lat2 = term[2]
+
+            data = np.array(data)
+            if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
+                nm = mon2sea(ct1[0].month)
+            else:
+                nm = mon2sea(ct1[-1].month)
+            if nint == 0: 
+                inte[nm].append(num/24.0)
+            if nint == 1:
+                inte[nm].append(circle_distance(lat1,lon1,lat2,lon2))
+            if nint == 2:
+                inte[nm].append(data[:,3].max())
+            if nint == 3:
+                inte[nm].append(data[:,3].mean())
+            if nint == 4:
+                inte[nm].append(data[:,6].max())
+            if nint == 5:
+                inte[nm].append(data[:,6].mean())
+
+        line = ff.readline()
+
+    a = line4.strip().split(" ",1)
+    term = a[1].strip().split(" ",1)
+    print("%s total %s" %(ff.name,term[0]))
+    ff.close()
+    return inte
+
 def calc_life_intensity(filname,flats=25,flatn=45,flonl=57,flonr=110):
     prefix = filname.split("_",1)[0].rsplit("/")[-1]
     ff = open(filname,"r") 

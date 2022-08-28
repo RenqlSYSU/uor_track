@@ -13,15 +13,15 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cmaps
 #matplotlib.use('Agg')
 
-lonl=0  #0  #
-lonr=150#360#
+lonl=15  #0  #
+lonr=145#360#
 lats=15 #20 #
 latn=70 #90 #
 lat_sp = 20
 lon_sp = 30 #60 #
 nrow = 4 #6 #
 ncol = 3 #2 #
-bmlo = 0.4 #0.25 #
+bmlo = 0.35#0.4 
 title_font=14
 label_font=10
 
@@ -38,11 +38,13 @@ cnlvl=[[0    ,320  ,20  ], # 0Feature Density
      [0    ,3.2  ,0.2 ], # 1Genesis Density
      [0    ,3.2  ,0.2 ], # 2Lysis Density
      [-1   ,1    ,1   ], # 3Mean Area
-     [-0.8 ,0.8  ,0.1 ], # 4Mean Growth/Decay Rate
+     #[-0.8 ,0.8  ,0.1 ], # 4Mean Growth/Decay Rate
+     [0    ,1.6  ,0.1 ], # 4Mean Growth/Decay Rate
      [-1   ,1    ,1   ], # 5Mean Anisotropy
      [0    ,8    ,0.5 ], # 6Mean Lifetime
      [0    ,80   ,5   ], # 7Mean Speed
-     [0    ,16   ,1   ], # 8Mean Intensity
+     #[0    ,12.8 ,0.8 ], # 8Mean Intensity
+     [0    ,8  ,0.5 ], # 9Mean Tendency
      [-1.6 ,1.6  ,0.2 ], # 9Mean Tendency
      [-1   ,1    ,1   ], # 10Spare1
      [-1   ,1    ,1   ], # 11Spare2
@@ -57,7 +59,8 @@ cnlvl=[[0    ,320  ,20  ], # 0Feature Density
 draw_var = ["fden","gden","lden","marea","mgdr","",
             "mlif","msp" ,"mstr","mten" ,""    ,"",
             ""    ,""    ,"tden",""    ] # 7 variables
-draw=[6,7,8]
+draw=[4,9]
+#draw=[6,7,8,4,9]
 #draw=[1,2,14]
 #draw=[14]
 #draw=[1,2,14,8,9,6]
@@ -124,13 +127,12 @@ for nv in range(0,len(draw),1):#,len(f),1):
     norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
     
     for nl in range(0,len(lev),1):
-        files = '/home/users/qd201969/ERA5-1HR-lev/statistic/%s_%d_1980-2020%s_stat.nc'%(prefix,lev[nl],suffix)
+        files = '/home/users/qd201969/ERA5-1HR-lev/statistic/%s_%d_1980-2020%s_48ptstat.nc'%(prefix,lev[nl],suffix)
         print(files)
         f = xr.open_dataset(files)
         var = f[draw_var[draw[nv]]].sel(long=ilon,lat=ilat).load()
-        print(var)
-        if draw[nv] == 9:
-            var=var*24
+        if draw[nv] in [4,9]:
+            var.data=var.data*24
         if draw[nv] > 2 and draw[nv] != 14:
             tden = f['tden'].sel(long=ilon,lat=ilat).load()
             mask = tden < 1.0
@@ -143,6 +145,8 @@ for nv in range(0,len(draw),1):#,len(f),1):
             else:
                 var1 = np.mean(var[(3*nm-1):(3*nm+2),:,:],axis=0)
                 uwnd1 = np.mean(uwnd[(3*nm-1):(3*nm+2),:,:],axis=0)
+            print('%s: min:%f ; max:%f'%(var.long_name,
+                np.nanmin(var.data),np.nanmax(var.data)))
             axe = ax[nm][nl]
             axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=1)
             axe.set_title("%dhPa %s"%(lev[nl],titls[nm]),fontdict=font)
@@ -174,6 +178,6 @@ for nv in range(0,len(draw),1):#,len(f),1):
         plt.figtext(0.02,bmlo-0.005, var.long_name,fontsize=title_font,
                 horizontalalignment='left',verticalalignment='bottom')
     plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
-    plt.savefig(figdir+var.long_name.replace(" ","")+".png", bbox_inches='tight',pad_inches=0.01)
+    plt.savefig(figdir+draw_var[draw[nv]]+".png", bbox_inches='tight',pad_inches=0.01)
 
 

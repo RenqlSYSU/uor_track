@@ -14,9 +14,6 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cmaps
 #matplotlib.use('Agg')
 
-nrow = 4 #6 #
-ncol = 3 #2 #
-bmlo = 0.4 #0.25 #
 title_font=14
 label_font=10
 plt.rcParams["font.weight"] = "bold"
@@ -28,8 +25,8 @@ font = {'family': 'sans-serif',
 
 lev = [850,500,250]
 prefix = "ff"
-suffix = '_local'#,'_total']
-#suffix = '_outside'#,'_local'#,'_total']
+#suffix = '_local'#,'_total']
+suffix = ''#'_outside'#,'_local'#,'_total']
 titls= ['DJF','MAM','JJA','SON']
 figdir = '/home/users/qd201969/uor_track/fig'
 path = '/home/users/qd201969/ERA5-1HR-lev/statistic'
@@ -44,6 +41,11 @@ if suffix == '_outside':
     lonr=140#360#
     lats=15 #20 #
     latn=60 #90 #
+if suffix == '':
+    lonl=0 
+    lonr=150
+    lats=15 
+    latn=70 
 lat_sp = 20
 lon_sp = 30 #60 #
 
@@ -67,15 +69,27 @@ del ds
 gc.collect()
 
 def main_run():
-
+    '''
+    cnlev1 = np.hstack((np.arange(1,4,1),np.arange(7,20,3)))
+    cnlev2 = np.hstack((np.arange(1,8.5,2.5),np.arange(13.5,50,5)))
     draw_shad_cont_seasonal_4x3(suffix,'msp',np.arange(15,85,5),'Speed',
-            'gden',np.arange(0.5,10,1),'Genesis','lden',np.arange(0.5,20,1),'Lysis',False)
-    
+            'gden',cnlev1,'Genesis','lden',cnlev1,'Lysis',False,[4,60])
     draw_shad_cont_seasonal_4x3(suffix,'mstr',np.arange(0,14,1),'Intensity',
-            'tden',np.arange(1,50,2.5),'Track','lden',np.arange(1,20,1),'U200',True)
+            'tden',cnlev2,'Track','lden',cnlev1,'U200',True,[8.5,60])
+    '''
+    cnlev1 = np.hstack((np.arange(1,4,1),np.arange(7,20,3)))
+    cnlev2 = np.hstack((np.arange(1,8.5,2.5),np.arange(13.5,50,5)))
+    draw_shad_cont_3x1(suffix,'msp',np.arange(15,71,4),'Speed',
+            'gden',cnlev1,'Genesis','lden',cnlev1,'Lysis',False,[4,60])
+    draw_shad_cont_3x1(suffix,'mstr',np.arange(0,11.2,0.8),'Intensity',
+            'tden',cnlev2,'Track','lden',cnlev1,'U200',True,[8.5,60])
 
 def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
-    varname1,cnlev1,label1,varname2,cnlev2,label2,jetoption):
+    varname1,cnlev1,label1,varname2,cnlev2,label2,jetoption,dash):
+    
+    nrow = 4 #6 #
+    ncol = 3 #2 #
+    bmlo = 0.4 #0.25 #
 
     fig = plt.figure(figsize=(12,12),dpi=300)
     ax = fig.subplots(nrow, ncol, subplot_kw=dict(
@@ -90,9 +104,9 @@ def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
         f = xr.open_dataset(files)
         print("")
         print(files)
-        var = read_stat(f,varname)
-        var1 = read_stat(f,varname1)
-        var2 = read_stat(f,varname2)
+        var = read_stat(f,varname,lev[nl])
+        var1 = read_stat(f,varname1,lev[nl])
+        var2 = read_stat(f,varname2,lev[nl])
     
         for nm in range(0,nrow,1):
             if nm == 0:
@@ -113,15 +127,22 @@ def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
 
             cont = axe.contourf(ilon, ilat, shad, cnlev, 
                  transform=ccrs.PlateCarree(),cmap=ncmap,extend='both',norm=norm)
-            topo = axe.contour(ilon, ilat, phis, [1500,3000], 
-                 transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            line1 = axe.contour(ilon, ilat, cont1, cnlev1, 
-                 transform=ccrs.PlateCarree(),colors='b',linewidths=1.5)
+            topo = axe.contour(ilon, ilat, phis, [1500,3000], linestyles='solid', 
+                 transform=ccrs.PlateCarree(),colors='black',linewidths=0.8)
+
+            line1 = axe.contour(ilon, ilat, cont1, cnlev1, linestyles='solid',
+                 transform=ccrs.PlateCarree(),colors='b',linewidths=1.2)
+            if not(varname1=='gden' and nl==2 and nm==3):
+                line3 = axe.contour(ilon, ilat, cont1, dash, linestyles='dashed', 
+                     transform=ccrs.PlateCarree(),colors='b',linewidths=1.5)
+            
             if jetoption :
-                jets = axe.contour(ilon, ilat, uwnd1, [30,40,50], 
-                     transform=ccrs.PlateCarree(),colors='r',linewidths=2.2)
+                jets = axe.contour(ilon, ilat, uwnd1, [30,40,50], linestyles='solid', 
+                     transform=ccrs.PlateCarree(),colors='r',linewidths=2.0)
             else :
-                line2 = axe.contour(ilon, ilat, cont2, cnlev2, 
+                line2 = axe.contour(ilon, ilat, cont2, cnlev2, linestyles='solid', 
+                     transform=ccrs.PlateCarree(),colors='r',linewidths=1.2)
+                line4 = axe.contour(ilon, ilat, cont2, dash, linestyles='dashed', 
                      transform=ccrs.PlateCarree(),colors='r',linewidths=1.5)
             
             if nl == 0:
@@ -145,7 +166,69 @@ def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
     plt.savefig('%s/stat_seasonal%s_%s.png'%(figdir,suffix,varname), 
         bbox_inches='tight',pad_inches=0.01)
 
-def read_stat(f,varname):
+def draw_shad_cont_3x1(suffix,varname,cnlev,label,
+    varname1,cnlev1,label1,varname2,cnlev2,label2,jetoption,dash):
+    
+    nrow = 3 #6 #
+    ncol = 1 #2 #
+    bmlo = 0.5
+
+    fig = plt.figure(figsize=(12,12),dpi=300)
+    ax = fig.subplots(nrow, ncol, subplot_kw=dict(
+        projection=ccrs.PlateCarree(central_longitude=180.0))) #sharex=True, sharey=True
+
+    ncmap = colors.ListedColormap(cmaps.topo_15lev(range(0,16,1))[::-1])
+    norm = colors.BoundaryNorm(boundaries=cnlev,
+        ncolors=ncmap.N,extend='both')
+
+    uwnd1 = uwnd.mean(axis=0)
+    for nr in range(0,len(lev),1):
+        files = '%s/%s_%d_1980-2020%s_stat.nc'%(path,prefix,lev[nr],suffix)
+        f = xr.open_dataset(files)
+        print("")
+        print(files)
+        shad = np.nanmean(read_stat(f,varname,lev[nr]),axis=0)
+        cont1 = np.nanmean(read_stat(f,varname1,lev[nr]),axis=0)
+        cont2 = np.nanmean(read_stat(f,varname2,lev[nr]),axis=0)
+    
+        axe = ax[nr]
+        axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],
+            edgecolor='k'), linewidth=0.8, zorder=1)
+        axe.set_title("%dhPa %s"%(lev[nr],label
+            ),fontsize=title_font,fontdict=font)
+
+        cont = axe.contourf(ilon, ilat, shad, cnlev, 
+             transform=ccrs.PlateCarree(),cmap=ncmap,extend='both',norm=norm)
+        topo = axe.contour(ilon, ilat, phis, [1500,3000], linestyles='solid', 
+             transform=ccrs.PlateCarree(),colors='black',linewidths=0.8)
+
+        line1 = axe.contour(ilon, ilat, cont1, cnlev1, linestyles='solid',
+             transform=ccrs.PlateCarree(),colors='b',linewidths=1.2)
+        line3 = axe.contour(ilon, ilat, cont1, dash, linestyles='dashed', 
+             transform=ccrs.PlateCarree(),colors='b',linewidths=1.5)
+    
+        if jetoption :
+            jets = axe.contour(ilon, ilat, uwnd1, [30,40,50], linestyles='solid', 
+                 transform=ccrs.PlateCarree(),colors='r',linewidths=2.0)
+        else :
+            line2 = axe.contour(ilon, ilat, cont2, cnlev2, linestyles='solid', 
+                 transform=ccrs.PlateCarree(),colors='r',linewidths=1.2)
+            line4 = axe.contour(ilon, ilat, cont2, dash, linestyles='dashed', 
+                 transform=ccrs.PlateCarree(),colors='r',linewidths=1.5)
+        
+        axe.set_yticks(np.arange(lats,latn,lat_sp), crs=ccrs.PlateCarree())
+        axe.yaxis.set_major_formatter(LatitudeFormatter(degree_symbol=''))
+        if nr == (nrow-1):
+            axe.set_xticks(np.arange(lonl,lonr,lon_sp), crs=ccrs.PlateCarree())
+            axe.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
+    
+    position = fig.add_axes([0.35, bmlo+0.001, 0.3, 0.01]) #left, bottom, width, height
+    cb = plt.colorbar(cont, cax=position ,orientation='horizontal')#, shrink=.9)
+    plt.tight_layout(w_pad=0.5,rect=(0,bmlo,1,1))
+    plt.savefig('%s/stat_seasonal%s_%s.png'%(figdir,suffix,varname), 
+        bbox_inches='tight',pad_inches=0.01)
+
+def read_stat(f,varname,nl):
     var = f[varname].sel(long=ilon,lat=ilat).load()
     if varname == 'mten':
         var.data = var.data*24
@@ -154,6 +237,11 @@ def read_stat(f,varname):
         mask = tden < 1.0
         var.data = np.ma.array(var.data,mask=mask)
         del mask, tden
+    
+    if nl==850:
+        var.data = np.ma.array(var.data,mask=(
+            np.broadcast_to(phis, var.shape)>1500))
+    
     print('%s: min:%f ; max:%f'%(var.long_name,
         np.nanmin(var.data),np.nanmax(var.data)))
     return var.data

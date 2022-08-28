@@ -28,17 +28,20 @@ fi
 
 
 echo ${nmonth[*]}
-    
-sed -i "21s/.*/${filname}/" indat/STATS.latlng_1hr.in
+
+input=indat/STATS.latlng_1hr_pt.in
+sed -i "21s/.*/${filname}/" $input 
 for nm in $(seq 1 1 ${#nday[*]});do #{1..${nm}};do
-    fras=$((frae+1))
-    frae=$((fras+24*nday[$((nm-1))]-1))
-    echo "month=${nmonth[$((nm-1))]}, frame_s=${fras}, frame_e=${frae}"
+    if [ ! -f ${output}_${nmonth[$((nm-1))]}.nc ];then
+        fras=$((frae+1))
+        frae=$((fras+24*nday[$((nm-1))]-1))
+        echo "month=${nmonth[$((nm-1))]}, frame_s=${fras}, frame_e=${frae}"
 
-    sed -i "34s/.*/${fras}/" indat/STATS.latlng_1hr.in
-    sed -i "35s/.*/${frae}/" indat/STATS.latlng_1hr.in
-
-    bin/track.linux < indat/STATS.latlng_1hr.in > ${output}_record
-    mv outdat/stat_trs_scl.linux_1.nc ${output}_${nmonth[$((nm-1))]}.nc
+        sed -i "34s/.*/${fras}/" $input 
+        sed -i "35s/.*/${frae}/" $input
+        
+        bin/track.linux < $input > ${output}_record
+        mv outdat/stat_trs_scl.linux_1.nc ${output}_${nmonth[$((nm-1))]}.nc
+    fi
 done
 
