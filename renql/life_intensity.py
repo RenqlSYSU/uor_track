@@ -90,23 +90,24 @@ def calc_one_variable(filname,nint,flats=25,flatn=45,flonl=57,flonr=110):
                     lon2 = term[1]
                     lat2 = term[2]
 
-            data = np.array(data)
-            if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
-                nm = mon2sea(ct1[0].month)
-            else:
-                nm = mon2sea(ct1[-1].month)
-            if nint == 0: 
-                inte[nm].append(num/24.0)
-            if nint == 1:
-                inte[nm].append(circle_distance(lat1,lon1,lat2,lon2))
-            if nint == 2:
-                inte[nm].append(data[:,3].max())
-            if nint == 3:
-                inte[nm].append(data[:,3].mean())
-            if nint == 4:
-                inte[nm].append(data[:,6].max())
-            if nint == 5:
-                inte[nm].append(data[:,6].mean())
+            if lon2>lon1:
+                data = np.array(data)
+                if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
+                    nm = mon2sea(ct1[0].month)
+                else:
+                    nm = mon2sea(ct1[-1].month)
+                if nint == 0: 
+                    inte[nm].append(num/24.0)
+                if nint == 1:
+                    inte[nm].append(circle_distance(lat1,lon1,lat2,lon2))
+                if nint == 2:
+                    inte[nm].append(data[:,3].max())
+                if nint == 3:
+                    inte[nm].append(data[:,3].mean())
+                if nint == 4:
+                    inte[nm].append(data[:,6].max())
+                if nint == 5:
+                    inte[nm].append(data[:,6].mean())
 
         line = ff.readline()
 

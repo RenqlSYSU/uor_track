@@ -129,8 +129,8 @@ if [ $pro == 2 ];then
         #fi
         np=$((np+1))
     done
-    python ~/uor_track/2109-draw_stat_con_xr_mp.py \
-        ${prefix} ${suffix} ${level} 0 ${lats} ${latn} ${lonl} ${lonr}
+    #python ~/uor_track/2109-draw_stat_con_xr_mp.py \
+    #    ${prefix} ${suffix} ${level} 0 ${lats} ${latn} ${lonl} ${lonr}
     python ~/uor_track/2109-draw_stat_con_seasonal_xr_mp.py \
         ${prefix} ${suffix} ${level} 0 ${lats} ${latn} ${lonl} ${lonr}
 fi

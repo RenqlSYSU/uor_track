@@ -8,6 +8,7 @@ import numpy as np
 import subprocess
 import os 
 from netCDF4 import Dataset
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import cartopy.crs as ccrs
@@ -16,9 +17,10 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
 from cartopy.io.shapereader import Reader
 import cmaps
-from PIL import Image, ImageDraw, ImageSequence
+from datetime import datetime
 from wrf import (to_np, getvar, smooth2d, get_cartopy, cartopy_xlim,
                  cartopy_ylim, latlon_coords, interplevel)
+matplotlib.use('Agg')
 
 # constants
 BIGFONT=22
@@ -26,45 +28,35 @@ MIDFONT=18
 SMFONT=14
 
 # define date of start time and forcast time
-stime  = ['2021','09','23'] # year, month, date, hour
-ftime  = ['2021','09','23','12']
-ftime0 = ['2021','09','23','16'] # use to calc accumulated pr,large than ftime
-#data = "/home/lzhenn/array74/Njord_Calypso/archive/njord//2021112612/wrfout_d01_2021-11-26_12:00:00"
-data = "/home/metctm1/array_hq133/data/s2s/wrfroms/clim/aegir_2011070100/wrfout_d01_2011-07-23_00:00:00"
+ftime  = datetime(2018,9,14,00)
+ftime0 = datetime(2018,9,17,00)
+domain = 'd02'
 #data = "/home/metctm1/array_hq133/data/s2s/wrfonly/clim/2011070100/wrfout_d01_2011-07-23_00:00:00"
-#data = "/home/dataop/data/nmodel/wrf_fc/2021/202109/"+"".join(stime)+"12/wrfout_d04_2021-09-23_12:00:00"
+path = '/home/lzhenn/cooperate/data/case_study/coupled/2018091200'
+data = "%s/wrfout_%s_%s:00:00"%(path,domain,ftime.strftime('%Y-%m-%d_%H')) 
 
 #varname = ['slp','U10','V10']
 #drawvar = 'UV10 (m/s)'
-#varname = ['RAINNC','RAINC']
-#drawvar = 'preci(mm/24h)'
-varname = ['z']
-drawvar = '500 Z'
-figtle = ''.join(ftime)+'_500Z(gpm)'
+varname = ['RAINNC','RAINC']
+drawvar = 'preci(mm)'
+#varname = ['z']
+#drawvar = '500 Z'
+figtle = 'CTRL'
 lev = 500 #hPa
+figdir = '/home/lzhenn/cooperate/fig/%s_%s.png'%(ftime.strftime('%Y-%m-%d_%H'),varname[0])
 
-case = ['Njord','PATH']
-nc = 0
 lat_sp = 1.0 #5.0
 lon_sp = 1.0 #10.0
+q_mis=15 # wind vector plotting every q_miss grid
 
-figtle = drawvar+'\nS'+'-'.join(stime)+' F'+'-'.join(ftime)
-figdir = '/home/lzhenn/cooperate/fig/S'+''.join(stime)+'.F'+''.join(ftime)+'.uv10.png'
-
-coast_shp = Reader(os.getenv('SHP_LIB')+'/china_coast/china_coastline.dbf').geometries()
 # contour level for precip
 #cnlevels = [0.1, 0.5, 1, 2, 3, 5, 8, 12, 16, 20, 25, 30, 40, 50, 70, 100, 150] #houly preci
-#cnlevels = [0.1, 0.5, 1, 3, 5, 10,15,20, 30, 40, 60, 80, 100, 120, 150, 200, 250] #24h accumulated preci
+cnlevels = [0.1, 0.5, 1, 3, 5, 10,15,20, 30, 40, 60, 80, 100, 120, 150, 200, 250] #24h accumulated preci
 #cnlevels = np.arange(1000,1017,1) #slp, hPa
-cnlevels = np.arange(586,603,1) #500Z, gpm
+#cnlevels = np.arange(586,603,1) #500Z, gpm
 #cnlevels = np.arange(0,17,1) #UV10 speeds
 norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=cmaps.precip2_17lev.N,extend='both')
 #norm = colors.Normalize(vmin=1000, vmax=1015)
-
-if case[nc] == case[0]: 
-    q_mis=15 # wind vector plotting every q_miss grid
-else:
-    q_mis=8  # wind vector plotting every q_miss grid
 
 # Open the NetCDF file
 ncfile = Dataset(data)
@@ -76,7 +68,8 @@ else:
     varnp  = to_np(var)
 
 if varname[0] == 'RAINNC':
-    print(''.join(ftime)+' to '+''.join(ftime0)+' preci')
+    filedir0 = "%s/wrfout_%s_%s:00:00"%(path,domain,ftime0.strftime('%Y-%m-%d_%H')) 
+    print('%s to %s preci'%(ftime.strftime('%Y-%m-%d_%H'),ftime0.strftime('%Y-%m-%d_%H')))
     ncfile0 = Dataset(filedir0)
     varnp   = to_np(getvar(ncfile0,"RAINC")) + to_np(getvar(ncfile0,"RAINNC"))\
               -varnp-to_np(getvar(ncfile,'RAINC'))
@@ -93,10 +86,12 @@ fig = plt.figure(figsize=(12,9),dpi=100)
 axe = plt.axes(projection=cart_proj)
 #axe = plt.subplot(1,2,i+1,projection=cart_proj)    #创建子图
 
-coast_shp = Reader(os.getenv('SHP_LIB')+'/china_coast/china_coastline.dbf').geometries()
-coastline = cfeat.ShapelyFeature(coast_shp, ccrs.PlateCarree(), edgecolor='black', facecolor='none')
-axe.add_feature(coastline, linewidth=0.8,zorder=1)
-
+#coast_shp = Reader(os.getenv('SHP_LIB')+'/china_coast/china_coastline.dbf').geometries()
+#coastline = cfeat.ShapelyFeature(coast_shp, ccrs.PlateCarree(), edgecolor='black', facecolor='none')
+#axe.add_feature(coastline, linewidth=0.8,zorder=1)
+province_shp_file=os.getenv('SHP_LIB')+'/cnmap/cnhimap.dbf'
+province_shp=shpreader.Reader(province_shp_file).geometries()
+axe.add_geometries(province_shp, ccrs.PlateCarree(),facecolor='none', edgecolor='black',linewidth=1., zorder = 1)
 if len(varname) == 3:
     uvarnp = to_np(getvar(ncfile,varname[1]))
     vvarnp = to_np(getvar(ncfile,varname[2]))
@@ -116,14 +111,13 @@ else:
 # Set the map bounds
 axe.set_xlim(cartopy_xlim(var))
 axe.set_ylim(cartopy_ylim(var))
-axe.gridlines(draw_labels=True)
-if case[nc] == case[1]:
-    axe.set_xticks(np.arange(np.ceil(lons[0,0]),np.ceil(lons[0,-1]),lat_sp), crs=ccrs.PlateCarree())
-    axe.set_yticks(np.arange(np.ceil(lats[0,0]),np.ceil(lats[-1,0]),lon_sp), crs=ccrs.PlateCarree())
-    axe.xaxis.set_major_formatter(LONGITUDE_FORMATTER) 
-    axe.yaxis.set_major_formatter(LATITUDE_FORMATTER)
-    axe.xaxis.set_major_formatter(LongitudeFormatter())
-    axe.yaxis.set_major_formatter(LatitudeFormatter())
+#axe.gridlines(draw_labels=True)
+#axe.set_xticks(np.arange(np.ceil(lons[0,0]),np.ceil(lons[0,-1]),lat_sp), crs=ccrs.PlateCarree())
+#axe.set_yticks(np.arange(np.ceil(lats[0,0]),np.ceil(lats[-1,0]),lon_sp), crs=ccrs.PlateCarree())
+#axe.xaxis.set_major_formatter(LONGITUDE_FORMATTER) 
+#axe.yaxis.set_major_formatter(LATITUDE_FORMATTER)
+#axe.xaxis.set_major_formatter(LongitudeFormatter())
+#axe.yaxis.set_major_formatter(LatitudeFormatter())
 
 axe.set_title(figtle,fontsize=MIDFONT) 
 plt.colorbar(cont, ax=axe, shrink=.7)

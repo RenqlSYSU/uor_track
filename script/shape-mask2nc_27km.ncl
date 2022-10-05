@@ -27,6 +27,7 @@ begin
     lon1d@units = "degrees_east"
     nlat = dimsizes(lat1d)
     nlon = dimsizes(lon1d)
+    
     data = new((/nlat,nlon/),float) 
     data = 1
     data@_FillValue=-9999

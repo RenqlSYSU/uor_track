@@ -119,7 +119,8 @@ filname=["/home/lzhenn/cooperate/data/Whole_HK_DTM_100m.nc",\
          "/home/lzhenn/njord_implement/domaindb/gba_norm/roms_d01.nc",\
          "/home/metctm1/array/data/Calypso/roms_d02.nc",\
          "/home/metctm1/array/data/Calypso/roms_d03.nc"]
-fileout="/home/lzhenn/cooperate/data/dtm_bathymetry_100m3.nc"
+
+fileout="/home/lzhenn/cooperate/data/dtm_bathymetry_100m_lantau.nc"
 title1 = ["100m","2.2km","500m","100m"]
 
 #f  = xr.open_dataset(filname[3])
@@ -140,7 +141,7 @@ norm  = colors.BoundaryNorm(boundaries=cnlevels, ncolors=ncmap.N,extend="both")
 print("cnlevel: %d, ncmap: %d"%(len(cnlevels),ncmap.N))
 #norm = colors.TwoSlopeNorm(vmin=-60, vcenter=0, vmax=450)
 draw_one_2d("100m_terrain-bathy",lon,lat,var1,norm,ncmap)
-#draw_3d("100m_terrain-bathy",lon,lat,var,norm,ncmap)
+#draw_3d("100m_terrain-bathy",lon,lat,var1,norm,ncmap)
 
 '''
 for nf in range(1,4,1):#len(filname),1):

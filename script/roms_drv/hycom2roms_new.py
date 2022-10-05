@@ -7,7 +7,7 @@ import subprocess
 from test_zeta import test_map
 import cmaps
 
-time = '20210915'
+time = '20180912'
 dst_dir='/home/lzhenn/cooperate/script/roms_drv/' # store output file
 hycom_dir = '/home/lzhenn/drv_field/hycom_subset/%s00/'%time # input file 
 
@@ -16,7 +16,7 @@ hycom_dir = '/home/lzhenn/drv_field/hycom_subset/%s00/'%time # input file
 # If the roms grid has not been changed, no modification is required
 # ===================================================
 # roms reference inital, climatology, and boundary file
-roms_dir  = '/home/lzhenn/drv_field/icbc/2021091500/' 
+roms_dir  = '/home/lzhenn/drv_field/icbc/2018091200//' 
 
 # contain horizontal grid information: lat, lon
 roms_grid = '/home/lzhenn/Njord/Projects/Njord/roms_swan_grid/roms_d01_lp0d1.nc'
@@ -33,7 +33,7 @@ def main_run():
     # test
     figdir = "/home/lzhenn/cooperate/fig/"
     
-    ds_hycom = xr.open_dataset('%shycom_glby_930_2021091500.nc'%hycom_dir)
+    ds_hycom = xr.open_dataset('%shycom_glby_930_2018091200.nc'%hycom_dir)
     dst_ds = xr.open_dataset('%scoawst_ini.nc'%roms_dir)
     
     lat_rho = ds_grid['lat_rho'][:,0].data
@@ -98,13 +98,13 @@ def make_ini(time):
 
 def make_clm(time):
     ds_hycom = xr.open_dataset('%shycom_glby_930_%s00.nc'%(hycom_dir,time))
-    dst_ds = xr.open_dataset('%scoawst_clm_20210915.nc'%roms_dir)
+    dst_ds = xr.open_dataset('%scoawst_clm_20180912.nc'%roms_dir)
     
     dst_ds.to_netcdf('%scoawst_clm_%s.nc'%(dst_dir,time),"w")
 
 def make_bdry(time):
     ds_hycom = xr.open_dataset('%shycom_glby_930_%s00.nc'%(hycom_dir,time))
-    dst_ds = xr.open_dataset('%scoawst_bdy_20210915.nc'%roms_dir)
+    dst_ds = xr.open_dataset('%scoawst_bdy_20180912.nc'%roms_dir)
     
     dst_ds.to_netcdf('%scoawst_bdy_%s.nc'%(dst_dir,time),"w")
 

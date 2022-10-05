@@ -38,13 +38,13 @@ cnlvl=[[0    ,320  ,20  ], # 0Feature Density
      [0    ,3.2  ,0.2 ], # 1Genesis Density
      [0    ,3.2  ,0.2 ], # 2Lysis Density
      [-1   ,1    ,1   ], # 3Mean Area
-     #[-0.8 ,0.8  ,0.1 ], # 4Mean Growth/Decay Rate
-     [0    ,1.6  ,0.1 ], # 4Mean Growth/Decay Rate
+     [-0.8 ,0.8  ,0.1 ], # 4Mean Growth/Decay Rate
+     #[0    ,1.6  ,0.1 ], # 4Mean Growth/Decay Rate
      [-1   ,1    ,1   ], # 5Mean Anisotropy
      [0    ,8    ,0.5 ], # 6Mean Lifetime
      [0    ,80   ,5   ], # 7Mean Speed
-     #[0    ,12.8 ,0.8 ], # 8Mean Intensity
-     [0    ,8  ,0.5 ], # 9Mean Tendency
+     [0    ,12.8 ,0.8 ], # 8Mean Intensity
+     #[0    ,8  ,0.5 ], # 9Mean Tendency
      [-1.6 ,1.6  ,0.2 ], # 9Mean Tendency
      [-1   ,1    ,1   ], # 10Spare1
      [-1   ,1    ,1   ], # 11Spare2
@@ -59,7 +59,8 @@ cnlvl=[[0    ,320  ,20  ], # 0Feature Density
 draw_var = ["fden","gden","lden","marea","mgdr","",
             "mlif","msp" ,"mstr","mten" ,""    ,"",
             ""    ,""    ,"tden",""    ] # 7 variables
-draw=[4,9]
+draw=[7,8,]
+#draw=[4,9,]
 #draw=[6,7,8,4,9]
 #draw=[1,2,14]
 #draw=[14]
@@ -127,7 +128,7 @@ for nv in range(0,len(draw),1):#,len(f),1):
     norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
     
     for nl in range(0,len(lev),1):
-        files = '/home/users/qd201969/ERA5-1HR-lev/statistic/%s_%d_1980-2020%s_48ptstat.nc'%(prefix,lev[nl],suffix)
+        files = '/home/users/qd201969/ERA5-1HR-lev/statistic/%s_%d_1980-2020%s_stat.nc'%(prefix,lev[nl],suffix)
         print(files)
         f = xr.open_dataset(files)
         var = f[draw_var[draw[nv]]].sel(long=ilon,lat=ilat).load()

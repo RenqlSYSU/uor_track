@@ -43,13 +43,13 @@ def main_run():
     #varname = 'th';dvar=varname;scale=1;unit='K';cnlev=np.arange(215,295.1,5)
     #varname = 'dthdy';dvar=varname;scale=-100000;unit='K/100km';cnlev=np.arange(-1.6,1.61,0.2)
     #varname = 'dvdz';dvar=varname;scale=1000;unit='$10^3 s^{-1}$';cnlev=np.arange(0,8.1,0.5)
-    #varname = 'egr';dvar='EGR';scale=1;unit='$day^{-1}$';cnlev=np.arange(0,1.61,0.1)
-    varname = 'eff_egr';dvar='EGR_eff';scale=1;unit='$day^{-1}$';cnlev=np.arange(0,1.61,0.1)
+    varname = 'egr';dvar='EGR';scale=1;unit='$day^{-1}$';cnlev=np.arange(0,1.61,0.1)
+    #varname = 'eff_egr';dvar='EGR_eff';scale=1;unit='$day^{-1}$';cnlev=np.arange(0,1.61,0.1)
     #varname = 'N2';dvar=varname;scale=100000;unit='10$^{-5}$ s$^{-2}$';cnlev=np.arange(1,34,2)
     #varname = 'dtdz';dvar=varname;scale=1000;unit='K/km';cnlev=np.arange(1,9.1,0.5)
     #varname = 'eff_dtdz';dvar=varname;scale=1000;unit='K/km';cnlev=np.arange(1,9.1,0.5)
     #varname = 'dtdz_moist';dvar=varname;scale=1000;unit='K/km';cnlev=np.arange(8.5,11.8,0.2)
-    outfile = '%s/month41_%s.nc'%(outdir,varname)
+    outfile = '%s/month41_%s_m.nc'%(outdir,varname)
     calc_monthly_egr(outfile,varname)
     #calc_monthly_n2(outfile,varname)
     #calc_monthly_dtdy(outfile,varname)
@@ -224,6 +224,16 @@ def calc_monthly_egr(outfile,varname):
     nyear = 0
     for year in range(1980,2021,1):
         print('calc for %d'%year)
+        ds = xr.open_dataset("%s/z/ERA5_z_%d.nc"%(path,year))
+        z = ds['z'].sel(level=level,latitude=ilat,longitude=ilon
+            ).groupby(ds.time.dt.month).mean('time').data/ga
+        ds = xr.open_dataset("%s/u/ERA5_u_%d.nc"%(path,year))
+        u = ds['u'].sel(level=level,latitude=ilat,longitude=ilon
+                ).groupby(ds.time.dt.month).mean('time')
+        ds = xr.open_dataset("%s/t/ERA5_t_%d.nc"%(path,year))
+        t = ds['t'].sel(level=level,latitude=ilat,longitude=ilon
+            ).groupby(ds.time.dt.month).mean('time').data
+        
         #ds = xr.open_dataset("%s/z/ERA5_z_%d.nc"%(path,year))
         #z = ds['z'].sel(level=level,latitude=ilat,longitude=ilon
         #    ).groupby(ds.time.dt.dayofyear).mean('time').data/ga
@@ -243,12 +253,12 @@ def calc_monthly_egr(outfile,varname):
         #v = ds['v'].sel(level=level,latitude=ilat,longitude=ilon
         #    ).groupby(ds.time.dt.dayofyear).mean('time').data
         
-        ds = xr.open_dataset("%s/t/ERA5_t_%d.nc"%(path,year))
-        t = ds['t'].sel(level=level,latitude=ilat,longitude=ilon).data
-        ds = xr.open_dataset("%s/z/ERA5_z_%d.nc"%(path,year))
-        z = ds['z'].sel(level=level,latitude=ilat,longitude=ilon).data/ga
-        ds = xr.open_dataset("%s/u/ERA5_u_%d.nc"%(path,year))
-        u = ds['u'].sel(level=level,latitude=ilat,longitude=ilon)
+        #ds = xr.open_dataset("%s/t/ERA5_t_%d.nc"%(path,year))
+        #t = ds['t'].sel(level=level,latitude=ilat,longitude=ilon).data
+        #ds = xr.open_dataset("%s/z/ERA5_z_%d.nc"%(path,year))
+        #z = ds['z'].sel(level=level,latitude=ilat,longitude=ilon).data/ga
+        #ds = xr.open_dataset("%s/u/ERA5_u_%d.nc"%(path,year))
+        #u = ds['u'].sel(level=level,latitude=ilat,longitude=ilon)
         #ds = xr.open_dataset("%s/v/ERA5_v_%d.nc"%(path,year))
         #v = ds['v'].sel(level=level,latitude=ilat,longitude=ilon)
         del ds
@@ -259,8 +269,8 @@ def calc_monthly_egr(outfile,varname):
             u.data = dynamic_calc.calc_eff_egr(t, z, u.data, f0, level, w)
             #u.data = dynamic_calc.calc_eff_egr(t, z, u.data, f0, level, w, v)
         else:
-            u.data = dynamic_calc.calc_egr(t, z, u.data, f0, level, v)
-        u = u.groupby(u.time.dt.month).mean('time')
+            u.data = dynamic_calc.calc_egr(t, z, u.data, f0, level)
+        #u = u.groupby(u.time.dt.month).mean('time')
         var.data = var.data + u.data 
         nyear = nyear + 1
  

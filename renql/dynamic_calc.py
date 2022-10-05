@@ -63,17 +63,17 @@ def calc_dthdz_moist(t,z,level):
             np.power(1000.0/lev4d,0.286),z)
     return dthdz
 
-def calc_egr(t,z,u,f0,level,v):
+def calc_egr(t,z,u,f0,level):
     t = calc_pot_temp(t, np.array(level), 1)
     brunt = np.sqrt(upward_diff_z(t,z)*ga/t) 
     # negative is nan
 
     brunt = np.ma.array(brunt,mask=(brunt<1e-10))
     f00 = np.broadcast_to(f0.reshape(len(f0), 1), u.shape)
-    #term = 0.3098*np.abs(upward_diff_z(u,z))*f00/brunt
-    dudz = np.sqrt(np.power(upward_diff_z(u, z),2)+
-        np.power(upward_diff_z(v, z),2))
-    term = 0.3098*dudz*f00/brunt
+    term = 0.3098*np.abs(upward_diff_z(u,z))*f00/brunt
+    #dudz = np.sqrt(np.power(upward_diff_z(u, z),2)+
+    #    np.power(upward_diff_z(v, z),2))
+    #term = 0.3098*dudz*f00/brunt
     return term
 
 def calc_teqv(t,q):
@@ -106,11 +106,19 @@ def center_diff_z(var,z):
 def center_diff(var,z,dim):
     varn = np.moveaxis(var,dim,-1)
     term = varn.copy()
-    term[:,:,:,1:-1] = np.divide(varn[:,:,:,0:-2]-varn[:,:,:,2:],
-        z[0:-2]-z[2:])
-    term[:,:,:,0] = np.divide(varn[:,:,:,0]-varn[:,:,:,1],
-        z[0]-z[1])
-    term[:,:,:,-1] = np.divide(varn[:,:,:,-2]-varn[:,:,:,-1],
-        z[-2]-z[-1])
+    if len(term.shape)==4:
+        term[:,:,:,1:-1] = np.divide(varn[:,:,:,0:-2]-varn[:,:,:,2:],
+            z[0:-2]-z[2:])
+        term[:,:,:,0] = np.divide(varn[:,:,:,0]-varn[:,:,:,1],
+            z[0]-z[1])
+        term[:,:,:,-1] = np.divide(varn[:,:,:,-2]-varn[:,:,:,-1],
+            z[-2]-z[-1])
+    if len(term.shape)==3:
+        term[:,:,1:-1] = np.divide(varn[:,:,0:-2]-varn[:,:,2:],
+            z[0:-2]-z[2:])
+        term[:,:,0] = np.divide(varn[:,:,0]-varn[:,:,1],
+            z[0]-z[1])
+        term[:,:,-1] = np.divide(varn[:,:,-2]-varn[:,:,-1],
+            z[-2]-z[-1])
     return np.moveaxis(term,-1,dim)
 

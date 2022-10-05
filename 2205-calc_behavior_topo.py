@@ -38,14 +38,14 @@ lev  = [850,500,250]
 path = '/home/users/qd201969/ERA5-1HR-lev'
 outdir = "/home/users/qd201969/uor_track/mdata"
 figdir = "/home/users/qd201969/uor_track/fig"
-prefix = 'fftadd'
+prefix = 'ff'
 radiu = 6
 behv = ["%dtotal"%radiu,"%dlocal"%radiu,"%doutside"%radiu]
 
 def main_run():
     thre = 1500
     varname = ['lifetime','distance','max vor','mean vor']
-    for nint in [2,3]:
+    for nint in [0,2]:
         draw_seasonal_box_1x2(varname[nint],nint)
     '''
     if not os.path.isfile('%s/tp_loca_%d.txt'%(outdir,thre)):

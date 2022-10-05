@@ -16,7 +16,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeat
 from cartopy.io.shapereader import Reader
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import cmaps
+import cmaps, regionmask
+import geopandas as gpd
 
 title_font=18
 label_font=14
@@ -27,35 +28,68 @@ font = {'family': 'sans-serif',
         'color':  'black',
         }
 
-indir = ['/home/metctm1/cmip-wrfltm-arch/era5',
+indir = ['/home/metctm1/array_hq133/data/drv_fld/era5',
          '/home/metctm1/array_hq133/data/s2s/wrfonly/clim/',
          '/home/metctm1/array_hq133/data/s2s/wrfroms/clim/aegir_']
 outdir = '/home/lzhenn/cooperate/data/cwrf_s2s'
 figdir = '/home/lzhenn/cooperate/fig'
 case = ['ERA5','WRF','WRFROMS']
-years = range(2011,2021)
+years = range(2011,2021) #[2022,]#
 lats = 15
 latn = 50
-lonl = 110
-lonr = 120
+lonl = 75
+lonr = 137
 ilat = np.arange(lats, latn+0.1, 0.25)
 ilon = np.arange(lonl, lonr+0.1, 0.25)
-ftime  = pd.date_range(start='2021-07-01 00',end='2021-07-31 23',
+ftime  = pd.date_range(start='2021-07-01 00',end='2021-08-05 00',
     freq='1D',closed=None)
 print('%d days'%len(ftime))
 
 def main_run():
     read_era5_grib('t2m','T2','K','sl')
-    for i in range(1,3):
-        calc_wrf_interp('T2','K',3,indir[i],case[i])
-    draw_clim_tcc('T2','T2m',np.arange(16,33,1),np.arange(-2.4,2.41,0.3))
+    #for i in range(1,3):
+    #    calc_wrf_interp('T2','K',3,indir[i],case[i])
+    #draw_clim_tcc('T2','T2m',np.arange(16,33,1),np.arange(-2.4,2.41,0.3))
+    #test_regionmask('T2','T2m')
 
+def test_regionmask(varname,drawvar):
+    var = [] 
+    for ca in range(len(case)):
+        if len(years)==1:
+            ds = xr.open_dataset('%s/%s-%s_daily_%d.nc'%(outdir,case[ca],varname,years[0]))
+        else:
+            ds = xr.open_dataset('%s/%s-%s_daily_clim.nc'%(outdir,case[ca],varname))
+        var.append(ds[varname].sel(time=ftime,lat=ilat,lon=ilon))
+    # choose china grid
+    #shf = '/disk/r074/lzhenn/tracacode/2205-PPOL-COOP/data/gadm36_CHN_0.shp'
+    shf = '/home/metctm1/array/tracacode/UTILITY-2016/shp/cnmap/gadm36_CHN_1.shp'
+    mask = regionmask.mask_geopandas(gpd.read_file(shf),var[0])
+    var = [x.where(mask==5).mean(('lat','lon'))-273.15 for x in var]
+
+    fig = plt.figure(figsize=(12,6),dpi=150)
+    axe = fig.subplots(1,1)
+    axe.set_title('Guangdong %s 2016'%drawvar,fontsize=title_font,fontdict=font)
+    for nr in range(len(var)):
+        axe.plot(ftime, var[nr], linewidth=2)
+    
+    axe.set_xlabel('',fontsize=label_font,fontdict=font)
+    axe.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    plt.setp(axe.get_xticklabels(), rotation=15, ha="right")
+    
+    axe.set_ylabel('',fontsize=label_font,fontdict=font)
+    
+    axe.grid(True, which="both", color='grey', linestyle='--', linewidth=1)
+    axe.legend(case)
+    
+    plt.savefig('%s/%s_ts.png'%(figdir,varname), 
+        bbox_inches='tight',pad_inches=0.01)
+    
 def draw_clim_tcc(varname,drawvar,cnlev1,cnlev2):
     var = [] 
     for ca in range(len(case)):
         ds = xr.open_dataset('%s/%s-%s_daily_clim.nc'%(outdir,case[ca],varname))
-        var.append(ds[varname].sel(time=ftime,lat=ilat).data-273.15)
-
+        var.append(ds[varname].sel(time=ftime,lat=ilat,lon=ilon).data-273.15)
+'''
     draw_3plot([var[1]-var[0],var[2]-var[0],var[2]-var[1]], 
         ['diff WRF-ERA5','diff WRFROMS-ERA5','diff WRFROMS-WRF'], 
         cnlev2, cmaps.BlueDarkRed18, '%s/cwrf_%s_diff.png'%(figdir,varname))
@@ -64,6 +98,7 @@ def draw_clim_tcc(varname,drawvar,cnlev1,cnlev2):
         np.arange(-0.8,0.81,0.1), cmaps.BlueDarkRed18, '%s/cwrf_%s_diff2.png'%(figdir,varname))
     draw_3plot(var, ['%s %s'%(drawvar,nc) for nc in case],cnlev1, 
         cmaps.precip2_17lev, '%s/cwrf_%s_clim.png'%(figdir,varname))
+'''
 
 def draw_3plot(var,figtitle,cnlevels,fcolors,figfile):
     lat_sp = 10
@@ -94,7 +129,10 @@ def draw_3plot(var,figtitle,cnlevels,fcolors,figfile):
     plt.savefig(figfile, bbox_inches='tight',pad_inches=0.01)
     
 def read_era5_grib(varname,new_var,unit,suffix):
-    outfile = '%s/ERA5-%s_daily_clim.nc'%(outdir,new_var)
+    if len(years)==1:
+        outfile = '%s/ERA5-%s_daily_%d.nc'%(outdir,new_var,years[0])
+    else:
+        outfile = '%s/ERA5-%s_daily_clim.nc'%(outdir,new_var)
     if os.path.exists(outfile):
         print('%s exists'%outfile)
         return
@@ -110,23 +148,27 @@ def read_era5_grib(varname,new_var,unit,suffix):
         for itm in range(len(fn_list)):
             print(fn_list[itm])
             ds = xr.open_dataset(fn_list[itm],engine='cfgrib',backend_kwargs={
-                'filter_by_keys': {'typeOfLevel': 'surface'}})
-            term.append(ds[varname].sel(
-                longitude=ilon).mean(('time','longitude')).data.tolist())
-        if year==2011:
+                'filter_by_keys': {'typeOfLevel': 'surface'},'indexpath':''})
+            term.append(ds[varname].mean('time').data.tolist())
+            #term.append(ds[varname].sel(
+            #    longitude=ilon).mean(('time','longitude')).data.tolist())
+        if year == years[0]:
             var = np.array(term)
             print('var shape %s'%(str(var.shape)))
         else:
             var = var + np.array(term)
     print('var shape %s'%(str(var.shape)))
-    da = xr.DataArray(np.divide(var.data,len(years)),coords=[ftime,ds.latitude],
-        dims=['time','lat'])
+    da = xr.DataArray(np.divide(var.data,len(years)),coords=[ftime,
+        ds.latitude,ds.longitude], dims=['time','lat','lon'])
     da.attrs['units']=unit
     ds = da.to_dataset(name=new_var)
     ds.to_netcdf(outfile,"w")
 
 def calc_wrf_interp(varname,unit,dh,path,casename):
-    outfile = '%s/%s-%s_daily_clim.nc'%(outdir,casename,varname)
+    if len(years)==1:
+        outfile = '%s/%s-%s_daily_%d.nc'%(outdir,casename,varname,years[0])
+    else:
+        outfile = '%s/%s-%s_daily_clim.nc'%(outdir,casename,varname)
     if os.path.exists(outfile):
         print('%s exists'%outfile)
         return
@@ -144,7 +186,7 @@ def calc_wrf_interp(varname,unit,dh,path,casename):
         
         z = wrf.getvar(wrf_list, varname, timeidx=wrf.ALL_TIMES, 
             method='cat')
-        if year == 2011:
+        if year == years[0]:
             term = z.groupby(z.Time.dt.dayofyear).mean('Time')
             xlat = wrf.getvar(wrf_list[0],'XLAT')
             xlon = wrf.getvar(wrf_list[0],'XLONG')
@@ -163,8 +205,8 @@ def calc_wrf_interp(varname,unit,dh,path,casename):
         vectorize=True, dask="parallelized",output_dtypes=['float64'],)
     print(var)
                         
-    da = xr.DataArray(var.data.mean(axis=2),
-        coords=[ftime,ilat],dims=['time','lat'])
+    da = xr.DataArray(var.data,
+        coords=[ftime,ilat,ilon],dims=['time','lat','lon'])
     da.attrs['units'] = unit
     ds = da.to_dataset(name=varname)
     ds.to_netcdf(outfile,"w")

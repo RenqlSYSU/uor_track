@@ -1,12 +1,3 @@
-'''
-read Whole_HK_DTM_5m.asc, 
-Interpolate to a resolution of 100m
-calculate latitude and longitude,
-convert to nc file
-
-20211011
-'''
-
 import xarray as xr
 import pandas as pd
 import numpy as np

@@ -25,18 +25,17 @@ font = {'family': 'sans-serif',
 
 lev = [850,500,250]
 prefix = "ff"
-#suffix = '_local'#,'_total']
-suffix = ''#'_outside'#,'_local'#,'_total']
+suffix = ''#'_6local'#,'_total']'_6outside'#,
 titls= ['DJF','MAM','JJA','SON']
 figdir = '/home/users/qd201969/uor_track/fig'
 path = '/home/users/qd201969/ERA5-1HR-lev/statistic'
 uwndpath = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_mon/ERA5_mon_u_1979-2020.nc'
-if suffix == '_local':
+if suffix == '_6local':
     lonl=50  #0  #
     lonr=150#360#
     lats=15 #20 #
     latn=55 #90 #
-if suffix == '_outside':
+if suffix == '_6outside':
     lonl=20  #0  #
     lonr=140#360#
     lats=15 #20 #
@@ -77,12 +76,12 @@ def main_run():
     draw_shad_cont_seasonal_4x3(suffix,'mstr',np.arange(0,14,1),'Intensity',
             'tden',cnlev2,'Track','lden',cnlev1,'U200',True,[8.5,60])
     '''
-    cnlev1 = np.hstack((np.arange(1,4,1),np.arange(7,20,3)))
-    cnlev2 = np.hstack((np.arange(1,8.5,2.5),np.arange(13.5,50,5)))
-    draw_shad_cont_3x1(suffix,'msp',np.arange(15,71,4),'Speed',
-            'gden',cnlev1,'Genesis','lden',cnlev1,'Lysis',False,[4,60])
-    draw_shad_cont_3x1(suffix,'mstr',np.arange(0,11.2,0.8),'Intensity',
-            'tden',cnlev2,'Track','lden',cnlev1,'U200',True,[8.5,60])
+    cnlev1 = np.hstack((np.arange(2,5,1),np.arange(7,20,3)))
+    cnlev2 = np.hstack((np.arange(5,20,5),np.arange(26,80,6)))
+    #draw_shad_cont_seasonal_4x3(suffix,'gden',np.arange(0,7,0.5),'Genesis',
+    #        'tden',cnlev2,'Track','lden',cnlev1,'U200',True,[20,80])
+    draw_shad_cont_seasonal_4x3(suffix,'tden',np.arange(0,42,3),'Track',
+            'gden',cnlev1,'Gensis','lden',cnlev1,'U200',True,[5,80])
 
 def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
     varname1,cnlev1,label1,varname2,cnlev2,label2,jetoption,dash):
@@ -94,8 +93,13 @@ def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
     fig = plt.figure(figsize=(12,12),dpi=300)
     ax = fig.subplots(nrow, ncol, subplot_kw=dict(
         projection=ccrs.PlateCarree(central_longitude=180.0))) #sharex=True, sharey=True
-
-    ncmap = colors.ListedColormap(cmaps.topo_15lev(range(0,16,1))[::-1])
+    
+    colr = cmaps.topo_15lev(range(0,16,1))[::-1]
+    print(colr)
+    colr[8,:] = colors.to_rgba('y')
+    #colr[8:13,:] = colr[9:14,:]
+    colr[7,:] = colors.to_rgba('c')
+    ncmap = colors.ListedColormap(colr)
     norm = colors.BoundaryNorm(boundaries=cnlev,
         ncolors=ncmap.N,extend='both')
     

@@ -79,23 +79,25 @@ def calc_season_cyclone(filname):
             num = int(term1[-1])
             
             ct1=[]
+            data=[]
             for nl in range(0,num,1):
                 line = ff.readline()
-                data = list(map(float,line.strip().split(" ")))
-                ct1.append(start+timedelta(hours=int(data[0])))
+                data.append(list(map(float,line.strip().split(" "))))
+                ct1.append(start+timedelta(hours=int(data[-1][0])))
 
             signal=-10
-            dist = np.square(data[2]-loca[:,0])+np.square(data[1]-loca[:,1]) 
-            if dist.min()<radiu2*radiu2:
-                signal = 0 # lysis
-            else:
-                signal = 1 # moveout
-                
-            if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
-                if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
-                    var[signal,mon2sea(ct1[0].month)] += 1
+            if data[-1][1] > data[0][1]:
+                dist = np.square(data[-1][2]-loca[:,0])+np.square(data[-1][1]-loca[:,1]) 
+                if dist.min()<radiu2*radiu2:
+                    signal = 0 # lysis
                 else:
-                    var[signal,mon2sea(ct1[-1].month)] += 1
+                    signal = 1 # moveout
+                    
+                if sum(i.year==1996 for i in ct1)/len(ct1) >= 0.5 : 
+                    if sum(i.month==ct1[0].month for i in ct1)/len(ct1) >= 0.5 : 
+                        var[signal,mon2sea(ct1[0].month)] += 1
+                    else:
+                        var[signal,mon2sea(ct1[-1].month)] += 1
         line = ff.readline()
     ff.close()
     return var 

@@ -40,10 +40,30 @@ ga = 9.80665 # Gravitational acceleration
 a  = 6378388 # the radius of earth, m
 
 def main_run():
-    varname = '2m_th';dvar=varname;scale=1;unit='K';cnlev=np.arange(245,325.1,5)
+    #varname = '2m_th';dvar=varname;scale=1;unit='K';cnlev=np.arange(245,325.1,5)
+    varname = 'd2mthdy';dvar=varname;scale=-100000;unit='K/100km';cnlev=np.arange(-1.6,1.61,0.2)
     outfile = '%s/month41_%s.nc'%(outdir,varname)
     #calc_monthly_surface(outfile,varname)
-    draw_season_4x3(outfile,varname,scale,unit,cnlev,dvar)
+    calc_monthly_dtdy(outfile,varname)
+    draw_season_4x1(outfile,varname,scale,unit,cnlev,dvar)
+
+def calc_monthly_dtdy(outfile,varname):
+    if os.path.exists(outfile):
+        print('%s exists'%outfile)
+        return
+    else:
+        print('handle %s'%outfile)
+
+    ds = xr.open_dataset('%s/month41_2m_th.nc'%outdir)
+    var = ds['2m_th']
+    del ds
+    gc.collect()
+    
+    var.data = dynamic_calc.center_diff(var.data, 
+            ilat*np.pi/180.0, 1)/a
+    print(var)
+    ds1 = var.to_dataset(name=varname)
+    ds1.to_netcdf(outfile,'w')
 
 def calc_monthly_surface(outfile,varname):
     if os.path.exists(outfile):
@@ -65,7 +85,7 @@ def calc_monthly_surface(outfile,varname):
     ds1 = var.to_dataset(name=varname)
     ds1.to_netcdf(outfile,'w')
 
-def draw_season_4x3(outfile,varname,scal,unit,cnlev,dvar):
+def draw_season_4x1(outfile,varname,scal,unit,cnlev,dvar):
     titls= ['DJF','MAM','JJA','SON']
     
     ds = xr.open_dataset(outfile)
@@ -129,7 +149,7 @@ def draw_season_4x3(outfile,varname,scal,unit,cnlev,dvar):
             axe.set_xticks(np.arange(lonl,lonr,lon_sp), crs=ccrs.PlateCarree())
             axe.xaxis.set_major_formatter(LongitudeFormatter(degree_symbol=''))
 
-    position = fig.add_axes([0.7, bmlo+0.05, 0.01, 1-bmlo-0.1]) #left, bottom, width, height
+    position = fig.add_axes([0.65, bmlo+0.05, 0.01, 1-bmlo-0.1]) #left, bottom, width, height
     cb = plt.colorbar(cont, cax=position ,orientation='vertical')#, shrink=.9)
     plt.tight_layout(w_pad=0.1,rect=(0,bmlo,1,1))
     plt.savefig('%s/seasonal_%s.png'%(figdir,varname), bbox_inches='tight',pad_inches=0.01)

@@ -15,7 +15,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeat
 from cartopy.io.shapereader import Reader
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import cmaps
+import cmaps, regionmask
+import geopandas as gpd
 
 title_font=18
 label_font=14
@@ -42,15 +43,18 @@ ilon = np.arange(lonl, lonr+0.1, 0.25)
 def main_run():
     #for year in range(2011,2021):
     #    read_era5_grib(year,'t2m','T2','K','sl')
+    #    read_era5_grib(year,'skt','TSK','K','sl')
     #    read_era5_grib(year,'z','500z','m2*s-2','pl')
         #read_era5_grib(year,'u','200u','m/s','pl')
     #    for i in range(1,3):
             #calc_wrf_interp(year,'T2',3,indir[i],case[i])
+    #        calc_wrf_interp(year,'TSK',3,indir[i],case[i])
             #calc_wrf_interp(year,'500z',3,indir[i],case[i])
      #       calc_wrf_interp(year,'200u',3,indir[i],case[i])
      #       calc_wrf_interp_rainfall(year,'tp',744,indir[i],case[i])
-    draw_clim_tcc('T2','T2m',np.arange(0,34,2),np.arange(-4,4.1,0.5))
-    #draw_clim_tcc('500z','500hPa z',np.arange(5740,5910,10),np.arange(-0.8,0.81,0.1))
+    #draw_clim_tcc('TSK','TSK',np.arange(0,34,2),np.arange(-4,4.1,0.5))
+    #draw_clim_tcc('T2','T2m',np.arange(0,34,2),np.arange(-4,4.1,0.5))
+    draw_clim_tcc('500z','500hPa z',np.arange(5740,5910,10),np.arange(-8,8.1,1))
     #draw_clim_tcc('200u','200hPa U',np.arange(-4,30,2),np.arange(-4,4.1,0.5))
     #draw_clim_tcc('tp','Tp(mm/day)',np.arange(0,34,2),np.arange(-8,8.1,1))
 
@@ -65,17 +69,29 @@ def draw_clim_tcc(varname,drawvar,cnlev1,cnlev2):
             var[0].data = var[0].data*31
         else:
             var.append(ds[varname].sel(lat=ilat,lon=ilon).load())
-        var[ca].data = np.nan_to_num(var[ca].data, nan=0)
+        #var[ca].data = np.nan_to_num(var[ca].data, nan=0)
         #var.append(ds[varname].sel(lat=ilat,lon=ilon).data.mean(axis=0)-273.15)
+    ''' 
+    region = regionmask.defined_regions.natural_earth_v5_0_0.countries_110
+    mask = region.mask(var[0]).data
+    var = [x.where(mask==139) for x in var]
+    '''
+    #shf = '/disk/r074/lzhenn/tracacode/2205-PPOL-COOP/data/gadm36_CHN_0.shp'
+    shf = '/home/metctm1/array/tracacode/UTILITY-2016/shp/cnmap/gadm36_CHN_1.shp'
+    mask = regionmask.mask_geopandas(gpd.read_file(shf),var[0])
+    var = [x.where(mask==5) for x in var]
+    print(mask)
+    print(var[0])
+
     if varname == 'tp':
         term1 = var[0].data
         var[0] = var[1].copy()
         var[0].data = term1
     if varname in ['500z','200u']:
-        #var[0].data = var[0].data/9.8
-        var[1].data = var[1].data*9.8
-        var[2].data = var[2].data*9.8
-
+        var[0] = var[0]/9.8#.data
+        var[1] = var[1]*9.8#.data
+        var[2] = var[2]*9.8#.data
+    '''
     term = []
     term.append(xr.apply_ufunc(calc_corr,var[0],var[1],
         input_core_dims=[['time'],['time']],
@@ -90,21 +106,21 @@ def draw_clim_tcc(varname,drawvar,cnlev1,cnlev2):
         np.concatenate((np.arange(-0.95,-0.56,0.05),np.array([0]),np.arange(0.6,0.96,0.05))), 
         cmaps.BlueDarkRed18, '%s/cwrf_%s_corr.png'%(figdir,varname))
     del term
-   
+    '''
     if varname == 'tp':
         var = [x.data.mean(axis=0)*1000/31.0 for x in var]
-    elif varname == 'T2':
+    elif varname in ['T2','TSK']:
         var = [x.data.mean(axis=0)-273.15 for x in var]
     else:
-        var = [x.data.mean(axis=0) for x in var]
+        var = [x.mean(axis=0) for x in var]
 
-    draw_3plot([var[1]-var[0],var[2]-var[0],var[2]-var[1]], 
-        ['diff WRF-ERA5','diff WRFROMS-ERA5','diff WRFROMS-WRF'], 
-        cnlev2, cmaps.BlueDarkRed18, '%s/cwrf_%s_diff.png'%(figdir,varname))
-    draw_3plot([var[1]-var[0],var[2]-var[0],var[2]-var[1]], 
-        ['diff WRF-ERA5','diff WRFROMS-ERA5','diff WRFROMS-WRF'], 
-        np.arange(-0.8,0.81,0.1), cmaps.BlueDarkRed18, '%s/cwrf_%s_diff2.png'%(figdir,varname))
-    
+#    draw_3plot([var[1]-var[0],var[2]-var[0],var[2]-var[1]], 
+#        ['diff WRF-ERA5','diff WRFROMS-ERA5','diff WRFROMS-WRF'], 
+#        cnlev2, cmaps.BlueDarkRed18, '%s/cwrf_%s_diff.png'%(figdir,varname))
+#    draw_3plot([var[1]-var[0],var[2]-var[0],var[2]-var[1]], 
+#        ['diff WRF-ERA5','diff WRFROMS-ERA5','diff WRFROMS-WRF'], 
+#        np.arange(-0.8,0.81,0.1), cmaps.BlueDarkRed18, '%s/cwrf_%s_diff2.png'%(figdir,varname))
+#    
     draw_3plot(var, ['%s %s'%(drawvar,nc) for nc in case],cnlev1, 
         cmaps.precip2_17lev, '%s/cwrf_%s_clim.png'%(figdir,varname))
 
@@ -160,7 +176,7 @@ def read_era5_grib(year,varname,new_var,unit,suffix):
     
     for itm in fn_list:
         print(itm)
-        if new_var == 'T2':
+        if new_var in ['T2','TSK']:
             ds = xr.open_dataset(itm,engine='cfgrib',backend_kwargs={
                 'filter_by_keys': {'typeOfLevel': 'surface'}})
             var = var + ds[varname].data.tolist()
@@ -196,7 +212,7 @@ def calc_wrf_interp(year,varname,dh,path,casename):
     print('%d total file %d; opened file %d'%(year, 
         len(fn_list),len(wrf_list)))
     
-    if varname == 'T2':
+    if varname in ['T2','TSK']:
         term = wrf.getvar(wrf_list, varname, timeidx=wrf.ALL_TIMES, 
             method='cat').mean('Time').data
         unit = 'k'
