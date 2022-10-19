@@ -18,6 +18,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeat
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cmaps
+from renql import dynamic_calc
 
 lonl=0  #0  #
 lonr=150#360#
@@ -39,20 +40,17 @@ varname = ['z']
 drawvar = ['z']
 unit    = ['m']
 vcref =[10,20,30] # different levels 
-cnlvl =[[1300 ,20 ],
-        [5050 ,60 ],
-        [9300 ,100]]
+cnlvl =3*[[-4,0.5]]
+#cnlvl =[[1300 ,20 ],
+#        [5050 ,60 ],
+#        [9300 ,100]]
 q_mis=15
-dbox = 1
-flats = 30 #int(sys.argv[2])
-flatn = 45 #int(sys.argv[3])
-flonl = 60 #int(sys.argv[4])
-flonr = 90 #int(sys.argv[5])
 figdir = "/home/users/qd201969/uor_track/fig/"
+path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_mon'
 
-f = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_z_1979-2020.nc')
-lat = f.latitude
-lon = f.longitude
+f = xr.open_dataset('%s/ERA5_mon_z_1979-2020.nc'%path)
+lat = f.latitude.data
+lon = f.longitude.data
 ilon = lon[(lon>=lonl) & (lon<=lonr)]
 ilat = lat[(lat>=lats) & (lat<=latn)]
 
@@ -61,21 +59,22 @@ phis = ds['PHIS'].sel(lon=ilon,lat=ilat,method="nearest").load()
 phis = phis/9.8 # transfer from m2/s2 to m
 
 for nl in range(0,len(lev),1):
-    da = f['z'].sel(level=lev[nl],longitude=ilon,latitude=ilat,method="nearest").load()
-    var = da.groupby(da.time.dt.month).mean('time')
-    var.data = var.data/9.8
-    print(var)
+    #da = f['z'].sel(level=lev[nl],longitude=ilon,latitude=ilat,method="nearest").load()
+    #var = da.groupby(da.time.dt.month).mean('time')
+    #var.data = var.data/9.8
+    #print(var)
 
-    ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_u_1979-2020.nc')
+    ds = xr.open_dataset('%s/ERA5_mon_u_1979-2020.nc'%path)
     da = ds['u'].sel(level=lev[nl],longitude=ilon,latitude=ilat,method="nearest").load()
-    uwnd = da.groupby(da.time.dt.month).mean('time')
+    uwnd = da.groupby(da.time.dt.month).mean('time').data
 
-    ds = xr.open_dataset('/home/users/qd201969/data/ERA5_mon_v_1979-2020.nc')
+    ds = xr.open_dataset('%s/ERA5_mon_v_1979-2020.nc'%path)
     da = ds['v'].sel(level=lev[nl],longitude=ilon,latitude=ilat,method="nearest").load()
-    vwnd = da.groupby(da.time.dt.month).mean('time')
+    vwnd = da.groupby(da.time.dt.month).mean('time').data
     del ds, da
     gc.collect()
-
+    
+    var = dynamic_calc.calc_uv2vr_cfd(uwnd,vwnd,ilat,ilon) 
     #speed = np.power((np.power(uwnd.data,2)+np.power(vwnd.data,2)),0.5)
     #vcref = int(np.percentile(speed,50))
     #maxlvl = int(np.percentile(var.data,80))
@@ -90,7 +89,7 @@ for nl in range(0,len(lev),1):
     cnlevels = np.arange(cnlvl[nl][0], cnlvl[nl][0]+cnlvl[nl][1]*(fcolors.N-1), cnlvl[nl][1])
     norm = colors.BoundaryNorm(boundaries=cnlevels, ncolors=fcolors.N,extend='both')
 
-    fig = plt.figure(figsize=(12,12),dpi=300)
+    fig = plt.figure(figsize=(12,12),dpi=100)
     ax = fig.subplots(nrow, ncol, subplot_kw=dict(projection=ccrs.PlateCarree())) #sharex=True, sharey=True
     nm = -1
     for nr in range(0,nrow,1):
@@ -102,6 +101,7 @@ for nl in range(0,len(lev),1):
             #axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],edgecolor='k'), linewidth=0.8, zorder=2)
             axe.set_title(str(lev[nl])+" "+titls[nm],fontsize=SMFONT)
 
+            print('min:%f ; max:%f'%(np.nanmin(var[nm,:,:]),np.nanmax(var[nm,:,:])))
             shad = axe.contourf(ilon, ilat, var[nm,:,:], cnlevels,
                          transform=ccrs.PlateCarree(),cmap=fcolors,extend='both',norm=norm)
             
@@ -109,15 +109,11 @@ for nl in range(0,len(lev),1):
                     pivot='mid',units='inches',scale=vcref[nl]*3,scale_units='inches',color="dimgray",
                     width=0.02,headwidth=3,headlength=4.5,transform=ccrs.PlateCarree())
 
-            cont = axe.contour(ilon, ilat, var[nm,:,:], np.arange(1000,15000,cnlvl[nl][1]), 
-                         transform=ccrs.PlateCarree(), colors='darkviolet', linewidths=2)
+            #cont = axe.contour(ilon, ilat, var[nm,:,:], np.arange(1000,15000,cnlvl[nl][1]), 
+            #             transform=ccrs.PlateCarree(), colors='darkviolet', linewidths=2)
 
             topo = axe.contour(ilon, ilat, phis, [1500,3000],
                          transform=ccrs.PlateCarree(),colors='black',linewidths=1.2)
-
-            if dbox >= 1 :
-                axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                         linewidth=2, color='black', transform=ccrs.PlateCarree()) # filter box
 
             if nc == 0:
                 axe.set_yticks(np.arange(lats,latn,lat_sp), crs=ccrs.PlateCarree())

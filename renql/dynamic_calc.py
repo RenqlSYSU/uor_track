@@ -6,6 +6,17 @@ Cpd= 1005.7 # J/(K*kg)
 Rd = 287.05 # J/(K*kg)
 epsl = 0.622 # Mv/Md
 
+def calc_uv2vr_cfd(u,v,lat,lon):
+    # u,v 4 deminsion; lat,lon 1 dimension
+    # dv/dx-du/dy
+    lat1 = lat*np.pi/180.0
+    lon1 = lon*np.pi/180.0
+    coslat = np.broadcast_to(np.cos(lat1).reshape(
+        1,len(lat1),1), u.shape)
+    term = 1.0/(a*coslat)*(center_diff(v,lon1,2)-
+        center_diff(u*coslat,lat1,1))
+    return term*100000
+
 def calc_n2(t,z,level,varname,nmask):
     if varname == 'N2':
         term = calc_pot_temp(t, np.array(level), 1)

@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 import cdsapi
 
-varname = ['u_component_of_wind','v_component_of_wind']
-filname = ['u','v']
+varname = ['u_component_of_wind','v_component_of_wind','vorticity',
+    'potential_vorticity','vertical_velocity','specific_humidity',]
+filname = ['u','v','vr','pv','omega','q']
 path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_mon'
 
 c = cdsapi.Client()
 
 def main_run():
-    #for nv in range(0,len(varname),1):
-    down_single_level('2m_temperature','t2')    
+    for nv in range(3,len(varname),1):
+        down_pressure_level(varname[nv],filname[nv])
+    #down_single_level('2m_temperature','t2')    
+    #down_pressure_level('vorticity','vr')
 
 def down_single_level(var,filvar):
     c.retrieve(
