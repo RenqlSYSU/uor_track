@@ -27,6 +27,7 @@ lev = [850,500,250]
 prefix = "ff"
 suffix = ''#'_6local'#,'_total']'_6outside'#,
 titls= ['DJF','MAM','JJA','SON']
+numod= [chr(i) for i in range(97,115)]
 figdir = '/home/users/qd201969/uor_track/fig'
 path = '/home/users/qd201969/ERA5-1HR-lev/statistic'
 uwndpath = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_mon/ERA5_mon_u_1979-2020.nc'
@@ -126,7 +127,7 @@ def draw_shad_cont_seasonal_4x3(suffix,varname,cnlev,label,
             axe = ax[nm][nl]
             axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],
                 edgecolor='k'), linewidth=0.8, zorder=1)
-            axe.set_title("%dhPa %s %s"%(lev[nl],titls[nm],
+            axe.set_title("(%s) %dhPa %s %s"%(numod[3*nm+nl],lev[nl],titls[nm],
                 suffix.strip('_')),fontsize=title_font,fontdict=font)
 
             cont = axe.contourf(ilon, ilat, shad, cnlev, 
@@ -198,7 +199,7 @@ def draw_shad_cont_3x1(suffix,varname,cnlev,label,
         axe = ax[nr]
         axe.add_feature(cfeat.GSHHSFeature(levels=[1,2],
             edgecolor='k'), linewidth=0.8, zorder=1)
-        axe.set_title("%dhPa %s"%(lev[nr],label
+        axe.set_title("(%s) %dhPa %s"%(numod[nr],lev[nr],label
             ),fontsize=title_font,fontdict=font)
 
         cont = axe.contourf(ilon, ilat, shad, cnlev, 

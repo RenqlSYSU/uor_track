@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 import cdsapi, os
 
-varname = ['u_component_of_wind','temperature','geopotential',
-    'v_component_of_wind','specific_humidity','vertical_velocity']
-filname = ['u','t','z','v','q','w']
-#path = '/work/scratch-pw2/renql/ERA5_hourly/'
-path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_subdaily/'
+varname = ['u_component_of_wind','v_component_of_wind','temperature','geopotential',
+    'specific_humidity','vertical_velocity']
+filname = ['u','v','t','z','q','w']
+path = '/work/scratch-pw2/renql/ERA5_hourly/'
+#path = '/gws/nopw/j04/ncas_generic/users/renql/ERA5_subdaily/'
 
 c = cdsapi.Client()
 
-for nv in range(5,len(varname),1):
+#for nv in range(5,len(varname),1):
+for nv in range(0,2,1):
     if not os.path.exists(path+filname[nv]):
         os.makedirs(path+filname[nv])
 
@@ -31,8 +32,8 @@ for nv in range(5,len(varname),1):
                     '550', '825', '850',
                     '875',
                 ],
-                'grid': [1,1], #[0.25, 0.25],
-                'area': [75, 10, 10, 150, ],
+                'grid': [0.25, 0.25],#[1,1], #
+                'area': [70, 0, 15, 150, ], #
                 'year': str(year), 
                 'month': [
                     '01', '02', '03',
@@ -54,8 +55,14 @@ for nv in range(5,len(varname),1):
                     '31',
                 ],
                 'time': [
-                    '00:00', '06:00', '12:00',
-                    '18:00',
+                    '00:00', '01:00', '02:00',
+                    '03:00', '04:00', '05:00',
+                    '06:00', '07:00', '08:00',
+                    '09:00', '10:00', '11:00',
+                    '12:00', '13:00', '14:00',
+                    '15:00', '16:00', '17:00',
+                    '18:00', '19:00', '20:00',
+                    '21:00', '22:00', '23:00',
                 ],
                 'format': 'netcdf',
             },
@@ -66,13 +73,7 @@ for nv in range(5,len(varname),1):
                     '250', '500', '850',
                 ],
                 'time': [
-                    '00:00', '01:00', '02:00',
-                    '03:00', '04:00', '05:00',
-                    '06:00', '07:00', '08:00',
-                    '09:00', '10:00', '11:00',
-                    '12:00', '13:00', '14:00',
-                    '15:00', '16:00', '17:00',
-                    '18:00', '19:00', '20:00',
-                    '21:00', '22:00', '23:00',
+                    '00:00', '06:00', '12:00',
+                    '18:00',
                 ],
 '''

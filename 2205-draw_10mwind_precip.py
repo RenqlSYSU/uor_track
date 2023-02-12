@@ -26,33 +26,22 @@ fileout="/home/users/qd201969/uor_track/mdata/"
 figdir = '/home/users/qd201969/uor_track/fig/'
 lev  = [850,500,250]
 dbox = False
-title= {'_local':'local',
-        '_outside':'outside',
-        '_total':'total',
+title= {'_6local':'local',
+        '_6outside':'outside',
+        '_6total':'total',
         '':'All'}
-suffixs = ['_local','_outside','_total','']
-#title= {'_0_2545-60110':'local',
-#        '_5_2545-60110_2_4545-60110':'northern',
-#        '_5_2545-60110_2_2545-6060':'western',
-#        '_2_2545-60110':'passing',
-#        '':'All'}
-#suffixs = ['_0_2545-60110','_5_2545-60110_2_4545-60110',
-#        '_5_2545-60110_2_2545-6060','_2_2545-60110','']
+suffixs = ['_6local','_6outside','']#,'_6total'
 lonl=0  #0  #
 lonr=150#360#
 lats=15  #
 latn=70 #
 lat_sp = 20
 lon_sp = 30 #60 #
-flats = 25  #int(sys.argv[2])
-flatn = 45  #int(sys.argv[3])
-flonl = 60  #int(sys.argv[4])
-flonr = 110 #int(sys.argv[5])
 radiu = 6
-perc = 99
+perc = 95
 
 def main_run():
-    #calc_associated_weather()
+    calc_associated_weather()
     ''' 
     ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
     ilon = ds.longitude
@@ -65,7 +54,6 @@ def main_run():
         draw_seasonal_contour4x3(var,'tp','%s/clim_precip_%drad_lag0'%(fileout,radiu),
             suffixs[ns],[2,104,6],'preci (%)',
             '%s/precip%s_contri_4x3.jpg'%(figdir,suffixs[ns]),ilon,ilat)
-    ''' 
     
     ds = xr.open_dataset("%s/clim_max%dprecip_event.nc"%(fileout,perc))
     ilon = ds.longitude
@@ -92,20 +80,22 @@ def main_run():
             '%s/%.1fmax10mwind%s_contri_4x3.jpg'%(figdir,perc,suffixs[ns]),ilon,ilat)
     draw_annual_contour3x2([2,104,6],'percent',
         '%s/max%dprecip_10mwind_contri_3x2.jpg'%(figdir,perc),ilon,ilat)
+    ''' 
 
 def calc_associated_weather():
-    for suffix in suffixs[0:2]: 
+    for suffix in suffixs: 
         com = "python ~/uor_track/2203-calc_maximum10mwind2.py %s %d %d"\
                 %(suffix,radiu,perc)
         print(com)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
-        
+        '''
         com = "python ~/uor_track/2203-calc_clim_precip_mpool.py %s %d %d"\
                 %(suffix,radiu,perc)
         print(com)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
+        '''
 
 def draw_annual_contour3x2(cnlev,cblabel,figdir,ilon,ilat):
     nrow = 3 #6 #

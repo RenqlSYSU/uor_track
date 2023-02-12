@@ -13,27 +13,14 @@ import cartopy.feature as cfeat
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cmaps
 
-flats = 25  #int(sys.argv[2])
-flatn = 45  #int(sys.argv[3])
-flonl = 60  #int(sys.argv[4])
-flonr = 105 #int(sys.argv[5])
-prefix = "fftadd"
-#suffix = '_0_2545-60110'
-#suffix = '_5_2545-60110_2_4545-60110'
-#suffix = '_5_2545-60110_2_2545-6060'
-#suffix = ''
 suffix = sys.argv[1] 
 radiu = int(sys.argv[2])
-perc = float(sys.argv[3])
+perc = int(sys.argv[3])
+prefix = "fftadd"
 title= {'_local':'local',
         '_outside':'outside',
         '_total':'total',
         '':'All'}
-#title= {'_0_2545-60110':'local',
-#        '_5_2545-60110_2_4545-60110':'northern',
-#        '_5_2545-60110_2_2545-6060':'western',
-#        '_2_2545-60110':'passing',
-#        '':'All'}
 behv = ["ALL" ,"PAS" ,"NTP" ,"STP" ,"NTL" ,"STL" ,"LYS" ]#,"DIF"]
 
 fileout="/home/users/qd201969/uor_track/mdata/"
@@ -49,21 +36,24 @@ latn=70 #
 
 def main_run():
     lag = 0
-    #max10mwind_threshold(perc)
-    ds = xr.open_dataset("%smax10mwind_%.1fthreshold_month.nc"%(fileout,perc))
+    outfile='%s/dailymax10mwind_%dthre_month.nc'%(fileout,perc)
+    if not os.path.exists(outfile):
+        max_threshold_dailymax(perc,outfile)
+    ds = xr.open_dataset(outfile)
     ilon = ds.lon
     ilat = ds.lat
     thre = ds['threshold'].data
-    #monthly_contour(thre,ilon,ilat,[2,19,1],'max10mwind','m/s',figdir+'max10mwind_thre',perc)
+    monthly_contour(thre,ilon,ilat,[2,19,1],'max10mwind','m/s',figdir+'dailymax10mwind_thre',perc)
     
     start_time = datetime.now()
-    #ctrl_max10mwind_event(perc,thre)
+    ctrl_max10mwind_event(perc,thre,"%s/clim_%ddailymax10mwind_event.nc"%(fileout,perc))
     
     process_pool = Pool(processes=3)
     results=[]
     for nl in range(len(lev)):
+        outfile="%s/%ddailymax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,lev,suffix)
         result=process_pool.apply_async(count_max10mwind_event,
-                args=(perc,thre,lev[nl],lag,))
+                args=(perc,thre,lev[nl],lag,outfile))
         results.append(result)
     print(results) 
     process_pool.close()
@@ -100,7 +90,33 @@ def main_run():
             title[suffix],nl),'max10mwind (%)','%smax10mwind%d%s'%(figdir,nl,suffix),perc)
     ''' 
 
-def max10mwind_threshold(perc):
+def max_threshold_dailymax(perc,outfile):
+    ds  = xr.open_dataset(datapath+"1980.nc")
+    ilon = ds.lon
+    ilat = ds.lat
+    thre = np.empty( [12,len(ilat),len(ilon)],dtype=float ) 
+    
+    for nm in range(0,12,1):
+        var = ds['tp'].sel(time=np.array(
+            [ds.time.dt.month.isin(nm+1),ds.time.dt.year.isin(1980)]
+            ).all(axis=0))
+        var = var.groupby(var.time.dt.day).max('time').data
+        for ny in range(1981,2021,1):
+            ds1  = xr.open_dataset("%s%d.nc"%(datapath,ny))
+            term = ds1['tp'].sel(time=np.array(
+                [ds1.time.dt.month.isin(nm+1),ds1.time.dt.year.isin(ny)]
+                ).all(axis=0))
+            var = np.concatenate((var, term.groupby(term.time.dt.day
+                ).max('time').data))
+            print("month %2d %d: "%(nm,ny), var.shape)
+        thre[nm,:,:] = np.percentile(var,perc,axis=0)
+    
+    da = xr.DataArray(thre, coords=[range(0,12,1),ilat,ilon], 
+            dims=["month","lat","lon"])
+    ds2 = da.to_dataset(name='threshold')
+    ds2.to_netcdf(outfile,"w")
+
+def max_threshold(perc,outfile):
     ds  = xr.open_dataset(datapath+"1980.nc")
     ilon = ds.lon
     ilat = ds.lat
@@ -123,10 +139,10 @@ def max10mwind_threshold(perc):
     da = xr.DataArray(thre, coords=[range(0,12,1),ilat,ilon], 
             dims=["month","lat","lon"])
     ds2 = da.to_dataset(name='threshold')
-    ds2.to_netcdf("%smax10mwind_%.1fthreshold_month.nc"%(fileout,perc),"w")
+    ds2.to_netcdf(outfile,"w")
 
 def ctrl_max10mwind_event(perc,thre):
-    var  = np.zeros( thre.shape, dtype=float ) 
+    var = np.zeros( thre.shape, dtype=float ) 
     for ny in range(1980,2021,1):
         print('task [0]:%d'%(ny))
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
@@ -144,19 +160,17 @@ def ctrl_max10mwind_event(perc,thre):
         var = var + term.groupby(term.time.dt.month).sum('time') 
     var = var/41
     ds1 = var.to_dataset(name='event')
-    ds1.to_netcdf("%sclim_%.1fmax10mwind_event.nc"%(fileout,perc),"w")
+    ds1.to_netcdf(outfile,"w")
 
-def count_max10mwind_event(perc,thre,lev,lag):
+def count_max10mwind_event(perc,thre,lev,lag,outfile):
     ctime,clat,clon = composite_time("%s%s_%d_1980-2020%s"%(
         path,prefix,lev,suffix),lats,latn,lonl,lonr)
     
     var  = np.zeros( thre.shape, dtype=float ) 
-
     for ny in range(1980,2021,1):
         print('task [%d]:%d'%(lev,ny))
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['var1'].sel(time=ds.time.dt.year.isin(ny))
-        #term = xr.where(term>=perc,1,0)
         for nm in range(12):
             term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
                 term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
@@ -174,7 +188,7 @@ def count_max10mwind_event(perc,thre,lev,lag):
         var = var + term.groupby(term.time.dt.month).sum('time') 
     var = var/41
     ds1 = var.to_dataset(name='event')
-    ds1.to_netcdf("%sclim_%.1fmax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,lev,suffix),"w")
+    ds1.to_netcdf(outfile,"w")
 
 def composite_time(filname,flats,flatn,flonl,flonr):
     ff = open(filname,"r") 
@@ -268,8 +282,6 @@ def monthly_contour(var,ilon,ilat,cnlev,figtitle,cblabel,figdir,perc):
                  extend='both',norm=norm)
             topo = axe.contour(ilon, ilat, phis, [1500,3000], 
                  transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                 linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
             jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,40,50], 
                  transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=1.5)
             

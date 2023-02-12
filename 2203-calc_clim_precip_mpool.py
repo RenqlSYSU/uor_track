@@ -18,10 +18,6 @@ flatn = 45  #int(sys.argv[3])
 flonl = 60  #int(sys.argv[4])
 flonr = 105 #int(sys.argv[5])
 prefix = "fftadd"
-#suffix = '_0_2545-60110'
-#suffix = '_5_2545-60110_2_4545-60110'
-#suffix = '_5_2545-60110_2_2545-6060'
-#suffix = ''
 suffix = sys.argv[1] 
 radiu = int(sys.argv[2])
 perc = int(sys.argv[3])
@@ -45,17 +41,8 @@ sy='clim'
 
 def main_run():
     lag = 0
-    
-    ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
-    ilon = ds.longitude
-    ilat = ds.latitude
-    tp = ds['tp'].data
-    #days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
-    #for i in range(len(days)):
-    #    tp[i,:,:] = tp[i,:,:]/days[i]
-    #draw_precip(tp,[0,170,10],'%s'%sy,'precip (mm/month)'
-    #        ,figdir+'clim_precip',ilon,ilat,perc)
-
+    '''
+    maxpreci_threshold_dailymax(perc) 
     #maxpreci_threshold(perc) 
     ds = xr.open_dataset("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc))
     ilon = ds.lon
@@ -63,14 +50,12 @@ def main_run():
     thre = ds['threshold'].data
     print(thre)
     start_time = datetime.now()
-    #draw_precip(thre*1000*24,[0,170,10],'%s'%sy,'max%dprecip (mm/day)'%perc
-    #        ,figdir+'clim_precip',ilon,ilat,perc)
-    #mask_precip(perc,var,0,850)
-   
+    '''
     process_pool = Pool(processes=3)
     results=[]
     for nl in range(len(lev)):
-        result=process_pool.apply_async(mask_precip, args=(perc,thre,lag,lev[nl],))
+        result=process_pool.apply_async(mask_precip_amount, args=(lag,lev[nl],))
+        #result=process_pool.apply_async(mask_precip_amount, args=(perc,thre,lag,lev[nl],))
         results.append(result)
     print(results) 
     print(results[0].get()) 
@@ -80,9 +65,18 @@ def main_run():
     print(start_time)
     print(datetime.now())
     print("%d precip lag %d: %s"%(perc,lag,title[suffix]))
-    #mask_precip_oneyear(sy)
-    #ds = xr.open_dataset("%s%s_precip.nc"%(fileout,sy))
+    
     ''' 
+    ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
+    ilon = ds.longitude
+    ilat = ds.latitude
+    tp = ds['tp'].data
+    #days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
+    #for i in range(len(days)):
+    #    tp[i,:,:] = tp[i,:,:]/days[i]
+    #draw_precip(tp,[0,170,10],'%s'%sy,'precip (mm/month)'
+    #        ,figdir+'clim_precip',ilon,ilat,perc)
+    
     days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
     ds = xr.open_dataset("%sclim_max%dprecip_event.nc"%(fileout,perc))
     ilon = ds.longitude
@@ -112,6 +106,34 @@ def main_run():
         #draw_precip(term2-term,[0,51,3],'7rad-6rad %s %s %d'%(title[suffix],sy,nl),
         #        'precip percent','%sclim_precip_diff%d%s'%(figdir,nl,suffix),ilon,ilat,perc)
     '''
+def maxpreci_threshold_dailymax(perc):
+    ds  = xr.open_dataset(datapath+"1980.nc")
+    lat = ds.latitude
+    lon = ds.longitude
+    ilon = lon[(lon>=lonl) & (lon<=lonr)]
+    ilat = lat[(lat>=lats) & (lat<=latn)]
+    thre = np.empty( [12,len(ilat),len(ilon)],dtype=float ) 
+    
+    for nm in range(0,12,1):
+        var = ds['tp'].sel(time=np.array(
+            [ds.time.dt.month.isin(nm+1),ds.time.dt.year.isin(1980)]
+            ).all(axis=0),longitude=ilon,latitude=ilat)
+        var = var.groupby(var.time.dt.day).max('time').data
+        for ny in range(1981,2021,1):
+            ds1  = xr.open_dataset("%s%d.nc"%(datapath,ny))
+            term = ds1['tp'].sel(time=np.array(
+                [ds1.time.dt.month.isin(nm+1),ds1.time.dt.year.isin(ny)]
+                ).all(axis=0),longitude=ilon,latitude=ilat)
+            var = np.concatenate((var, term.groupby(term.time.dt.day
+                ).max('time').data))
+            print("month %2d %d: "%(nm,ny), var.shape)
+        thre[nm,:,:] = np.percentile(var,perc,axis=0)
+    
+    da = xr.DataArray(thre, coords=[range(0,12,1),ilat,ilon], 
+            dims=["month","lat","lon"])
+    ds2 = da.to_dataset(name='threshold')
+    ds2.to_netcdf("%smaxprecip1h_%dthre_month_dailymax.nc"%(fileout,perc),"w")
+
 def maxpreci_threshold(perc):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
@@ -138,7 +160,37 @@ def maxpreci_threshold(perc):
     ds2 = da.to_dataset(name='threshold')
     ds2.to_netcdf("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc),"w")
 
-def mask_precip(perc,thre,lag,nl):
+def mask_precip_amount(lag,nl):
+    ds  = xr.open_dataset(datapath+"1980.nc")
+    lat = ds.latitude
+    lon = ds.longitude
+    ilon = lon[(lon>=lonl) & (lon<=lonr)]
+    ilat = lat[(lat>=lats) & (lat<=latn)]
+    var  = np.empty( [12,len(ilat),len(ilon)],dtype=float )  
+    
+    ctime,clat,clon = composite_time("%s%s_%d_1980-2020%s"%(
+        path,prefix,nl,suffix),lats,latn,lonl,lonr)
+    for ny in range(1980,2021,1):
+        print('task [%d]:%d'%(nl,ny))
+        ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
+        term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
+                ,longitude=ilon,latitude=ilat)
+        
+        ctime1 = ctime.where(ctime.dt.year.isin(ny),drop=True)
+        clat1 = clat.where(ctime.dt.year.isin(ny),drop=True)
+        clon1 = clon.where(ctime.dt.year.isin(ny),drop=True)
+        for ct,clo,cla in zip(ctime1,clon1,clat1):
+            indx = np.argwhere(term.time.data==ct.data)[0][0]
+            term[indx-lag:(indx+1+lag),:,:] = term[indx-lag:(indx+1+lag),:,:].where(
+                (np.square(term.longitude-clo)+
+                np.square(term.latitude-cla))>(radiu*radiu), 0)
+        var = var + term.groupby(term.time.dt.month).sum('time') 
+    var = var*1000/41
+    var.attrs['units']='mm/month'
+    ds1 = var.to_dataset(name='tp')
+    ds1.to_netcdf("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix),"w")
+
+def mask_precip_extreme(perc,thre,lag,nl):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
     lon = ds.longitude
@@ -151,9 +203,9 @@ def mask_precip(perc,thre,lag,nl):
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
                 ,longitude=ilon,latitude=ilat)
-        for nm in range(12):
-            term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
-                term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
+        #for nm in range(12):
+        #    term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
+        #        term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
         var = var + term.groupby(term.time.dt.month).sum('time') 
     #var = var*1000/41
     #var.attrs['units']='mm/month'
