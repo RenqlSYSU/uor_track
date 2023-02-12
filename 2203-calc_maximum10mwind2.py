@@ -97,13 +97,13 @@ def max_threshold_dailymax(perc,outfile):
     thre = np.empty( [12,len(ilat),len(ilon)],dtype=float ) 
     
     for nm in range(0,12,1):
-        var = ds['tp'].sel(time=np.array(
+        var = ds['var1'].sel(time=np.array(
             [ds.time.dt.month.isin(nm+1),ds.time.dt.year.isin(1980)]
             ).all(axis=0))
         var = var.groupby(var.time.dt.day).max('time').data
         for ny in range(1981,2021,1):
             ds1  = xr.open_dataset("%s%d.nc"%(datapath,ny))
-            term = ds1['tp'].sel(time=np.array(
+            term = ds1['var1'].sel(time=np.array(
                 [ds1.time.dt.month.isin(nm+1),ds1.time.dt.year.isin(ny)]
                 ).all(axis=0))
             var = np.concatenate((var, term.groupby(term.time.dt.day
