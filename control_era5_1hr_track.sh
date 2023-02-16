@@ -37,17 +37,19 @@ if [ $pro == -1 ];then
     echo "convert to real time"
     timestep=1 #hour
 
-    for ny in {1980..2020};do
+    #for ny in {1980..2020};do
+        ny=2000
+        nl=0
         starttime=$((ny-1))120100
-        for nl in {0..2};do
+        #for nl in {0..2};do
             filname1=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}_trs_pos.${suffix}
             filname2=${OUTDIR}ERA5_VOR${lev[$nl]}_1hr_${ny}_DET/${prefix}t_trs_pos.${suffix}
             if [ ! -f "${filname2}" ]; then
                 utils/bin/count ${filname1} 0 0 5 4 0 $starttime $timestep
                 mv ${filname1}.new ${filname2}
             fi
-        done
-    done
+        #done
+    #done
 fi
 
 if [ $pro == 0 ];then
@@ -64,7 +66,7 @@ if [ $pro == 1 ];then
     cd $OUTDIR
     pwd
     echo "combine ${prefix}_trs_pos"
-    for nl in {0..2};do
+    for nl in {0..0};do
         echo 41 > combine.in_${lev[$nl]}
         echo 1 >> combine.in_${lev[$nl]}
         

@@ -30,7 +30,7 @@ title= {'_6local':'local',
         '_6outside':'outside',
         '_6total':'total',
         '':'All'}
-suffixs = ['_6local','_6outside','']#,'_6total'
+suffixs = ['_6local','_6outside']#,'_6total'
 lonl=0  #0  #
 lonr=150#360#
 lats=15  #
@@ -38,7 +38,7 @@ latn=70 #
 lat_sp = 20
 lon_sp = 30 #60 #
 radiu = 6
-perc = 95
+perc = 99
 
 def main_run():
     calc_associated_weather()
@@ -84,18 +84,18 @@ def main_run():
 
 def calc_associated_weather():
     for suffix in suffixs: 
-        com = "python ~/uor_track/2203-calc_maximum10mwind2.py %s %d %d"\
+        '''
+        com = "python ~/uor_track/2203-calc_maximum10mwind2.py '%s' %d %d"\
                 %(suffix,radiu,perc)
         print(com)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
         '''
-        com = "python ~/uor_track/2203-calc_clim_precip_mpool.py %s %d %d"\
+        com = "python ~/uor_track/2203-calc_clim_precip_mpool.py '%s' %d %d"\
                 %(suffix,radiu,perc)
         print(com)
         ret=subprocess.Popen(com,shell=True)
         ret.wait()
-        '''
 
 def draw_annual_contour3x2(cnlev,cblabel,figdir,ilon,ilat):
     nrow = 3 #6 #

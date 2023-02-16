@@ -43,17 +43,20 @@ def main_run():
     ilon = ds.lon
     ilat = ds.lat
     thre = ds['threshold'].data
-    monthly_contour(thre,ilon,ilat,[2,19,1],'max10mwind','m/s',figdir+'dailymax10mwind_thre',perc)
+    #monthly_contour(thre,ilon,ilat,[2,19,1],'max10mwind','m/s',figdir+'dailymax10mwind_thre',perc)
     
     start_time = datetime.now()
-    ctrl_max10mwind_event(perc,thre,"%s/clim_%ddailymax10mwind_event.nc"%(fileout,perc))
+    outfile="%s/clim_%ddailymax10mwind_event.nc"%(fileout,perc)
+    if not os.path.exists(outfile):
+        ctrl_max10mwind_event(perc,thre,outfile)
     
     process_pool = Pool(processes=3)
     results=[]
-    for nl in range(len(lev)):
-        outfile="%s/%ddailymax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,lev,suffix)
+    #for nl in range(len(lev)):
+    for nl in range(3):
+        outfile="%s/%ddailymax10mwind_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,lev[nl],suffix)
         result=process_pool.apply_async(count_max10mwind_event,
-                args=(perc,thre,lev[nl],lag,outfile))
+                args=(perc,thre,lev[nl],lag,outfile,))
         results.append(result)
     print(results) 
     process_pool.close()
@@ -61,7 +64,7 @@ def main_run():
     print(results[0].get()) 
     print(start_time)
     print(datetime.now())
-    print("%.1f 10mwind lag %d: %s"%(perc,lag,title[suffix]))
+    print("%.1f 10mwind lag %d: %s"%(perc,lag,suffix))
     '''
     days = [31   ,28   ,31   ,30   ,31   ,30   ,31   ,31   ,30   ,31   ,30   ,31   ]
     ds = xr.open_dataset("%sclim_%.1fmax10mwind_event.nc"%(fileout,perc))
@@ -141,10 +144,10 @@ def max_threshold(perc,outfile):
     ds2 = da.to_dataset(name='threshold')
     ds2.to_netcdf(outfile,"w")
 
-def ctrl_max10mwind_event(perc,thre):
+def ctrl_max10mwind_event(perc,thre,outfile):
     var = np.zeros( thre.shape, dtype=float ) 
     for ny in range(1980,2021,1):
-        print('task [0]:%d'%(ny))
+        print('task [ctrl]:%d'%(ny))
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['var1'].sel(time=ds.time.dt.year.isin(ny))
         #term = xr.where(term>=perc,1,0)
@@ -218,8 +221,8 @@ def composite_time(filname,flats,flatn,flonl,flonr):
                     data = list(map(float,line.strip().replace(" &","").split(" ")))
                 else:
                     data = list(map(float,line.strip().split(" ")))
-                if data[1]<=flonr and data[1] >= flonl and\
-                data[2]<=flatn and data[2]>=flats :
+                if data[1]<=(flonr+6) and data[1] >= flonl and\
+                data[2]<=(flatn+6) and data[2]>=(flats-6) :
                     ctime.append(datetime.strptime(str(int(data[0])),'%Y%m%d%H'))
                     clat.append(data[2])
                     clon.append(data[1])

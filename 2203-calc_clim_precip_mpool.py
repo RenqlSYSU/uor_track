@@ -3,7 +3,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from multiprocessing import Pool
-import sys
+import sys, os, subprocess, linecache, gc
 from datetime import datetime
 from renql import cyc_filter
 import matplotlib.pyplot as plt
@@ -13,10 +13,6 @@ import cartopy.feature as cfeat
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cmaps
 
-flats = 25  #int(sys.argv[2])
-flatn = 45  #int(sys.argv[3])
-flonl = 60  #int(sys.argv[4])
-flonr = 105 #int(sys.argv[5])
 prefix = "fftadd"
 suffix = sys.argv[1] 
 radiu = int(sys.argv[2])
@@ -41,21 +37,29 @@ sy='clim'
 
 def main_run():
     lag = 0
-    '''
-    maxpreci_threshold_dailymax(perc) 
+    #ctrl_precip_amount('%sclim_precip.nc'%fileout)
     #maxpreci_threshold(perc) 
-    ds = xr.open_dataset("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc))
+    outfile='%s/%ddailymaxpreci_thre_month.nc'%(fileout,perc)
+    if not os.path.exists(outfile):
+        maxpreci_threshold_dailymax(perc,outfile) 
+    ds = xr.open_dataset(outfile)
     ilon = ds.lon
     ilat = ds.lat
     thre = ds['threshold'].data
     print(thre)
+    
+    #outfile="%s/clim_%ddailymaxpreci_event.nc"%(fileout,perc)
+    #if not os.path.exists(outfile):
+    #    ctrl_precip_extreme_event(perc,thre,outfile)
+    
     start_time = datetime.now()
-    '''
     process_pool = Pool(processes=3)
     results=[]
     for nl in range(len(lev)):
-        result=process_pool.apply_async(mask_precip_amount, args=(lag,lev[nl],))
-        #result=process_pool.apply_async(mask_precip_amount, args=(perc,thre,lag,lev[nl],))
+        #outfile="%s/clim_preci_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,lev[nl],suffix)
+        #result=process_pool.apply_async(mask_precip_amount, args=(lag,lev[nl],outfile,))
+        outfile="%s/%ddailymaxpreci_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,lev[nl],suffix)
+        result=process_pool.apply_async(mask_precip_extreme, args=(perc,thre,lag,lev[nl],outfile,))
         results.append(result)
     print(results) 
     print(results[0].get()) 
@@ -65,7 +69,6 @@ def main_run():
     print(start_time)
     print(datetime.now())
     print("%d precip lag %d: %s"%(perc,lag,title[suffix]))
-    
     ''' 
     ds = xr.open_dataset("%s/clim_precip.nc"%(fileout))
     ilon = ds.longitude
@@ -106,7 +109,7 @@ def main_run():
         #draw_precip(term2-term,[0,51,3],'7rad-6rad %s %s %d'%(title[suffix],sy,nl),
         #        'precip percent','%sclim_precip_diff%d%s'%(figdir,nl,suffix),ilon,ilat,perc)
     '''
-def maxpreci_threshold_dailymax(perc):
+def maxpreci_threshold_dailymax(perc,outfile):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
     lon = ds.longitude
@@ -132,9 +135,9 @@ def maxpreci_threshold_dailymax(perc):
     da = xr.DataArray(thre, coords=[range(0,12,1),ilat,ilon], 
             dims=["month","lat","lon"])
     ds2 = da.to_dataset(name='threshold')
-    ds2.to_netcdf("%smaxprecip1h_%dthre_month_dailymax.nc"%(fileout,perc),"w")
+    ds2.to_netcdf(outfile,"w")
 
-def maxpreci_threshold(perc):
+def maxpreci_threshold(perc,outfile):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
     lon = ds.longitude
@@ -158,9 +161,28 @@ def maxpreci_threshold(perc):
     da = xr.DataArray(thre, coords=[range(0,12,1),ilat,ilon], 
             dims=["month","lat","lon"])
     ds2 = da.to_dataset(name='threshold')
-    ds2.to_netcdf("%smaxprecip1h_%dthreshold_month.nc"%(fileout,perc),"w")
+    ds2.to_netcdf(outfile,"w")
 
-def mask_precip_amount(lag,nl):
+def ctrl_precip_amount(outfile):
+    ds  = xr.open_dataset(datapath+"1980.nc")
+    lat = ds.latitude
+    lon = ds.longitude
+    ilon = lon[(lon>=lonl) & (lon<=lonr)]
+    ilat = lat[(lat>=lats) & (lat<=latn)]
+    var  = np.empty( [12,len(ilat),len(ilon)],dtype=float )  
+    
+    for ny in range(1980,2021,1):
+        print('task :%d'%(ny))
+        ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
+        term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
+                ,longitude=ilon,latitude=ilat)
+        var = var + term.groupby(term.time.dt.month).sum('time') 
+    var = var*1000/41
+    var.attrs['units']='mm/month'
+    ds1 = var.to_dataset(name='tp')
+    ds1.to_netcdf(outfile,"w")
+
+def mask_precip_amount(lag,nl,outfile):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
     lon = ds.longitude
@@ -188,32 +210,38 @@ def mask_precip_amount(lag,nl):
     var = var*1000/41
     var.attrs['units']='mm/month'
     ds1 = var.to_dataset(name='tp')
-    ds1.to_netcdf("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix),"w")
+    ds1.to_netcdf(outfile,"w")
 
-def mask_precip_extreme(perc,thre,lag,nl):
+def ctrl_precip_extreme_event(perc,thre,outfile):
     ds  = xr.open_dataset(datapath+"1980.nc")
     lat = ds.latitude
     lon = ds.longitude
     ilon = lon[(lon>=lonl) & (lon<=lonr)]
     ilat = lat[(lat>=lats) & (lat<=latn)]
-    var  = np.empty( [12,len(ilat),len(ilon)],dtype=float )  
-    '''
+    var  = np.zeros( [12,len(ilat),len(ilon)],dtype=float )  
+    
     for ny in range(1980,2021,1):
-        print(ny)
+        print('ctrl %d'%ny)
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
                 ,longitude=ilon,latitude=ilat)
-        #for nm in range(12):
-        #    term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
-        #        term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
+        for nm in range(12):
+            term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
+                term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
         var = var + term.groupby(term.time.dt.month).sum('time') 
-    #var = var*1000/41
-    #var.attrs['units']='mm/month'
     var = var/41
     var.attrs['units']='event'
     ds1 = var.to_dataset(name='tp')
-    ds1.to_netcdf("%sclim_max%dprecip_event.nc"%(fileout,perc),"w")
-    '''
+    ds1.to_netcdf(outfile,"w")
+
+def mask_precip_extreme(perc,thre,lag,nl,outfile):
+    ds  = xr.open_dataset(datapath+"1980.nc")
+    lat = ds.latitude
+    lon = ds.longitude
+    ilon = lon[(lon>=lonl) & (lon<=lonr)]
+    ilat = lat[(lat>=lats) & (lat<=latn)]
+    var  = np.zeros( [12,len(ilat),len(ilon)],dtype=float )  
+    
     ctime,clat,clon = composite_time("%s%s_%d_1980-2020%s"%(
         path,prefix,nl,suffix),lats,latn,lonl,lonr)
     for ny in range(1980,2021,1):
@@ -221,7 +249,6 @@ def mask_precip_extreme(perc,thre,lag,nl):
         ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
         term = ds['tp'].sel(time=ds.time.dt.year.isin(ny)
                 ,longitude=ilon,latitude=ilat)
-        #term = xr.where(term>=perc,1,0)
         for nm in range(12):
             term.loc[dict(time=term.time.dt.month.isin(nm+1))] = xr.where(
                 term.sel(time=term.time.dt.month.isin(nm+1))>thre[nm,:,:],1,0)
@@ -234,15 +261,11 @@ def mask_precip_extreme(perc,thre,lag,nl):
             term[indx-lag:(indx+1+lag),:,:] = term[indx-lag:(indx+1+lag),:,:].where(
                 (np.square(term.longitude-clo)+
                 np.square(term.latitude-cla))>(radiu*radiu), 0)
-        #term = term/term.time.dt.days_in_month
         var = var + term.groupby(term.time.dt.month).sum('time') 
-    #var = var*1000/41
-    #var.attrs['units']='mm/month'
     var = var/41
     var.attrs['units']='event'
     ds1 = var.to_dataset(name='tp')
-    ds1.to_netcdf("%sclim_max%dprecip_%drad_lag%d_%d%s.nc"%(fileout,perc,radiu,lag,nl,suffix),"w")
-    #ds1.to_netcdf("%sclim_precip_%drad_lag%d_%d%s.nc"%(fileout,radiu,lag,nl,suffix),"w")
+    ds1.to_netcdf(outfile,"w")
 
 def mask_precip_oneyear(ny):
     ds  = xr.open_dataset("%s%d.nc"%(datapath,ny))
@@ -326,8 +349,6 @@ def draw_precip(var,cnlev,figtitle,cblabel,figdir,ilon,ilat,perc):
                  extend='both',norm=norm)
             topo = axe.contour(ilon, ilat, phis, [1500,3000], 
                  transform=ccrs.PlateCarree(),colors='black',linewidths=1.5)
-            axe.plot([flonl,flonl,flonr,flonr,flonl],[flatn,flats,flats,flatn,flatn], 
-                 linewidth=2.5, color='black', transform=ccrs.PlateCarree()) # filter box
             jets = axe.contour(ilon, ilat, uwnd[nm,:,:], [30,40,50], 
                  transform=ccrs.PlateCarree(),colors='darkviolet',linewidths=1.5)
             
@@ -378,8 +399,8 @@ def composite_time(filname,flats,flatn,flonl,flonr):
                     data = list(map(float,line.strip().replace(" &","").split(" ")))
                 else:
                     data = list(map(float,line.strip().split(" ")))
-                if data[1]<=flonr and data[1] >= flonl and\
-                data[2]<=flatn and data[2]>=flats :
+                if data[1]<=(flonr+6) and data[1] >= flonl and\
+                data[2]<=(flatn+6) and data[2]>=(flats-6) :
                     ctime.append(datetime.strptime(str(int(data[0])),'%Y%m%d%H'))
                     clat.append(data[2])
                     clon.append(data[1])

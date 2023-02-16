@@ -67,7 +67,7 @@ def month_filter(filname):
 path = '/home/users/qd201969/ERA5-1HR-lev/'
 lev  = [850,500,250]
 prefix = 'ff'
-
+'''
 for year in range(1980,2021):
     for nl in lev:
         filname = "%sERA5_VOR%d_1hr_%d_DET/%s_trs_pos.addZ_addwind10m_precip_maxpre"\
@@ -75,6 +75,7 @@ for year in range(1980,2021):
         if not os.path.exists('%s-1211'%filname):
             month_filter(filname)
 
+'''
 com = "sh ~/uor_track/control_era5_1hr_track.sh %s -1 0 addZ_addwind10m_precip_maxpre-1211"%(prefix)
 ret=subprocess.Popen(com,shell=True)
 ret.wait()
@@ -83,3 +84,7 @@ com = "sh ~/uor_track/control_era5_1hr_track.sh %st 1 0 addZ_addwind10m_precip_m
 ret=subprocess.Popen(com,shell=True)
 ret.wait()
 
+filname = "%sERA5_VOR850_1hr_2000_DET/%s_trs_pos.addZ_addwind10m_precip_maxpre"\
+        %(path,prefix)
+if not os.path.exists('%s-1211'%filname):
+    month_filter(filname)
